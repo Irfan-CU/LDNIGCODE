@@ -26,9 +26,13 @@ The most Important Part in this code for genrating LDNI FDM Toolpaths is
 2-Printing Nozell Accelration after every Path.
 3-Output GCode Path coordinates are 10 times of what they should be.
 
+******Solved Issues:
+
+1- Solved the accelration issues:
+
 ******Progress:
 
-1- Working on removing accelrations after every path.
+1- Working on optimizing the G-code path values.
 
       
       
