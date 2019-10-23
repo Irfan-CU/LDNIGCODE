@@ -1,0 +1,454 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Cura file copies">
+      <UniqueIdentifier>{4b420015-083c-4b15-8ebd-fe13313fea0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libs">
+      <UniqueIdentifier>{fe2b594c-f1b1-497f-acfc-6a0e1652f164}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{e5bbc4cb-fb2e-4411-a203-8ce314dd71a8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\libs\clipper\clipper.cpp">
+      <Filter>libs</Filter>
+    </ClCompile>
+    <ClCompile Include="Point3.cpp">
+      <Filter>Header Files\Cura file copies</Filter>
+    </ClCompile>
+    <ClCompile Include="LayerPlan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PMBody.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fffGcodeWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LayerBufferPlan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Preheat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="timematerialestimate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FlowTempGraph.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="timeEstimate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GcodePath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Infill.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="layerpart.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WallComputation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fffPolygonGenrator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="multivolumes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Slicer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SkinInfillAreaComputation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Polygon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SliceDataStorage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PathOrderOptimizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PathConfigStorage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NozzelTempInsert.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LinearAlgebra2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Date.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AABB.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gcodeExport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="raft.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GcodePathConfig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AABB3D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Point3Irfan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LDNIcpuOperation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LDNIcpuSolid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="clipper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Combcpp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LDNIDataBoard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PolygonUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PolygonPoint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SVG.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LinesPolygonCrossing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gettime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ProgressStageEstimator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MergerInfillLines.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Progress.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="logoutput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Support.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SupportInfillPartcpp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SkirtBrim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WallOverlap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ListPolyIt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ProximityPointLink.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PolygonProximityLinker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="LDNIcpuOperation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LDNIcpuSolid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LDNIcudaOperation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LDNIcudaSolid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LDNIDataBoard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PMBody.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scan_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IntpointIrfan.h">
+      <Filter>Header Files\Cura file copies</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libs\clipper\clipper.hpp">
+      <Filter>libs</Filter>
+    </ClInclude>
+    <ClInclude Include="Point3.h">
+      <Filter>Header Files\Cura file copies</Filter>
+    </ClInclude>
+    <ClInclude Include="LayerPlan.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PathOrderOptimizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Optional.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GCodePath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GCodeLayerThreader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LayerBufferPlan.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Preheat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ENUMSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fffGcodewriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GcodeExport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AABB.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Polygon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NozzelTempInsert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GCodePathConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SliceDataStorage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Infill.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Slicer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AABB3D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="layerPart.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZigZagConnector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UnionFind.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FanSpeedLayerTime.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RetractionConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SpaceFillType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Raft.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PathConfigStorage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PrintFeature.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Date.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fffPolygonGenrator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WallComputation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LinearAlgebra2D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SkinInfillAreaComputation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="multivolumes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Lock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Temprature.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Duration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Flow_Temprature graph.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="timeEstimate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="timeMaterialEstimate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Polygonutils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PolygonPoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SparsePointGridInclusive.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SparsePointGrid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SparseGrid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SparseLineGrid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SVG.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="floatpoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CombPathh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LinesPolygonCrossing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeKeeper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gettime.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProgressStageEstimator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProgressEstimator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SupportInfillPart.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MergeInfillLines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="String.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Ratio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Progress.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="logoutput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProgressEstimatorLinear.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SupportInfillParth.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SkirtBrim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LayerIndex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WipeScriptConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WallOverlap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PolygonProximityLinker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProximityPointLink.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ListPolyIt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SymmetricPair.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="LDNIcudaContouring.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="LDNIcudaNormalProcessing.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="LDNIcudaOffsetting.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="LDNIcudaOffsettingByHashing.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="LDNIcudaOperation.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="LDNIcudaSolid.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,336 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{220D7267-79F9-49AD-88C2-D794CBDB9ACB}</ProjectGuid>
+    <RootNamespace>LDNIcuda</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <CudaToolkitCustomDir>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0</CudaToolkitCustomDir>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">thrust;C:\Program Files (x86)\Windows Kits\10\Include;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">thrust;C:\Program Files (x86)\Windows Kits\10\Include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <SourcePath>C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\VC\VCTargets\BuildCustomizations</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <SourcePath>C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\VC\VCTargets\BuildCustomizations</SourcePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\vld-master\vld-master\src;C:\Users\Naureen Mustafa\source\repos\CuraEngine2\libs\clipper;D:\Irfan Mustafa\MSinConcordia\DR.Kwok\LDNI\LDNI Source\LDNI Source\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ShowIncludes>true</ShowIncludes>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glew32D.lib;cUtil32D.lib;cudart.lib;libcpmtD.lib;libcpmtd.lib;glew32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.lib; LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>D:\Irfan Mustafa\MSinConcordia\DR.Kwok\LDNI\LDNI Source\LDNI Source\LDNIcuda;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\GLKLib\x64\Release;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x64;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\vld-master\vld-master\src;C:\Users\Naureen Mustafa\source\repos\CuraEngine2\libs\clipper;D:\Irfan Mustafa\MSinConcordia\DR.Kwok\LDNI\LDNI Source\LDNI Source\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ShowIncludes>true</ShowIncludes>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glew32.lib;glut32.lib;cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.lib; LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>D:\Irfan Mustafa\MSinConcordia\DR.Kwok\LDNI\LDNI Source\LDNI Source\LDNIcuda;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\GLKLib\x64\Release;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x64;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\vld-master\vld-master\src;C:\Program Files (x86)\Windows Kits\10\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <OpenMPSupport>true</OpenMPSupport>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <AdditionalUsingDirectories>C:\Program Files (x86)\Windows Kits\10\Include</AdditionalUsingDirectories>
+      <ShowIncludes>true</ShowIncludes>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glew32.lib;cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\GLKLib\x64\Release;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <CudaCompile>
+      <CodeGeneration>compute_30,sm_30;%(CodeGeneration)</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\vld-master\vld-master\src;C:\Program Files (x86)\Windows Kits\10\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <OpenMPSupport>true</OpenMPSupport>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <AdditionalUsingDirectories>C:\Program Files (x86)\Windows Kits\10\Include</AdditionalUsingDirectories>
+      <ShowIncludes>true</ShowIncludes>
+      <BrowseInformation>true</BrowseInformation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glew32.lib;shell32.lib;glut32.lib;cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\GLKLib\x64\Release;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <CudaCompile>
+      <CodeGeneration>compute_30,sm_30;%(CodeGeneration)</CodeGeneration>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\libs\clipper\clipper.cpp" />
+    <ClCompile Include="AABB.cpp" />
+    <ClCompile Include="AABB3D.cpp" />
+    <ClCompile Include="clipper.cpp" />
+    <ClCompile Include="Combcpp.cpp" />
+    <ClCompile Include="Date.cpp" />
+    <ClCompile Include="fffGcodeWriter.cpp" />
+    <ClCompile Include="fffPolygonGenrator.cpp" />
+    <ClCompile Include="FlowTempGraph.cpp" />
+    <ClCompile Include="gcodeExport.cpp" />
+    <ClCompile Include="GcodePath.cpp" />
+    <ClCompile Include="GcodePathConfig.cpp" />
+    <ClCompile Include="gettime.cpp" />
+    <ClCompile Include="Infill.cpp" />
+    <ClCompile Include="LayerBufferPlan.cpp" />
+    <ClCompile Include="layerpart.cpp" />
+    <ClCompile Include="LayerPlan.cpp" />
+    <ClCompile Include="LDNIcpuOperation.cpp" />
+    <ClCompile Include="LDNIcpuSolid.cpp" />
+    <ClCompile Include="LDNIDataBoard.cpp" />
+    <ClCompile Include="LinearAlgebra2D.cpp" />
+    <ClCompile Include="LinesPolygonCrossing.cpp" />
+    <ClCompile Include="ListPolyIt.cpp" />
+    <ClCompile Include="logoutput.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="MergerInfillLines.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="multivolumes.cpp" />
+    <ClCompile Include="NozzelTempInsert.cpp" />
+    <ClCompile Include="PathConfigStorage.cpp" />
+    <ClCompile Include="PathOrderOptimizer.cpp" />
+    <ClCompile Include="PMBody.cpp" />
+    <ClCompile Include="Point3.cpp" />
+    <ClCompile Include="Point3Irfan.cpp" />
+    <ClCompile Include="Polygon.cpp" />
+    <ClCompile Include="PolygonPoint.cpp" />
+    <ClCompile Include="PolygonProximityLinker.cpp" />
+    <ClCompile Include="PolygonUtils.cpp" />
+    <ClCompile Include="Preheat.cpp" />
+    <ClCompile Include="Progress.cpp" />
+    <ClCompile Include="ProgressStageEstimator.cpp" />
+    <ClCompile Include="ProximityPointLink.cpp" />
+    <ClCompile Include="raft.cpp" />
+    <ClCompile Include="SkinInfillAreaComputation.cpp" />
+    <ClCompile Include="SkirtBrim.cpp" />
+    <ClCompile Include="SliceDataStorage.cpp" />
+    <ClCompile Include="Slicer.cpp" />
+    <ClCompile Include="Support.cpp" />
+    <ClCompile Include="SupportInfillPartcpp.cpp" />
+    <ClCompile Include="SVG.cpp" />
+    <ClCompile Include="timeEstimate.cpp" />
+    <ClCompile Include="timematerialestimate.cpp" />
+    <ClCompile Include="WallComputation.cpp" />
+    <ClCompile Include="WallOverlap.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\libs\clipper\clipper.hpp" />
+    <ClInclude Include="AABB.h" />
+    <ClInclude Include="AABB3D.h" />
+    <ClInclude Include="algorithm.h" />
+    <ClInclude Include="CombPathh.h" />
+    <ClInclude Include="Date.h" />
+    <ClInclude Include="Duration.h" />
+    <ClInclude Include="ENUMSettings.h" />
+    <ClInclude Include="FanSpeedLayerTime.h" />
+    <ClInclude Include="fffGcodewriter.h" />
+    <ClInclude Include="fffPolygonGenrator.h" />
+    <ClInclude Include="floatpoint.h" />
+    <ClInclude Include="Flow_Temprature graph.h" />
+    <ClInclude Include="GcodeExport.h" />
+    <ClInclude Include="GCodeLayerThreader.h" />
+    <ClInclude Include="GCodePath.h" />
+    <ClInclude Include="GCodePathConfig.h" />
+    <ClInclude Include="gettime.h" />
+    <ClInclude Include="Infill.h" />
+    <ClInclude Include="LayerIndex.h" />
+    <ClInclude Include="layerPart.h" />
+    <ClInclude Include="LinearAlgebra2D.h" />
+    <ClInclude Include="LinesPolygonCrossing.h" />
+    <ClInclude Include="ListPolyIt.h" />
+    <ClInclude Include="Lock.h" />
+    <ClInclude Include="logoutput.h" />
+    <ClInclude Include="math.h" />
+    <ClInclude Include="MergeInfillLines.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="multivolumes.h" />
+    <ClInclude Include="NozzelTempInsert.h" />
+    <ClInclude Include="PathConfigStorage.h" />
+    <ClInclude Include="Polygon.h" />
+    <ClInclude Include="PolygonPoint.h" />
+    <ClInclude Include="PolygonProximityLinker.h" />
+    <ClInclude Include="Polygonutils.h" />
+    <ClInclude Include="Preheat.h" />
+    <ClInclude Include="IntpointIrfan.h" />
+    <ClInclude Include="LayerBufferPlan.h" />
+    <ClInclude Include="LayerPlan.h" />
+    <ClInclude Include="LDNIcpuOperation.h" />
+    <ClInclude Include="LDNIcpuSolid.h" />
+    <ClInclude Include="LDNIcudaOperation.h" />
+    <ClInclude Include="LDNIcudaSolid.h" />
+    <ClInclude Include="LDNIDataBoard.h" />
+    <ClInclude Include="Optional.h" />
+    <ClInclude Include="PathOrderOptimizer.h" />
+    <ClInclude Include="PMBody.h" />
+    <ClInclude Include="Point3.h" />
+    <ClInclude Include="PrintFeature.h" />
+    <ClInclude Include="Progress.h" />
+    <ClInclude Include="ProgressEstimator.h" />
+    <ClInclude Include="ProgressEstimatorLinear.h" />
+    <ClInclude Include="ProgressStageEstimator.h" />
+    <ClInclude Include="ProximityPointLink.h" />
+    <ClInclude Include="Raft.h" />
+    <ClInclude Include="Ratio.h" />
+    <ClInclude Include="RetractionConfig.h" />
+    <ClInclude Include="scan_common.h" />
+    <ClInclude Include="SkinInfillAreaComputation.h" />
+    <ClInclude Include="SkirtBrim.h" />
+    <ClInclude Include="SliceDataStorage.h" />
+    <ClInclude Include="Slicer.h" />
+    <ClInclude Include="SpaceFillType.h" />
+    <ClInclude Include="SparseGrid.h" />
+    <ClInclude Include="SparseLineGrid.h" />
+    <ClInclude Include="SparsePointGrid.h" />
+    <ClInclude Include="SparsePointGridInclusive.h" />
+    <ClInclude Include="String.h" />
+    <ClInclude Include="SupportInfillPart.h" />
+    <ClInclude Include="SupportInfillParth.h" />
+    <ClInclude Include="SVG.h" />
+    <ClInclude Include="SymmetricPair.h" />
+    <ClInclude Include="Temprature.h" />
+    <ClInclude Include="timeEstimate.h" />
+    <ClInclude Include="TimeKeeper.h" />
+    <ClInclude Include="timeMaterialEstimate.h" />
+    <ClInclude Include="UnionFind.h" />
+    <ClInclude Include="WallComputation.h" />
+    <ClInclude Include="WallOverlap.h" />
+    <ClInclude Include="WipeScriptConfig.h" />
+    <ClInclude Include="ZigZagConnector.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GLKLib\GLKLib.vcxproj">
+      <Project>{9e461da4-1748-4007-8b25-2554356dc132}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="LDNIcudaContouring.cu" />
+    <CudaCompile Include="LDNIcudaNormalProcessing.cu" />
+    <CudaCompile Include="LDNIcudaOffsetting.cu" />
+    <CudaCompile Include="LDNIcudaOffsettingByHashing.cu" />
+    <CudaCompile Include="LDNIcudaOperation.cu" />
+    <CudaCompile Include="LDNIcudaSolid.cu" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />
+  </ImportGroup>
+</Project>

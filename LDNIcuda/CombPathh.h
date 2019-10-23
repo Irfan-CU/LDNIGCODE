@@ -1,0 +1,17 @@
+#pragma once
+//Copyright (c) 2018 Ultimaker B.V.
+//CuraEngine is released under the terms of the AGPLv3 or higher.
+
+#ifndef PATH_PLANNING_COMB_PATH_H
+#define PATH_PLANNING_COMB_PATH_H
+
+#include "IntpointIrfan.h"
+
+	struct CombPath : public  std::vector<curaIrfan::PointIrfan> //!< A single path either inside or outise the parts
+	{
+		bool cross_boundary = false; //!< Whether the path crosses a boundary.
+	};
+
+//namespace cura
+
+#endif//PATH_PLANNING_COMB_PATH_H
