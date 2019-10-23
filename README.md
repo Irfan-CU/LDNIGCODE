@@ -22,7 +22,7 @@ The most Important Part in this code for genrating LDNI FDM Toolpaths is
 
 *****Errors:
 
-1-Code is working till step 2 but the values being written in the file are not logical working on that.
+1-Code is working but the values being written in the file are not logical working on that.
 2-Printing Nozell Accelration after every Path.
 3-Output GCode Path coordinates are 10 times of what they should be.
 
