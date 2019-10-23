@@ -158,9 +158,9 @@
 			{
 				if (path.isTravelPath())
 					continue;
-				double speed = path.getSpeed() * factor;
+				double speed = path.config->getSpeed() * factor;
 				if (speed < minimalSpeed)
-					factor = minimalSpeed / path.getSpeed();
+					factor = minimalSpeed / path.config->getSpeed();
 			}
 
 			//Only slow down for the minimal time if that will be slower.

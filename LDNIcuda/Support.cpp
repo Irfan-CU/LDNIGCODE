@@ -403,7 +403,7 @@
 			}
 
 			// optimize polygons: remove unnecessary verts
-			insets[inset_idx].simplify();
+			//insets[inset_idx].simplify();
 			if (insets[inset_idx].size() < 1)
 			{
 				insets.pop_back();

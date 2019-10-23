@@ -59,8 +59,8 @@ MergeInfillLines::MergeInfillLines(ExtruderPlan& plan)
 		curaIrfan::PointIrfan average_first_path;
 
 		coord_tIrfan first_path_length = calcPathLength(first_path_start, first_path);
-		coord_tIrfan first_path_length_flow = first_path_length * first_path.flow1; //To get the volume we don't need to include the line width since it's the same for both lines.
-		const coord_tIrfan line_width = first_path.getLineWidth1();
+		coord_tIrfan first_path_length_flow = first_path_length * first_path.flow; //To get the volume we don't need to include the line width since it's the same for both lines.
+		const coord_tIrfan line_width = first_path.config->getLineWidth();
 
 		if (first_is_already_merged)
 		{
@@ -86,7 +86,7 @@ MergeInfillLines::MergeInfillLines(ExtruderPlan& plan)
 			curaIrfan::operator+=(average_second_path, point);
 			//average_second_path += point;
 		}
-		second_path_length *= second_path.flow1;
+		second_path_length *= second_path.flow;
 		coord_tIrfan second_path_length_flow = second_path_length;
 		average_second_path = curaIrfan::operator/(average_second_path, static_cast<coord_tIrfan>(second_path.points.size() + 1));
 		//average_second_path = average_second_path / static_cast<coord_tIrfan>(second_path.points.size() + 1);
@@ -156,7 +156,7 @@ MergeInfillLines::MergeInfillLines(ExtruderPlan& plan)
 			error_area = 0;
 		}
 
-		first_path.flow1 = new_flow;
+		first_path.flow = new_flow;
 
 		return true;
 	}
@@ -166,7 +166,7 @@ MergeInfillLines::MergeInfillLines(ExtruderPlan& plan)
 	{
 		const curaIrfan::PointIrfan first_path_end = first_path.points.back();
 		const curaIrfan::PointIrfan second_path_end = second_path.points.back();
-		const coord_tIrfan line_width = first_path.getLineWidth1();
+		const coord_tIrfan line_width = first_path.config->getLineWidth();
 
 		// This check prevents [CURA-5690] fat skin lines:
 		const coord_tIrfan line_width_squared = line_width * line_width;
@@ -307,11 +307,11 @@ MergeInfillLines::MergeInfillLines(ExtruderPlan& plan)
 			{
 				allow_try_merge = false;
 			}
-			if (first_path.type != second_path.type) //Only merge lines that have the same type.
+			if (first_path.config->type != second_path.config->type) //Only merge lines that have the same type.
 			{
 				allow_try_merge = false;
 			}
-			if (first_path.type != PrintFeatureType::Infill && first_path.type != PrintFeatureType::Skin) //Only merge skin and infill lines.
+			if (first_path.config->type != PrintFeatureType::Infill && first_path.config->type != PrintFeatureType::Skin) //Only merge skin and infill lines.
 			{
 				allow_try_merge = false;
 			}

@@ -30,7 +30,7 @@ bool SupportInfillPart::generateInsetsAndInfillAreas()
 		// if there are walls, we use the inner area as the infill area
 		infill_area = insets.back().offset(-support_line_width / 2);
 		// optimize polygons: remove unnecessary verts
-		infill_area.simplify();
+		//infill_area.simplify();
 	}
 
 	return true;

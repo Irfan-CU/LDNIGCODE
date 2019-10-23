@@ -118,7 +118,7 @@ Polygons SliceDataStorage::getLayerOutlines(const int layer_nr, const bool inclu
 		if (layer_nr >= 0)
 		{
 				const SliceLayer& layer = Layers[layer_nr];
-				printf("layer parts are %d \n", layer.parts.size());
+				
 				layer.getOutlines(total, external_polys_only);
 				
 				maximum_resolution = MM2INT(0.04);// std::min(maximum_resolution, mesh.settings.get<coord_t>("meshfix_maximum_resolution"));

@@ -22,7 +22,7 @@ std::vector<double> PathConfigStorage::getLineWidthFactorPerExtruder(const int& 
 	return ret;
 }
 
-GCodePathConfig createPerimeterGapConfig(const SliceMeshStorage& mesh, int layer_thickness, const int& layer_nr)
+GCodePathConfig createPerimeterGapConfig(const SliceDataStorage& mesh, int layer_thickness, const int& layer_nr)
 {
 	// The perimeter gap config follows the skin config, but has a different line width:
 	// wall_line_width_x divided by two because the gaps are between 0 and 1 times the wall line width
@@ -39,7 +39,7 @@ GCodePathConfig createPerimeterGapConfig(const SliceMeshStorage& mesh, int layer
 	);
 }
 
-PathConfigStorage::MeshPathConfigs::MeshPathConfigs(const SliceMeshStorage& mesh, const coord_tIrfan layer_thickness, const int& layer_nr, const std::vector<double>& line_width_factor_per_extruder)
+PathConfigStorage::MeshPathConfigs::MeshPathConfigs(const SliceDataStorage& storage, const coord_tIrfan layer_thickness, const int& layer_nr, const std::vector<double>& line_width_factor_per_extruder)
 	: inset0_config(
 		PrintFeatureType::OuterWall
 		, MM2INT(0.35)* 120//line_width_factor_per_extruder[mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr]
@@ -48,7 +48,7 @@ PathConfigStorage::MeshPathConfigs::MeshPathConfigs(const SliceMeshStorage& mesh
 		, GCodePathConfig::SpeedDerivatives{ 20, 500,5}
 	)
 	, insetX_config(
-		PrintFeatureType::OuterWall
+		PrintFeatureType::InnerWall
 		, MM2INT(0.35) * 120//line_width_factor_per_extruder[mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr]
 		, layer_thickness
 		, (layer_nr == 0) ? 100 : 100
@@ -121,7 +121,7 @@ PathConfigStorage::MeshPathConfigs::MeshPathConfigs(const SliceMeshStorage& mesh
 		, GCodePathConfig::SpeedDerivatives{ 13.33,500, 5 }
 	)
 
-	, perimeter_gap_config(createPerimeterGapConfig(mesh, layer_thickness, layer_nr))
+	, perimeter_gap_config(createPerimeterGapConfig(storage, layer_thickness, layer_nr))
 {
 	infill_config.reserve(MAX_INFILL_COMBINE);
 
@@ -212,11 +212,9 @@ PathConfigStorage::PathConfigStorage(const SliceDataStorage& storage, const int&
 		);
 	}
 
-	mesh_configs.reserve(storage.meshes.size());//  storage.meshes.size());
-	for (const SliceMeshStorage& mesh_storage : storage.meshes)
-	{
-		mesh_configs.emplace_back(mesh_storage, layer_thickness, layer_nr, line_width_factor_per_extruder);
-	}
+	mesh_configs.reserve(1);//  storage.meshes.size());
+	mesh_configs.emplace_back(storage, layer_thickness, layer_nr, line_width_factor_per_extruder);
+	
 
 	support_infill_config.reserve(MAX_INFILL_COMBINE);
 	const float support_infill_line_width_factor = 120.0;

@@ -51,7 +51,7 @@
 		{ // compute infill_skin_overlap
 			//const ExtruderTrain& train_infill = mesh.settings.get<ExtruderTrain&>("infill_extruder_nr");
 			const double infill_line_width_factor = (layer_nr == 0) ? 120 : double(1.0);
-			coord_tIrfan infill_line_distance = MM2INT(0.42);
+			coord_tIrfan infill_line_distance = MM2INT(6.3); //20%infill Density
 			coord_tIrfan infill_line_width =  MM2INT(0.42);
 			const bool infill_is_dense = infill_line_distance < infill_line_width * infill_line_width_factor + 10;
 			if (!infill_is_dense)// && mesh.settings.get<EFillMethod>("infill_pattern") != EFillMethod::CONCENTRIC)
@@ -436,7 +436,7 @@
 		}
 		const size_t wall_line_count = 3;// mesh.settings.get<size_t>("wall_line_count");
 		//double infill_line_distance = 0.42;// mesh.settings.get<coord_tIrfan>("infill_line_distance");
-		const coord_tIrfan infill_line_distance = MM2INT(0.42);
+		const coord_tIrfan infill_line_distance = MM2INT(6.3);
 		coord_tIrfan offset_from_inner_wall = -infill_skin_overlap;
 		//printf("the infill skin overlap is %d \n", -infill_skin_overlap);
 		if (wall_line_count > 0)
@@ -452,7 +452,7 @@
 		//printf("the infill size is %d \n points in parts are %d \n", infill.size(),part.insets.back().pointCount());
 		infill.removeSmallAreas(MIN_AREA_SIZE);
 		part.infill_area = infill.offset(infill_skin_overlap);
-		//printf("****the infill size for the part is %d and point count is %d \n",infill.size(),part.infill_area.pointCount());
+		//printf("****the infill size for the part is %d and point count is %d and the layer is %d\n",infill.size(),part.infill_area.pointCount(),layer_nr);
 	}
 
 	/*
@@ -578,7 +578,7 @@
 
 				if (infill_area.size() == 0 || layer_idx < min_layer || layer_idx > max_layer)
 				{ // initialize infill_area_per_combine_per_density empty
-					part.infill_area_per_combine_per_density.emplace_back(); // create a new infill_area_per_combine
+					part.infill_area_per_combine_per_density.emplace_back(); // create a new infill_area_per_combine		//100%dense
 					part.infill_area_per_combine_per_density.back().emplace_back(); // put empty infill area in the newly constructed infill_area_per_combine
 					//printf("doing part.infill_area_per_combine_per_density.back().emplace_back() @ line 548 of skin infillAreaComputation\n");
 																					// note: no need to copy part.infill_area, cause it's the empty vector anyway
@@ -634,7 +634,7 @@
 		
 		//printf("inside the combine\n");
 		
-		const coord_tIrfan layer_height = storage.getlayer_thickness();
+		const coord_tIrfan layer_height = storage.Layers[0].thickness;
 		const coord_tIrfan infill_sparse_thickness = MM2INT(0.2);
 		//printf("inside the combine\n");
 		const size_t amount = std::max(1U, round_divide(infill_sparse_thickness, std::max(layer_height, coord_tIrfan(1))));
@@ -643,7 +643,7 @@
 		{
 			return;
 		}
-		//printf("inside the combine\n");
+		printf("inside the combine\n");
 		/* We need to round down the layer index we start at to the nearest
 		divisible index. Otherwise we get some parts that have infill at divisible
 		layers and some at non-divisible layers. Those layers would then miss each

@@ -73,7 +73,7 @@ public:
 	void writePrintAcceleration(const double& acceleration);
 	void writeJerk(const double& jerk);
 	void writeTravelAcceleration(const double& acceleration);
-	void writeExtrusion(const curaIrfan::PointIrfan& p, const double& speed, double extrusion_mm3_per_mm, const PrintFeatureType& feature, coord_tIrfan layer_thickness, bool update_extrusion_offset = false);
+	void writeExtrusion(const curaIrfan::PointIrfan& p,coord_tIrfan layer_thickness, const double& speed, double extrusion_mm3_per_mm, PrintFeatureType feature, bool update_extrusion_offset = false);
 	void writeExtrusion(const Point3& p, const double& speed, double extrusion_mm3_per_mm, const PrintFeatureType& feature, coord_tIrfan layer_thickness, bool update_extrusion_offset = false);
 	void writeExtrusion(const int x, const int y, const int z, const double& speed, const double extrusion_mm3_per_mm, const PrintFeatureType& feature, coord_tIrfan layer_thickness,const bool update_extrusion_offset = false);
 	void writeFXYZE(const double& speed, const int x, const int y, const int z, const double e, const PrintFeatureType& feature);

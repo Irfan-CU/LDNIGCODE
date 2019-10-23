@@ -27,6 +27,7 @@
 			constexpr bool include_prime_tower = false; //Include manually below.
 			constexpr bool external_outlines_only = false; //Remove manually below.
 			first_layer_outline = storage.getLayerOutlines(layer_nr, include_support, include_prime_tower, external_outlines_only);
+			printf("the first layer outline size is %d \n", first_layer_outline.size());
 			first_layer_outline = first_layer_outline.unionPolygons(); //To guard against overlapping outlines, which would produce holes according to the even-odd rule.
 			Polygons first_layer_empty_holes;
 			if (external_only)
@@ -70,7 +71,7 @@
 		first_layer_outline = first_layer_outline.offset(join_distance).offset(-join_distance); // merge adjacent models into single polygon
 		constexpr coord_tIrfan smallest_line_length = 200;
 		constexpr coord_tIrfan largest_error_of_removed_point = 50;
-		first_layer_outline.simplify(smallest_line_length, largest_error_of_removed_point); // simplify for faster processing of the brim lines
+		//first_layer_outline.simplify(smallest_line_length, largest_error_of_removed_point); // simplify for faster processing of the brim lines
 		if (first_layer_outline.size() == 0)
 		{
 			printf("Couldn't generate skirt / brim! No polygons on first layer.\n");
@@ -111,7 +112,7 @@
 
 	void SkirtBrim::generate(SliceDataStorage& storage, Polygons first_layer_outline, int start_distance, unsigned int primary_line_count, bool allow_helpers /*= true*/)
 	{
-		const bool is_skirt = start_distance > 0;
+		const bool is_skirt = start_distance > 0;	//false
 
 		//Scene& scene = Application::getInstance().current_slice->scene;
 		const size_t adhesion_extruder_nr = 0;// scene.current_mesh_group->settings.get<ExtruderTrain&>("adhesion_extruder_nr").extruder_nr;

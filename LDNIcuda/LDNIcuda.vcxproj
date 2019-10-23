@@ -236,6 +236,7 @@
     <ClInclude Include="AABB.h" />
     <ClInclude Include="AABB3D.h" />
     <ClInclude Include="algorithm.h" />
+    <ClInclude Include="Comb.h" />
     <ClInclude Include="CombPathh.h" />
     <ClInclude Include="Date.h" />
     <ClInclude Include="Duration.h" />

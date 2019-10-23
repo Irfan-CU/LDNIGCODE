@@ -181,21 +181,25 @@ LayerPlan& FffGcodeWriter::processLayer(SliceDataStorage& storage, int layer_nr,
 	printf("set the layer plan \n");
 	if (include_helper_parts && layer_nr == 0)
 	{ // process the skirt or the brim of the starting extruder.
-		int extruder_nr = 0;
+
 		processSkirtBrim(storage, gcode_layer, extruder_nr);
+		printf("processed SkirtBrim \n");
 		
 	}
 	
 	bool disable_path_optimisation = false;
 	int mesh_idx = 0;
 	
+	const SliceMeshStorage& mesh = storage.meshes[mesh_idx];
+	const PathConfigStorage::MeshPathConfigs& mesh_config = gcode_layer.configs_storage.mesh_configs[mesh_idx];
+	printf("mesh_config is %d \n", mesh_config.infill_config[0].getLayerThickness());
 	
 	for (int extruder_nr = 0; extruder_nr <= 1; extruder_nr++)
 	{
 
 		if (layer_nr >= 0)
 		{
-			addMeshLayerToGCode(storage, extruder_nr,gcode_layer);
+			addMeshLayerToGCode(storage, extruder_nr, mesh_config,gcode_layer);
 			//printf("the code is at the line 181of th eprogram \n");
 		}
 		// ensure we print the prime tower with this extruder, because the next layer begins with this extruder!
@@ -478,7 +482,7 @@ void FffGcodeWriter::calculateExtruderOrderPerLayer(const SliceDataStorage& stor
 	}
 }
 */
-void FffGcodeWriter::addMeshLayerToGCode(const SliceDataStorage& storage, const size_t extruder_nr, LayerPlan& gcode_layer) const
+void FffGcodeWriter::addMeshLayerToGCode(const SliceDataStorage& storage, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer) const
 {	
 	const SliceLayer& layer = storage.Layers[gcode_layer.getLayerNr()];	 // get layer # function tells that which layer to process
 
@@ -510,7 +514,7 @@ void FffGcodeWriter::addMeshLayerToGCode(const SliceDataStorage& storage, const 
 	{
 		//printf("the code is at the line 355 \n %d",part_idx);
 		const SliceLayerPart& part = layer.parts[part_idx];
-		addMeshPartToGCode(storage, extruder_nr, part, gcode_layer);//part n layer being added to the GCode
+		addMeshPartToGCode(storage, extruder_nr, part,mesh_config, gcode_layer);//part n layer being added to the GCode
 	}
 	processIroning(layer,  gcode_layer);
 
@@ -523,13 +527,13 @@ bool FffGcodeWriter::processIroning(const SliceLayer& layer,  LayerPlan& gcode_l
 	return added_something;
 }
 
-void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage&storage, const size_t extruder_nr, const SliceLayerPart& part, LayerPlan& gcode_layer) const
+void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage&storage, const size_t extruder_nr, const SliceLayerPart& part, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer) const
 {
 	printf("inside addMeshPartToGCode for the layer %d and the parts are \n ", gcode_layer.getLayerNr());
 
 	bool added_something = false;		
 
-	added_something = added_something | processInfill(storage, gcode_layer, extruder_nr, part);
+	added_something = added_something | processInfill(storage, gcode_layer, extruder_nr,mesh_config, part);
 	
 	//added_something = added_something | processInsets(storage, gcode_layer, mesh, extruder_nr, mesh_config, part);
 
@@ -553,16 +557,16 @@ void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage&storage, const si
 	gcode_layer.setIsInside(false);
 }
 
-bool FffGcodeWriter::processInfill(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr, const SliceLayerPart& part) const
+bool FffGcodeWriter::processInfill(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const
 {
 	printf("inside processInfill \n ");
 	//bool added_something = processMultiLayerInfill(storage, gcode_layer, extruder_nr, part);
-	bool added_something = processSingleLayerInfill(storage, gcode_layer, extruder_nr, part);
+	bool added_something = processSingleLayerInfill(storage, mesh_config, gcode_layer, extruder_nr, part);
 	printf("the boolean added_something is %d \n", added_something);
 	return added_something;
 }
 
-bool FffGcodeWriter::processMultiLayerInfill(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr, const SliceLayerPart& part) const
+bool FffGcodeWriter::processMultiLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer, const size_t extruder_nr, const SliceLayerPart& part) const
 {
 	printf("inside processMultiLayerInfill \n ");
 	const coord_tIrfan infill_line_distance = MM2INT(6.3);// mesh.settings.get<coord_t>("infill_line_distance");
@@ -587,11 +591,13 @@ bool FffGcodeWriter::processMultiLayerInfill(const SliceDataStorage& storage, La
 	for (unsigned int combine_idx = 1; combine_idx < part.infill_area_per_combine_per_density[0].size(); combine_idx++)
 	{
 		printf("line 404 in fffGCODEwriter.cpp \n");
-		const coord_tIrfan infill_line_width = MM2INT(0.42);// 0.42;
+		int layernum = gcode_layer.getLayerNr();
+		const coord_tIrfan layer_thickness = storage.Layers[0].thickness;
+		const coord_tIrfan infill_line_width = MM2INT(6.3);// 0.42;
 		const EFillMethod infill_pattern = EFillMethod::TRIANGLES;
 		const bool zig_zaggify_infill = true;// mesh.settings.get<bool>("zig_zaggify_infill") || infill_pattern == EFillMethod::ZIG_ZAG;
 		const bool connect_polygons = false;// mesh.settings.get<bool>("connect_infill_polygons");
-		const size_t infill_multiplier = 0;// mesh.settings.get<size_t>("infill_multiplier");
+		const size_t infill_multiplier = 1;// mesh.settings.get<size_t>("infill_multiplier");
 		Polygons infill_polygons;
 		Polygons infill_lines;
 		for (size_t density_idx = part.infill_area_per_combine_per_density.size() - 1; (int)density_idx >= 0; density_idx--)
@@ -626,36 +632,32 @@ bool FffGcodeWriter::processMultiLayerInfill(const SliceDataStorage& storage, La
 			gcode_layer.setIsInside(true); // going to print stuff inside print object
 			const bool enable_travel_optimization = false;//mesh.settings.get<bool>("infill_enable_travel_optimization");
 			//gcode_layer.addLinesByOptimizer(infill_lines, mesh_config.infill_config[0], zig_zaggify_infill ? SpaceFillType::PolyLines : SpaceFillType::Lines, enable_travel_optimization);
+			gcode_layer.addLinesByOptimizer(layer_thickness, mesh_config.infill_config[combine_idx], infill_lines, layernum, SpaceFillType::Lines, enable_travel_optimization);
 		}
 	}
 	printf("line  in 445 fffGCODEwriter.cpp %d \n", part.infill_area_per_combine_per_density.size());
 	return added_something;
 }
 
-bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr, const SliceLayerPart& part) const
+bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer, const size_t extruder_nr, const SliceLayerPart& part) const
 {
 	printf("inside processSingleLayerInfill \n ");
 	
 	const coord_tIrfan infill_line_distance = MM2INT(6.3);
-	printf("the infill line distance is %d \n", infill_line_distance);
 	printf("inside processSingleLayerInfill @ 634\n");
 	bool added_something = false;
 	PathConfigStorage::MeshPathConfigs *meshpath;
-	const coord_tIrfan infill_line_width = MM2INT(0.42);
+	const coord_tIrfan infill_line_width = mesh_config.infill_config[0].getLineWidth();
 		
 	Polygons infill_lines;
 	//const double infill_line_width = 0.42;
 	//const coord_tIrfan infill_line_width_int = MM2INT(infill_line_width);
 	//printf("Inside Singel Layer Infill and the infill area per is %d \n", part.infill_area_per_combine_per_density[0].size());
-	if (infill_line_distance== 0 || part.infill_area_per_combine_per_density[0].size() == 0)
+	if (infill_line_distance == 0 || part.infill_area_per_combine_per_density[0].size() == 0)
 	{
 		printf("error in single layer infill \n");
 		return false;
 	}
-
-
-	//Combine the 1 layer thick infill with the top/bottom skin and print that as one thing.
-	
 
 	const EFillMethod pattern = EFillMethod::TRIANGLES;
 	const bool zig_zaggify_infill = true;// mesh.settings.get<bool>("zig_zaggify_infill") || pattern == EFillMethod::ZIG_ZAG;
@@ -667,7 +669,8 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, L
 	PrintFeatureType feature = PrintFeatureType::Infill;
 	coord_tIrfan layer_height = gcode_layer.z;
 	
-	coord_tIrfan layer_thickness = storage.layer_thickness;
+	coord_tIrfan layer_thickness = mesh_config.infill_config[0].getLayerThickness();
+	printf("the layer thickness in the sigle layer is %d \n", layer_thickness);
 	int layernum = gcode_layer.getLayerNr();
 	//printf("inside the singellayerinfill line 474 \n");
 	if (storage.infill_angles.size() > 0)
@@ -683,19 +686,7 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, L
 		//printf("inside the singellayerinfill loop\n");
 		int infill_line_distance_here = infill_line_distance<<(density_idx +1) ; // the highest density infill combines with the next to create a grid with density_factor 1
 		int infill_shift = infill_line_distance_here / 2;
-		// infill shift explanation: [>]=shift ["]=line_dist
-// :       |       :       |       :       |       :       |         > furthest from top
-// :   |   |   |   :   |   |   |   :   |   |   |   :   |   |   |     > further from top
-// : | | | | | | | : | | | | | | | : | | | | | | | : | | | | | | |   > near top
-// >>"""""
-// :       |       :       |       :       |       :       |         > furthest from top
-// :   |   |   |   :   |   |   |   :   |   |   |   :   |   |   |     > further from top
-// : | | | | | | | : | | | | | | | : | | | | | | | : | | | | | | |   > near top
-// >>>>"""""""""
-// :       |       :       |       :       |       :       |         > furthest from top
-// :   |   |   |   :   |   |   |   :   |   |   |   :   |   |   |     > further from top
-// : | | | | | | | : | | | | | | | : | | | | | | | : | | | | | | |   > near top
-// >>>>>>>>"""""""""""""""""
+
 		SlicerLayer slicerlayer;
 	//	printf("inside the singellayerinfill loop 494\n");
 		
@@ -737,7 +728,7 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, L
 		gcode_layer.setIsInside(true); // going to print stuff inside print object
 		const bool enable_travel_optimization = false;// mesh.settings.get<bool>("infill_enable_travel_optimization");
 		printf("outside the lineoptimizer \n");
-		gcode_layer.addLinesByOptimizer(layer_thickness, infill_lines, layernum, SpaceFillType::Lines, enable_travel_optimization);
+		gcode_layer.addLinesByOptimizer(layer_thickness, mesh_config.infill_config[0], infill_lines, layernum, SpaceFillType::Lines, enable_travel_optimization);
 		//gcode_layer.addLinesByOptimizer(in/fill_lines,SpaceFillType::Lines, enable_travel_optimization,0);
 		
 	}

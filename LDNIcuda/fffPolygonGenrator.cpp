@@ -94,12 +94,12 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 	
 	printf("Print Layer count: %i\n", storage.print_layer_count);
 
-	AreaSupport::generateOverhangAreas(storage);
-	AreaSupport::generateSupportAreas(storage);
+	//AreaSupport::generateOverhangAreas(storage);
+	//AreaSupport::generateSupportAreas(storage);
 	//TreeSupport tree_support_generator(storage);
 	//tree_support_generator.generateSupportAreas(storage);
 
-	printf("the bool is %d \n", isEmptyLayer(storage, 0));
+	
 	if (!isEmptyLayer(storage, 0))
 	{
 		printf("Processing platform adhesion\n");

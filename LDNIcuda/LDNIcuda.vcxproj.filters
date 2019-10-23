@@ -430,6 +430,9 @@
     <ClInclude Include="SymmetricPair.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Comb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="LDNIcudaContouring.cu">

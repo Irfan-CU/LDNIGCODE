@@ -451,7 +451,7 @@ void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, cons
 	current_e_value = e;
 	//estimateCalculator.plan(TimeEstimateCalculator::Position(INT2MM(x), INT2MM(y), INT2MM(z), eToMm(e)), speed, feature);
 }
-void GCodeExport::writeExtrusion(const curaIrfan::PointIrfan& p, const double& speed, double extrusion_mm3_per_mm, const PrintFeatureType& feature, coord_tIrfan layer_thickness, bool update_extrusion_offset)
+void GCodeExport::writeExtrusion(const curaIrfan::PointIrfan& p, coord_tIrfan layer_thickness, const double& speed, double extrusion_mm3_per_mm, PrintFeatureType feature, bool update_extrusion_offset)
 {
 	writeExtrusion(Point3(p.X, p.Y, current_layer_z), speed, extrusion_mm3_per_mm, feature, layer_thickness, update_extrusion_offset);
 }

@@ -20,7 +20,8 @@
 #include "Optional.h"
 #include "Polygon.h"
 
-	class LayerPlan; // forward declaration so that ExtruderPlan can be a friend
+    class Comb;
+    class LayerPlan; // forward declaration so that ExtruderPlan can be a friend
 	class LayerPlanBuffer; // forward declaration so that ExtruderPlan can be a friend 
 	class SliceDataStorage;
 	class WallOverlapComputation;
@@ -235,7 +236,7 @@
 		const bool is_initial_layer; //!< Whether this is the first layer (which might be raft)
 		const bool is_raft_layer; //!< Whether this is a layer which is part of the raft
 		coord_tIrfan layer_thickness;
-
+		Comb* comb;
 		std::vector<curaIrfan::PointIrfan> layer_start_pos_per_extruder; //!< The starting position of a layer for each extruder
 		std::optional<curaIrfan::PointIrfan> last_planned_position; //!< The last planned XY position of the print head (if known)
 		
@@ -258,7 +259,7 @@
 		bool is_inside; //!< Whether the destination of the next planned travel move is inside a layer part
 		Polygons comb_boundary_inside1; //!< The minimum boundary within which to comb, or to move into when performing a retraction.
 		Polygons comb_boundary_inside2; //!< The boundary preferably within which to comb, or to move into when performing a retraction.
-		
+		bool  processconfigs;
 		coord_tIrfan comb_move_inside_distance;  //!< Whenever using the minimum boundary for combing it tries to move the coordinates inside by this distance after calculating the combing.
 		Polygons bridge_wall_mask; //!< The regions of a layer part that are not supported, used for bridging
 		Polygons overhang_mask; //!< The regions of a layer part where the walls overhang
@@ -276,7 +277,7 @@
 		 * \param speed_factor (optional) a factor which the speed will be multiplied by.
 		 * \return A path with the given config which is now the last path in LayerPlan::paths
 		 */
-		GCodePath* getLatestPathWithConfig(coord_tIrfan layer_thickness, int layernum, SpaceFillType space_fill_type, const double flow = 1.0, bool spiralize = false, const double speed_factor = 1.0);
+		GCodePath* getLatestPathWithConfig(coord_tIrfan layer_thickness, const GCodePathConfig& config, SpaceFillType space_fill_type, const Ratio flow = 1.0_r, bool spiralize = false, const Ratio speed_factor = 1.0_r);
 		
 	public:
 		size_t getExtruder() const
@@ -304,9 +305,9 @@
 
 		void setMesh(const std::string mesh_id);
 		
-		void addLinesByOptimizer(coord_tIrfan layer_thickness , const Polygons& polygons, int layernum, SpaceFillType space_fill_type, bool enable_travel_optimization = false, int wipe_dist = 0, float flow_ratio = 1.0, std::optional<curaIrfan::PointIrfan> near_start_location = std::optional<curaIrfan::PointIrfan>(), double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
+		void addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePathConfig& config, const Polygons& polygons, int layernum, SpaceFillType space_fill_type, bool enable_travel_optimization = false, int wipe_dist = 0, float flow_ratio = 1.0, std::optional<curaIrfan::PointIrfan> near_start_location = std::optional<curaIrfan::PointIrfan>(), double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
 	        
-		void addExtrusionMove(coord_tIrfan layer_thickness,  curaIrfan::PointIrfan p, int layernum, SpaceFillType space_fill_type, const double& flow = 1.0, bool spiralize = false, double speed_factor = 1.0, double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
+		void addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathConfig& config, curaIrfan::PointIrfan p, int layernum, SpaceFillType space_fill_type, const double& flow = 1.0, bool spiralize = false, double speed_factor = 1.0, double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
 	 	
 		bool getSkirtBrimIsPlanned(unsigned int extruder_nr) const
 		{
@@ -338,7 +339,7 @@
 		void optimizePaths(const curaIrfan::PointIrfan& starting_position);
 
 		void addPolygon(coord_tIrfan layer_thickness, int layer_nr, ConstPolygonRef polygon, int start_Idx, const GCodePathConfig& config, WallOverlapComputation* wall_overlap_computation = nullptr, coord_tIrfan wall_0_wipe_dist = 0, bool spiralize = false, const double& flow_ratio = 1.0, bool always_retract = false);
-
+	
 		
 		void addPolygonsByOptimizer(coord_tIrfan layer_thickness, int layer_nr, const Polygons& polygons, const GCodePathConfig& config, WallOverlapComputation* wall_overlap_computation = nullptr, const ZSeamConfig& z_seam_config = ZSeamConfig(), coord_tIrfan wall_0_wipe_dist = 0, bool spiralize = false, const double flow_ratio = 1.0, bool always_retract = false, bool reverse_order = false);
 
@@ -351,7 +352,7 @@
 			overhang_mask = polys;
 		}
 		
-		
+		bool ProcessCofigs_Storage();
 		
 
 	

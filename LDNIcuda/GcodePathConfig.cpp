@@ -6,7 +6,7 @@
 #include "GCodePathConfig.h"
 
 GCodePathConfig::GCodePathConfig(const GCodePathConfig& other)
-	: type1(other.type1)
+	: type(other.type)
 	, speed_derivatives(other.speed_derivatives)
 	, line_width(other.line_width)
 	, layer_thickness(other.layer_thickness)
@@ -20,9 +20,9 @@ GCodePathConfig::GCodePathConfig(const GCodePathConfig& other)
 
 
 GCodePathConfig::GCodePathConfig(const PrintFeatureType& type, const coord_tIrfan line_width, const coord_tIrfan layer_height, const double& flow, const GCodePathConfig::SpeedDerivatives speed_derivatives, const bool is_bridge_path, const double fan_speed)
-	: type1(type)
+	: type(type)
 	, speed_derivatives(speed_derivatives)
-	, line_width(MM2INT(0.35))
+	, line_width(line_width)
 	, layer_thickness(layer_height)
 	, flow(flow)
 	, extrusion_mm3_per_mm(calculateExtrusion())
