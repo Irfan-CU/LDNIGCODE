@@ -35,7 +35,7 @@
 		printf("indide Process Buffer and buffer size is  %d\n",buffer.size());
 		if (buffer.empty())
 		{
-			printf("Is buffer empty for the layer %d layer\n");
+			printf("Is buffer empty for the layer %d layer\n",layernum);
 			return nullptr;
 		}
 		processFanSpeedLayerTime();

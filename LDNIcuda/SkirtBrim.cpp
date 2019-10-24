@@ -76,6 +76,7 @@
 		{
 			printf("Couldn't generate skirt / brim! No polygons on first layer.\n");
 		}
+		printf("the first layer outline size is 2 %d \n", first_layer_outline.size());
 	}
 
 	int SkirtBrim::generatePrimarySkirtBrimLines(const coord_tIrfan start_distance, size_t primary_line_count, const coord_tIrfan primary_extruder_minimal_length, const Polygons& first_layer_outline, Polygons& skirt_brim_primary_extruder)
@@ -137,7 +138,7 @@
 		}
 
 		int offset_distance = generatePrimarySkirtBrimLines(start_distance, primary_line_count, primary_extruder_minimal_length, first_layer_outline, skirt_brim_primary_extruder);
-
+		printf("offset_distance is %d \n", offset_distance);
 		// handle support-brim
 	//	const ExtruderTrain& support_infill_extruder = scene.current_mesh_group->settings.get<ExtruderTrain&>("support_infill_extruder_nr");
 		bool support_brim_enable = false;

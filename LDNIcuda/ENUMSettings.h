@@ -66,6 +66,15 @@ enum class ESurfaceMode
 	BOTH
 };
 
+enum class EPlatformAdhesion
+{
+	SKIRT,
+	BRIM,
+	RAFT,
+	NONE
+};
+
+
 
 
 #endif

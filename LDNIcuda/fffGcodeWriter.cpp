@@ -67,37 +67,8 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 	}
 	gcode.writeLayerCountComment(total_layers);
 	std::string current_mesh = "NONMESH";
-	total_layers = 15;
 	int process_layer_starting_layer_nr = 0;
-	/*
-	{ // calculate the mesh order for each extruder
-		const size_t extruder_count = Application::getInstance().current_slice->scene.extruders.size();
-		mesh_order_per_extruder.reserve(extruder_count);
-		for (size_t extruder_nr = 0; extruder_nr < extruder_count; extruder_nr++)
-		{
-			mesh_order_per_extruder.push_back(calculateMeshOrder(storage, extruder_nr));
-		}
-	}
-	*/
-	//calculateExtruderOrderPerLayer(storage);
-	/*
-	const bool has_raft = true;
-	if (has_raft)
-	{
-		processRaft(storage);
-		// process filler layers to fill the airgap with helper object (support etc) so that they stick better to the raft.
-		// only process the filler layers if there is anything to print in them.
-		for (bool extruder_is_used_in_filler_layers : storage.getExtrudersUsed(-1))
-		{
-			if (extruder_is_used_in_filler_layers)
-			{
-				process_layer_starting_layer_nr = -Raft::getFillerLayerCount();
-				break;
-			}
-		}
-	}
-   */
-	printf("the program is at line 98\n");
+	//printf("the program is at line 98\n");
 	//LayerPlan& gcode_layer = processLayer(storage, process_layer_starting_layer_nr, total_layers);
 	total_layers = 10;
 	const std::function<LayerPlan* (int)>& produce_item = [&storage, total_layers, this](int layer_nr)
@@ -178,10 +149,10 @@ LayerPlan& FffGcodeWriter::processLayer(SliceDataStorage& storage, int layer_nr,
 	//size_t extruder_order = ;
 	size_t extruder_nr = 0;
 	LayerPlan& gcode_layer = *new LayerPlan(storage, layer_nr, z, layer_thickness, extruder_nr, fan_speed_layer_time_settings_per_extruder, comb_offset_from_outlines, first_outer_wall_line_width, avoid_distance);
-	printf("set the layer plan \n");
+	printf("set the layer plan for layer %d \n", gcode_layer.getLayerNr());
 	if (include_helper_parts && layer_nr == 0)
 	{ // process the skirt or the brim of the starting extruder.
-
+		
 		processSkirtBrim(storage, gcode_layer, extruder_nr);
 		printf("processed SkirtBrim \n");
 		
@@ -219,6 +190,7 @@ LayerPlan& FffGcodeWriter::processLayer(SliceDataStorage& storage, int layer_nr,
 
 void FffGcodeWriter::processSkirtBrim(SliceDataStorage& storage, LayerPlan& gcode_layer, unsigned int extruder_nr) const
 {
+	
 	coord_tIrfan layer_thickness = storage.getlayer_thickness();
 	printf("inside skirt brim\n");
 	if (gcode_layer.getSkirtBrimIsPlanned(extruder_nr))
@@ -226,6 +198,7 @@ void FffGcodeWriter::processSkirtBrim(SliceDataStorage& storage, LayerPlan& gcod
 		printf("not processing brim \n");
 		return;	 
 	}
+	
 	const Polygons& skirt_brim = storage.skirt_brim[extruder_nr];
 	gcode_layer.setSkirtBrimIsPlanned(extruder_nr);
 	if (skirt_brim.size() == 0)
@@ -418,6 +391,7 @@ void FffGcodeWriter::processStartingCode(const SliceDataStorage& storage, const 
 	const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[start_extruder_nr];
 	gcode.writeRetraction(retraction_config);
 	gcode.setExtruderFanNumber(start_extruder_nr);
+	gcode.writeComment("ProcessStatingCodeisfinished");
 	
 }
 

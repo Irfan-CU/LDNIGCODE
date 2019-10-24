@@ -12,7 +12,7 @@
 #endif // _OPENMP
 
 #include "fffPolygonGenrator.h"
-#include "infill.h"
+#include "Infill.h"
 #include "layerPart.h"
 
 #include "multivolumes.h" 
@@ -120,12 +120,28 @@ void FffPolygonGenerator::processPlatformAdhesion(SliceDataStorage& storage)
 {
 	
 	Polygons first_layer_outline;
-	coord_tIrfan primary_line_count;
+	coord_tIrfan primary_line_count=17;// train.settings.get<size_t>("brim_line_count");
 	bool should_brim_prime_tower = false;// storage.primeTower.enabled && mesh_group_settings.get<bool>("prime_tower_brim_enable");
 	
-	primary_line_count = 17;// train.settings.get<size_t>("brim_line_count");
-	SkirtBrim::getFirstLayerOutline(storage, primary_line_count, false, first_layer_outline);
-	SkirtBrim::generate(storage, first_layer_outline, 0, primary_line_count);
+	EPlatformAdhesion type = EPlatformAdhesion::BRIM;// ("adhesion_type"))
+	switch (type)
+	{
+	    case EPlatformAdhesion::BRIM:
+		coord_tIrfan primary_line_count = 17;
+		SkirtBrim::getFirstLayerOutline(storage, primary_line_count, false, first_layer_outline);
+		SkirtBrim::generate(storage, first_layer_outline, 0, primary_line_count);
+		break;
+	
+	}
+	// If brim for prime tower is used, add the brim for prime tower separately.
+	if (should_brim_prime_tower)
+	{
+		constexpr bool allow_helpers = false;
+	}
+
+
+
+
 	
 }
 

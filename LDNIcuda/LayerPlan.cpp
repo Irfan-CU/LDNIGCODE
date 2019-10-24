@@ -38,8 +38,10 @@ GCodePath* LayerPlan::getLatestPathWithConfig(coord_tIrfan layer_thickness, cons
 {
 	
 	std::vector<GCodePath>& paths = extruder_plans.back().paths;
+	
 	if (paths.size() > 0 && paths.back().config == &config && !paths.back().done && paths.back().flow == flow && paths.back().speed_factor == speed_factor && paths.back().mesh_id == current_mesh) // spiralize can only change when a travel path is in between
 	{
+		
 		return &paths.back();
 	}
 	paths.emplace_back(config, current_mesh, space_fill_type, flow, spiralize, speed_factor);
@@ -338,9 +340,11 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 			}
 			if (!path.isTravelPath() && last_extrusion_config != path.config)
 			{
-				PrintFeatureType type = PrintFeatureType::Infill;
-
-				gcode.writeTypeComment(type);
+				gcode.writeTypeComment(path.config->type);
+				if (path.config->isBridgePath())
+				{
+					gcode.writeComment("BRIDGE");
+				}
 				last_extrusion_config = path.config;
 				update_extrusion_offset = true;
 			}
@@ -612,9 +616,9 @@ void LayerPlan::addPolygonsByOptimizer(coord_tIrfan layer_thickness, int layer_n
 
 GCodePath& LayerPlan::addTravel(coord_tIrfan layer_thickness, int layernum, curaIrfan::PointIrfan  p, bool force_comb_retract)
 {
-	printf("inside add travel \n");
 	const GCodePathConfig& travel_config = configs_storage.travel_config_per_extruder[getExtruder()];
 	const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[getExtruder()];
+	const PrintFeatureType& check = travel_config.type;
 	
 	GCodePath* path = getLatestPathWithConfig(layer_thickness, travel_config, SpaceFillType::None);
 	
@@ -629,6 +633,7 @@ GCodePath& LayerPlan::addTravel(coord_tIrfan layer_thickness, int layernum, cura
 	const bool is_first_travel_of_layer = !static_cast<bool>(last_planned_position);
 	if (is_first_travel_of_layer)
 	{
+		
 		bypass_combing = true; // first travel move is bogus; it is added after this and the previous layer have been planned in LayerPlanBuffer::addConnectingTravelMove
 		first_travel_destination = p;
 		first_travel_destination_is_inside = is_inside;
