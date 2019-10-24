@@ -20,7 +20,6 @@ GCodeExport::GCodeExport()
 	, relative_extrusion(false)
 {
 	*output_stream << std::fixed;
-	printf("printf initalized the constructor \n");
 	current_e_value = 0;
 	current_extruder = 0;
 	current_fan_speed = -1;
@@ -424,7 +423,9 @@ curaIrfan::PointIrfan GCodeExport::getGcodePos(const coord_tIrfan x, const coord
 	
 }
 void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, const int z, const double e, const PrintFeatureType& feature)
-{	if (currentSpeed != speed)
+{	
+
+	if (currentSpeed != speed)
 	{
 		*output_stream << " F" << speed * 60;
 		currentSpeed = speed;
@@ -439,13 +440,16 @@ void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, cons
 	{
 		*output_stream << " Z" << MMtoStream{ z };
 	}
-	
+	//printf("the current speed is %f and the speed is %f \n", currentSpeed, speed);
+	if (layer_nr == 0)
+	{
+		current_e_offset = 0.000;
+	}
 	if (e + current_e_offset != current_e_value)
 	{
 	
 		const double output_e = (relative_extrusion) ? e + current_e_offset - current_e_value : e + current_e_offset;
-		
-		*output_stream << " " << "E" << output_e;
+		*output_stream << " E" << output_e;
 		
 	}
 	
