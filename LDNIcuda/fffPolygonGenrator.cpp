@@ -98,6 +98,24 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 	//AreaSupport::generateSupportAreas(storage);
 	//TreeSupport tree_support_generator(storage);
 	//tree_support_generator.generateSupportAreas(storage);
+	bool include_support = false;
+	bool include_prime_tower = false;
+	bool external_only = false;
+	
+	Polygons& check = storage.getLayerOutlines(0, include_support, include_prime_tower, external_only);
+	for (int i = 0; i < check.size(); i++)
+	{
+		ConstPolygonRef check1 = check[i];
+		for (int j = 0; j < check1.size(); j++)
+		{
+			curaIrfan::PointIrfan point_check = check1[j];
+			Point3 check2 = Point3(point_check.X, point_check.Y, 0.0);
+			printf("the point at the start before the platform adhesion the getlayeroutline %f and %f \n", INT2MM(check2.x), INT2MM(check2.y));
+		}
+	
+	}
+    
+	
 
 	
 	if (!isEmptyLayer(storage, 0))
@@ -123,26 +141,11 @@ void FffPolygonGenerator::processPlatformAdhesion(SliceDataStorage& storage)
 	coord_tIrfan primary_line_count=17;// train.settings.get<size_t>("brim_line_count");
 	bool should_brim_prime_tower = false;// storage.primeTower.enabled && mesh_group_settings.get<bool>("prime_tower_brim_enable");
 	
-	EPlatformAdhesion type = EPlatformAdhesion::BRIM;// ("adhesion_type"))
-	switch (type)
-	{
-	    case EPlatformAdhesion::BRIM:
-		coord_tIrfan primary_line_count = 17;
-		SkirtBrim::getFirstLayerOutline(storage, primary_line_count, false, first_layer_outline);
-		SkirtBrim::generate(storage, first_layer_outline, 0, primary_line_count);
-		break;
-	
-	}
-	// If brim for prime tower is used, add the brim for prime tower separately.
-	if (should_brim_prime_tower)
-	{
-		constexpr bool allow_helpers = false;
-	}
+	EPlatformAdhesion type = EPlatformAdhesion::BRIM;
+	SkirtBrim::getFirstLayerOutline(storage, primary_line_count, false, first_layer_outline);
+	//positive till here
+	SkirtBrim::generate(storage, first_layer_outline, 0, primary_line_count);
 
-
-
-
-	
 }
 
 /*
@@ -213,6 +216,7 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 	storage.setlayer_thickness(layer_thickness);
 
 	printf("slice layer count is %d and %d \n", slice_layer_count, layer_thickness);
+	printf("the sotrage model dimensions are %f %f %f \n", INT2MM(storage.model_max.x), INT2MM(storage.model_max.y), INT2MM(storage.model_max.z));
 
 
 //	printf("the storage.model_min.x is %d and storage.model_min.y is %d  storage.model_min.z is %d storage.model_max.x is %d storage.model_max.y is %d  storage.model_max.z is %d \n", storage.model_min.x, storage.model_min.y, storage.model_min.z, storage.model_max.x, storage.model_max.y, storage.model_max.z);

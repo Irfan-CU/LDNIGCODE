@@ -409,6 +409,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 						gcode.writeExtrusion(path.points[point_idx], layer_thicnkess, speed, path.getExtrusionMM3perMM(), path.config->type, update_extrusion_offset);
 					}
 				}
+				gcode.writeComment(";done with one path");
 			}
 		}
 		extruder_plan.handleAllRemainingInserts(gcode);

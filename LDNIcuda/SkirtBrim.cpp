@@ -13,6 +13,7 @@
 		//const ExtruderTrain& support_infill_extruder = Application::getInstance().current_slice->scene.current_mesh_group->settings.get<ExtruderTrain&>("support_infill_extruder_nr");
 		bool brim_outside_only = true;
 		const bool external_only = is_skirt || brim_outside_only; //Whether to include holes or not. Skirt doesn't have any holes.
+		
 		const int layer_nr = 0;
 		if (is_skirt)
 		{
@@ -29,43 +30,16 @@
 			first_layer_outline = storage.getLayerOutlines(layer_nr, include_support, include_prime_tower, external_outlines_only);
 			printf("the first layer outline size is %d \n", first_layer_outline.size());
 			first_layer_outline = first_layer_outline.unionPolygons(); //To guard against overlapping outlines, which would produce holes according to the even-odd rule.
+			printf("the first layer outline size after union is %d \n", first_layer_outline.size());
+			
 			Polygons first_layer_empty_holes;
+			
 			if (external_only)
 			{
 				first_layer_empty_holes = first_layer_outline.getEmptyHoles();
 				first_layer_outline = first_layer_outline.removeEmptyHoles();
 			}
-			/*
-			if (storage.support.generated && primary_line_count > 0 && !storage.support.supportLayers.empty())
-			{ // remove model-brim from support
-				SupportLayer& support_layer = storage.support.supportLayers[0];
-				bool brim_replaces_support = true;//can be changed
-				if (brim_replaces_support)
-				{
-					// avoid gap in the middle
-					//    V
-					//  +---+     +----+
-					//  |+-+|     |+--+|
-					//  || ||     ||[]|| > expand to fit an extra brim line
-					//  |+-+|     |+--+|
-					//  +---+     +----+
-					const coord_tIrfan primary_extruder_skirt_brim_line_width = MM2INT(0.35) * 120;
-					Polygons model_brim_covered_area = first_layer_outline.offset(primary_extruder_skirt_brim_line_width * (primary_line_count + primary_line_count % 2), ClipperLib::jtRound); // always leave a gap of an even number of brim lines, so that it fits if it's generating brim from both sides
-					if (external_only)
-					{ // don't remove support within empty holes where no brim is generated.
-						model_brim_covered_area.add(first_layer_empty_holes);
-					}
-					AABB model_brim_covered_area_boundary_box(model_brim_covered_area);
-					support_layer.excludeAreasFromSupportInfillAreas(model_brim_covered_area, model_brim_covered_area_boundary_box);
-				}
-				for (const SupportInfillPart& support_infill_part : support_layer.support_infill_parts)
-				{
-					first_layer_outline.add(support_infill_part.outline);
-				}
-				first_layer_outline.add(support_layer.support_bottom);
-				first_layer_outline.add(support_layer.support_roof);
-			}
-*/
+			
 		}
 		constexpr coord_tIrfan join_distance = 20;
 		first_layer_outline = first_layer_outline.offset(join_distance).offset(-join_distance); // merge adjacent models into single polygon
@@ -76,6 +50,20 @@
 		{
 			printf("Couldn't generate skirt / brim! No polygons on first layer.\n");
 		}
+		/*
+		Polygons& check = first_layer_outline;
+		ConstPolygonRef check1 = check[0];	  
+		for (int i = 0; i < check1.size(); i++)
+		{
+			curaIrfan::PointIrfan point_check = check1[i];
+			Point3 check2 = Point3(point_check.X, point_check.Y, 0.0);
+			printf("the point at the start of the polygon is inside the getlayeroutline %f and %f \n", INT2MM(check2.x), INT2MM(check2.y));
+		}
+		Positive till here
+		*/
+		
+
+
 		printf("the first layer outline size is 2 %d \n", first_layer_outline.size());
 	}
 
@@ -113,6 +101,7 @@
 
 	void SkirtBrim::generate(SliceDataStorage& storage, Polygons first_layer_outline, int start_distance, unsigned int primary_line_count, bool allow_helpers /*= true*/)
 	{
+		printf("inside generate\n");
 		const bool is_skirt = start_distance > 0;	//false
 
 		//Scene& scene = Application::getInstance().current_slice->scene;
@@ -195,6 +184,7 @@
 		}
 
 		{ // process other extruders' brim/skirt (as one brim line around the old brim)
+			printf("inside the loop \n");
 			int last_width = primary_extruder_skirt_brim_line_width;
 			std::vector<bool> extruder_is_used = storage.getExtrudersUsed();
 			for (size_t extruder_nr = 0; extruder_nr < 1; extruder_nr++)
@@ -217,7 +207,18 @@
 					storage.skirt_brim[extruder_nr].add(first_layer_outline.offset(offset_distance, ClipperLib::jtRound));
 					offset_distance += width;
 				}
+				
 			}
+			Polygons&check1 = storage.skirt_brim[0];
+			ConstPolygonRef check2 = check1[0];
+			for (int i = 0; i < check2.size(); i++)
+			{
+				const curaIrfan::PointIrfan point_check = check2[i];
+				Point3 check = Point3(point_check.X, point_check.Y, 0.0);
+				printf("the point at the start of the polygon is inside the platformadhesion %f and %f \n", INT2MM(check.x), INT2MM(check.y));
+
+			}
+			
 		}
 	}
 

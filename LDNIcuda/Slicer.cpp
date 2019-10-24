@@ -214,10 +214,12 @@
 					segment.segmentidx = edge_id;
 					
 
-					const coord_tIrfan xx_int = MM2INT(xx * 10000);
-					const coord_tIrfan aa_int = MM2INT(aa * 10000);
-					const coord_tIrfan zz_int = MM2INT(zz * 10000);
-					const coord_tIrfan cc_int = MM2INT(cc * 10000);
+					const coord_tIrfan xx_int = MM2INT(xx * 30);
+					const coord_tIrfan aa_int = MM2INT(aa * 30);
+					const coord_tIrfan zz_int = MM2INT(zz * 30);
+					const coord_tIrfan cc_int = MM2INT(cc * 30);
+
+					
 
 					curaIrfan::PointIrfan st(xx_int, zz_int);
 					curaIrfan::PointIrfan ed(aa_int, cc_int);
@@ -234,18 +236,25 @@
 					{
 						poly.add(segment.end);
 						poly.add(segment.start);   
+						
 					}
-					else
+					else if (edge!=1 && edge != mesh1->GetVSAEdgeList().GetCount())
 					{
 						poly.add(segment.start);
-						poly.size();
+						
+					}
+					else 
+
+					{
+						poly.add(segment.end);
+						poly.add(segment.start);
 						
 					}
 					edge++;
 					
 				}
 				layers[layer_nr].polygons.add(poly);
-				//printf("the polygons point count is %d \n", layers[layer_nr].polygons.pointCount());
+				printf("the polygons point count is %d \n", layers[layer_nr].polygons.pointCount());
 				mesh_count++;
 				if (meshin_layer[layer_nr] == mesh_count)
 				{
