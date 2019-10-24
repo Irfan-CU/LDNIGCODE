@@ -1,6 +1,7 @@
 
 #include <cstring>
 
+#include "ExtruderTrain.h"
 #include "LayerPlan.h"
 #include "MergeInfillLines.h"
 #include "Raft.h"
@@ -158,6 +159,79 @@ void LayerPlan::setMesh(const std::string mesh_id)
 	current_mesh = mesh_id;
 }
 
+ExtruderTrain* LayerPlan::getLastPlannedExtruderTrain()
+{
+	return last_planned_extruder;
+}
+/*void LayerPlan::planPrime()
+{
+	forceNewPathStart();
+	constexpr float prime_blob_wipe_length = 10.0;
+	GCodePath& prime_travel = addTravel_simple(getLastPlannedPositionOrStartingPosition() + curaIrfan::PointIrfan(0, MM2INT(prime_blob_wipe_length)));
+	prime_travel.retract = false;
+	prime_travel.perform_z_hop = false;
+	prime_travel.perform_prime = true;
+	forceNewPathStart();
+}
+*/
+/*
+bool LayerPlan::setExtruder(const size_t extruder_nr)
+{
+	if (extruder_nr == getExtruder())
+	{
+		return false;
+	}
+	setIsInside(false);
+	{ // handle end position of the prev extruder
+		ExtruderTrain* extruder = getLastPlannedExtruderTrain();
+		const bool end_pos_absolute = true;// extruder->settings.get<bool>("machine_extruder_end_pos_abs");
+		Point end_pos(extruder->settings.get<coord_t>("machine_extruder_end_pos_x"), extruder->settings.get<coord_t>("machine_extruder_end_pos_y"));
+		if (!end_pos_absolute)
+		{
+			end_pos += getLastPlannedPositionOrStartingPosition();
+		}
+		else
+		{
+			const curaIrfan::PointIrfan extruder_offset(MM2INT(0.0), MM2INT(0.0));// extruder->settings.get<coord_t>("machine_nozzle_offset_x"), extruder->settings.get<coord_t>("machine_nozzle_offset_y"));
+			end_pos += extruder_offset; // absolute end pos is given as a head position
+		}
+		if (end_pos_absolute || last_planned_position)
+		{
+			addTravel(end_pos); //  + extruder_offset cause it
+		}
+	}
+	if (extruder_plans.back().paths.empty() && extruder_plans.back().inserts.empty())
+	{ // first extruder plan in a layer might be empty, cause it is made with the last extruder planned in the previous layer
+		extruder_plans.back().extruder_nr = extruder_nr;
+	}
+	else
+	{
+		extruder_plans.emplace_back(extruder_nr, layer_nr, is_initial_layer, is_raft_layer, layer_thickness, fan_speed_layer_time_settings_per_extruder[extruder_nr], storage.retraction_config_per_extruder[extruder_nr]);
+		assert(extruder_plans.size() <= Application::getInstance().current_slice->scene.extruders.size() && "Never use the same extruder twice on one layer!");
+	}
+	last_planned_extruder = &Application::getInstance().current_slice->scene.extruders[extruder_nr];
+
+	{ // handle starting pos of the new extruder
+		ExtruderTrain* extruder = getLastPlannedExtruderTrain();
+		const bool start_pos_absolute = extruder->settings.get<bool>("machine_extruder_start_pos_abs");
+		Point start_pos(extruder->settings.get<coord_t>("machine_extruder_start_pos_x"), extruder->settings.get<coord_t>("machine_extruder_start_pos_y"));
+		if (!start_pos_absolute)
+		{
+			start_pos += getLastPlannedPositionOrStartingPosition();
+		}
+		else
+		{
+			Point extruder_offset(extruder->settings.get<coord_t>("machine_nozzle_offset_x"), extruder->settings.get<coord_t>("machine_nozzle_offset_y"));
+			start_pos += extruder_offset; // absolute start pos is given as a head position
+		}
+		if (start_pos_absolute || last_planned_position)
+		{
+			last_planned_position = start_pos;
+		}
+	}
+	return true;
+}
+*/
 void LayerPlan::writeGCode(GCodeExport& gcode)
 {
 	coord_tIrfan layer_thicnkess = storage.Layers[0].thickness;
@@ -167,7 +241,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 
 	// flow-rate compensation
 	//const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
-	gcode.setFlowRateExtrusionSettings(0, Ratio(100)); //Offset is in mm.
+	gcode.setFlowRateExtrusionSettings(MM2INT(0), Ratio(100)); //Offset is in mm.
 
 	if (layer_nr == 0 ) //- true and 60;........static_cast<LayerIndex>(Raft::getTotalExtraLayers()) && mesh_group_settings.get<bool>("machine_heated_bed") && mesh_group_settings.get<Temperature>("material_bed_temperature") != 0)
 	{
@@ -656,7 +730,7 @@ GCodePath& LayerPlan::addTravel(coord_tIrfan layer_thickness, int layernum, cura
 	return ret;
 }
 
-GCodePath& LayerPlan::addTravel_simple(int layernum, curaIrfan::PointIrfan p, GCodePath* path)
+GCodePath& LayerPlan::addTravel_simple(int layer_nr,curaIrfan::PointIrfan p, GCodePath* path)
 {
 	
 	bool is_first_travel_of_layer = !static_cast<bool>(last_planned_position);

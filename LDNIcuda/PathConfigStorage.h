@@ -12,7 +12,8 @@
 #include "GCodePathConfig.h"
 #include "Coord_tIrfan.h"
 
-	class SliceDataStorage;
+    class ExtruderTrain;
+    class SliceDataStorage;
 	class SliceMeshStorage;
 
 	/*!

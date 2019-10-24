@@ -252,7 +252,7 @@
 		std::vector<ExtruderPlan> extruder_plans; //!< should always contain at least one ExtruderPlan
 
 		size_t last_extruder_previous_layer; //!< The last id of the extruder with which was printed in the previous layer
-		int last_planned_extruder;
+		ExtruderTrain* last_planned_extruder;
 		std::optional<curaIrfan::PointIrfan> first_travel_destination; //!< The destination of the first (travel) move (if this layer is not empty)
 		bool first_travel_destination_is_inside; //!< Whether the destination of the first planned travel move is inside a layer part
 		bool was_inside; //!< Whether the last planned (extrusion) move was inside a layer part
@@ -263,7 +263,6 @@
 		coord_tIrfan comb_move_inside_distance;  //!< Whenever using the minimum boundary for combing it tries to move the coordinates inside by this distance after calculating the combing.
 		Polygons bridge_wall_mask; //!< The regions of a layer part that are not supported, used for bridging
 		Polygons overhang_mask; //!< The regions of a layer part where the walls overhang
-
 		const std::vector<FanSpeedLayerTimeSettings> fan_speed_layer_time_settings_per_extruder;
 	private:
 		/*!
@@ -290,6 +289,8 @@
 		LayerPlan(const SliceDataStorage& storage, int layer_nr, coord_tIrfan z, coord_tIrfan layer_height, size_t start_extruder, const std::vector<FanSpeedLayerTimeSettings>& fan_speed_layer_time_settings_per_extruder, coord_tIrfan comb_boundary_offset, coord_tIrfan comb_move_inside_distance, coord_tIrfan travel_avoid_distance);
 	
 		~LayerPlan();
+
+		ExtruderTrain* getLastPlannedExtruderTrain();
 	 
 		int getLayerNr()
 		{
@@ -304,6 +305,10 @@
 		void writeGCode(GCodeExport& gcode);
 
 		void setMesh(const std::string mesh_id);
+		
+		//void planPrime();
+
+		//bool setExtruder(const size_t extruder_nr);
 		
 		void addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePathConfig& config, const Polygons& polygons, int layernum, SpaceFillType space_fill_type, bool enable_travel_optimization = false, int wipe_dist = 0, float flow_ratio = 1.0, std::optional<curaIrfan::PointIrfan> near_start_location = std::optional<curaIrfan::PointIrfan>(), double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
 	        
@@ -334,7 +339,7 @@
 		 * \param p The point to travel to
 		 * \param path (optional) The travel path to which to add the point \p p
 		 */
-		GCodePath& addTravel_simple(int layernum, curaIrfan::PointIrfan p, GCodePath* path = nullptr);
+		GCodePath& addTravel_simple(int layer_nr, curaIrfan::PointIrfan p, GCodePath* path = nullptr);
 
 		void optimizePaths(const curaIrfan::PointIrfan& starting_position);
 
@@ -354,8 +359,7 @@
 		
 		bool ProcessCofigs_Storage();
 		
-
-	
+		
 	};
 
 #endif

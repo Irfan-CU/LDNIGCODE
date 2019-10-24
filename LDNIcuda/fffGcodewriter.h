@@ -230,6 +230,7 @@ public:
 	void processSkirtBrim(SliceDataStorage& storage, LayerPlan& gcodeLayer, unsigned int extruder_nr) const;
 	bool processIroning(const SliceLayer& part, LayerPlan& gcode_layer) const;
 	bool processInsets(const SliceDataStorage& storage, LayerPlan& gcodeLayer, const size_t extruder_nr, const SliceLayerPart& part) const;
+	void setExtruder_addPrime(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr) const;
 	/*!
 	* Calculate in which order to plan the extruders for each layer
 	* Store the order of extruders for each layer in extruder_order_per_layer for normal layers

@@ -20,7 +20,7 @@ GCodeExport::GCodeExport()
 	, relative_extrusion(false)
 {
 	*output_stream << std::fixed;
-
+	printf("printf initalized the constructor \n");
 	current_e_value = 0;
 	current_extruder = 0;
 	current_fan_speed = -1;
@@ -33,7 +33,7 @@ GCodeExport::GCodeExport()
 	current_jerk = -1;
 
 	is_z_hopped = 0;
-	setFlavor(EGCodeFlavor::MARLIN);
+	setFlavor(EGCodeFlavor::GRIFFIN);
 	initial_bed_temp = 0;
 	build_volume_temperature = 0;
 
@@ -228,7 +228,10 @@ void GCodeExport::startExtruder(const size_t new_extruder)
 
 void GCodeExport::resetExtrusionValue()
 {
-	*output_stream << "G92 " << extruder_attr[current_extruder].extruderCharacter << "0" << new_line;
+	if (!relative_extrusion)
+	{
+		*output_stream << "G92 " << extruder_attr[current_extruder].extruderCharacter << "0" << new_line;
+	}
 
 	double current_extruded_volume = getCurrentExtrudedVolume();
 	extruder_attr[current_extruder].totalFilament += current_extruded_volume;
@@ -238,6 +241,8 @@ void GCodeExport::resetExtrusionValue()
 	}
 	current_e_value = 0.0;
 	extruder_attr[current_extruder].retraction_e_amount_at_e_start = extruder_attr[current_extruder].retraction_e_amount_current;
+
+
 }
 double GCodeExport::getCurrentExtrudedVolume() const
 {
@@ -419,8 +424,7 @@ curaIrfan::PointIrfan GCodeExport::getGcodePos(const coord_tIrfan x, const coord
 	
 }
 void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, const int z, const double e, const PrintFeatureType& feature)
-{
-	if (currentSpeed != speed)
+{	if (currentSpeed != speed)
 	{
 		*output_stream << " F" << speed * 60;
 		currentSpeed = speed;
@@ -450,6 +454,10 @@ void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, cons
 	currentPosition = Point3(x, y, z);
 	current_e_value = e;
 	//estimateCalculator.plan(TimeEstimateCalculator::Position(INT2MM(x), INT2MM(y), INT2MM(z), eToMm(e)), speed, feature);
+
+
+
+
 }
 void GCodeExport::writeExtrusion(const curaIrfan::PointIrfan& p, coord_tIrfan layer_thickness, const double& speed, double extrusion_mm3_per_mm, PrintFeatureType feature, bool update_extrusion_offset)
 {
@@ -491,14 +499,8 @@ void   GCodeExport::writeTemperatureCommand(const size_t extruder, const double&
 
 void GCodeExport::writePrimeTrain(const double& travel_speed, coord_tIrfan layer_thicknees)
 {
-	printf("inside prime train \n");
-	if (extruder_attr[current_extruder].is_primed)
-	{
-		
-		return;
-	}
 
-	if (!extruder_attr[current_extruder].is_primed)//extruder_settings.get<bool>("prime_blob_enable"))
+	if (layer_nr==0)//extruder_settings.get<bool>("prime_blob_enable"))
 	{ // only move to prime position if we do a blob/poop
 		// ideally the prime position would be respected whether we do a blob or not,
 		// but the frontend currently doesn't support a value function of an extruder setting depending on an fdmprinter setting,
@@ -544,7 +546,7 @@ void GCodeExport::writeTravel(const coord_tIrfan& x, const coord_tIrfan& y, cons
 	const double layer_height = INT2MM(layer_thicnkess);// Application::getInstance().current_slice->scene.current_mesh_group->settings.get<double>("layer_height");
 	*output_stream << "G0";
 	writeFXYZE(speed, x, y, z, current_e_value, travel_move_type);
-	printf("done with fxfyfz \n");
+	//printf("done with fxfyfz \n");
 
 }
 
