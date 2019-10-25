@@ -72,6 +72,7 @@
 		//const Settings& adhesion_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings.get<ExtruderTrain&>("adhesion_extruder_nr").settings;
 		const coord_tIrfan primary_extruder_skirt_brim_line_width = MM2INT(0.35) * 120;// adhesion_settings.get<coord_tIrfan>("skirt_brim_line_width") * adhesion_settings.get<Ratio>("initial_layer_line_width_factor");
 		coord_tIrfan offset_distance = start_distance - primary_extruder_skirt_brim_line_width / 2;
+		printf("thee offset distance is %d \n", offset_distance);
 		for (unsigned int skirt_brim_number = 0; skirt_brim_number < primary_line_count; skirt_brim_number++)
 		{
 			offset_distance += primary_extruder_skirt_brim_line_width;

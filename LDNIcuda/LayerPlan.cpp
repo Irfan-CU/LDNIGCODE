@@ -240,6 +240,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 	gcode.setLayerNr(layer_nr);
 	printf("done with  setLayerNr\n");
 	gcode.writeLayerComment(layer_nr);
+	gcode.writeextrusion();
 
 	// flow-rate compensation
 	//const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
@@ -262,7 +263,6 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 	for (size_t extruder_plan_idx = 0; extruder_plan_idx < extruder_plans.size(); extruder_plan_idx++)
 	{
 		ExtruderPlan& extruder_plan = extruder_plans[extruder_plan_idx];
-		printf("got the extruder plan and the size is %d for the layer %d \n", extruder_plans.size(),layer_nr);
 		const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[extruder_plan.extruder_nr];
 		coord_tIrfan z_hop_height = retraction_config.zHop;
 		if (extruder_plan_idx == 0)
@@ -276,15 +276,14 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 			
 		}
 		gcode.writeFanCommand(extruder_plan.getFanSpeed());
-		printf("wrote the fan command and going for the extruderplan.path\n");
 		std::vector<GCodePath>& paths = extruder_plan.paths;
-		printf("extruderplan.path size is %d \n", extruder_plan.paths.size());
-		extruder_plan.inserts.sort([](const NozzleTempInsert& a, const NozzleTempInsert& b) -> bool
+	   	extruder_plan.inserts.sort([](const NozzleTempInsert& a, const NozzleTempInsert& b) -> bool
 		{
 			return  a.path_idx < b.path_idx;
 		});
 		printf("sorted the paths here and the sorted paths size is %d \n",paths.size());
 		bool update_extrusion_offset = true;
+
 
 		for (unsigned int path_idx = 0; path_idx < paths.size(); path_idx++)
 		{
@@ -389,7 +388,9 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 				}
 				continue;
 			}
+			gcode.writeextrusion();
 			bool spiralize = false;
+			
 			if (!spiralize) // normal (extrusion) move (with coasting
 			{
 				// if path provides a valid (in range 0-100) fan speed, use it

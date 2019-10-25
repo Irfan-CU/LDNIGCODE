@@ -360,10 +360,10 @@ void GCodeExport::writeExtrusion(const int x, const int y, const int z, const do
 		current_e_offset = extrusion_offset;
 		*output_stream << ";FLOW_RATE_COMPENSATED_OFFSET = " << current_e_offset << new_line;
 	}
-
+	
 	extruder_attr[current_extruder].last_e_value_after_wipe += extrusion_per_mm * diff.vSizeMM();
 	double new_e_value = current_e_value + extrusion_per_mm * diff.vSizeMM();
-
+	printf("the values of the extrusiona are %f %f %f \n", current_e_value, extrusion_per_mm, diff.vSizeMM());
 	*output_stream << "G1";
 	writeFXYZE(speed, x, y, z, new_e_value,feature);
 }
@@ -416,6 +416,17 @@ void GCodeExport::writeUnretractionAndPrime()
 		extruder_attr[current_extruder].retraction_e_amount_current = 0.0;
 	}
 }
+
+Point3 GCodeExport::getPosition() const
+{
+	return currentPosition;
+}
+curaIrfan::PointIrfan GCodeExport::getPositionXY() const
+{
+	return curaIrfan::PointIrfan(currentPosition.x, currentPosition.y);
+}
+
+
 curaIrfan::PointIrfan GCodeExport::getGcodePos(const coord_tIrfan x, const coord_tIrfan y, const int extruder_train) const
 {
 	
@@ -608,13 +619,8 @@ void GCodeExport::writeRetraction(const RetractionConfig& config)
 
 double GCodeExport::mm3ToE(double mm3)
 {
-	if (is_volumetric)
 	{
-		return mm3;
-	}
-	else
-	{
-		return mm3 / extruder_attr[current_extruder].filament_area;
+		return mm3 / extruder_attr[0].filament_area;
 	}
 }
 double GCodeExport::eToMm(double e)
@@ -748,6 +754,11 @@ void GCodeExport::setZ(int z)
 void GCodeExport::writeLayerComment(const int layer_nr)
 {
 	*output_stream << ";LAYER:" << layer_nr << new_line;
+}
+
+void GCodeExport::writeextrusion()
+{
+	*output_stream << ";Extrusion:" << current_e_value << new_line;
 }
 
 void GCodeExport::writeLayerCountComment(const size_t layer_count)

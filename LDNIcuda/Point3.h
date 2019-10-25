@@ -100,7 +100,7 @@ public:
 		double fx = INT2MM(x);
 		double fy = INT2MM(y);
 		double fz = INT2MM(z);
-		return sqrt(fx*fx + fy * fy + fz * fz);
+		return sqrt(fx*fx + fy * fy);
 	}
 
 	coord_tIrfan dot(const Point3& p) const

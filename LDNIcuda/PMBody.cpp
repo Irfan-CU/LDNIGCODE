@@ -2145,14 +2145,7 @@ namespace curaIrfan
  //////==========================================LayerParts=============================================//////////
 
 
-Point3 GCodeExport::getPosition() const
-{
-	return currentPosition;
-}
-curaIrfan::PointIrfan GCodeExport::getPositionXY() const
-{
-	return curaIrfan::PointIrfan(currentPosition.x, currentPosition.y);
-}
+
 
 
 

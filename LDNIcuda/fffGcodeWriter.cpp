@@ -84,7 +84,8 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 	{
 		//Progress::messageProgress(Progress::Stage::EXPORT, std::max(0, gcode_layer->getLayerNr()) + 1, total_layers);
 		printf("processing the layer number %d \n", gcode_layer->getLayerNr());
-		layer_plan_buffer.handle(*gcode_layer, gcode);
+
+	 	layer_plan_buffer.handle(*gcode_layer, gcode);
 	};
 	const unsigned int max_task_count = OMP_MAX_ACTIVE_LAYERS_PROCESSED;
 	GcodeLayerThreader<LayerPlan> threader(
@@ -213,6 +214,8 @@ void FffGcodeWriter::processSkirtBrim(SliceDataStorage& storage, LayerPlan& gcod
 	start_close_to = prime_pos;
 	gcode_layer.addTravel(layer_thickness, gcode_layer.getLayerNr(), skirt_brim.back().closestPointTo(start_close_to));
 	gcode_layer.addPolygonsByOptimizer(layer_thickness, gcode_layer.getLayerNr(),skirt_brim, gcode_layer.configs_storage.skirt_brim_config_per_extruder[extruder_nr]);
+	
+	
 	printf("skirt brim is processed \n");
 }
 

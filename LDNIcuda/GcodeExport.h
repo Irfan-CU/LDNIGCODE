@@ -173,6 +173,8 @@ public:
 
 	void writeLayerComment(const int layer_nr);
 
+	void writeextrusion();
+
 	void writeLayerCountComment(const size_t layer_count);
 
 	int getExtruderNr() const;

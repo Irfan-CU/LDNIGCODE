@@ -24,7 +24,7 @@
 #include "sliceDataStorage.h"
 #include "Slicer.h"
 #include "Support.h"
-//#include "TreeSupport.h"
+
 
 #include "WallComputation.h"
 #include "Progress.h"
@@ -98,22 +98,7 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 	//AreaSupport::generateSupportAreas(storage);
 	//TreeSupport tree_support_generator(storage);
 	//tree_support_generator.generateSupportAreas(storage);
-	bool include_support = false;
-	bool include_prime_tower = false;
-	bool external_only = false;
 	
-	Polygons& check = storage.getLayerOutlines(0, include_support, include_prime_tower, external_only);
-	for (int i = 0; i < check.size(); i++)
-	{
-		ConstPolygonRef check1 = check[i];
-		for (int j = 0; j < check1.size(); j++)
-		{
-			curaIrfan::PointIrfan point_check = check1[j];
-			Point3 check2 = Point3(point_check.X, point_check.Y, 0.0);
-			printf("the point at the start before the platform adhesion the getlayeroutline %f and %f \n", INT2MM(check2.x), INT2MM(check2.y));
-		}
-	
-	}
     
 	
 
@@ -124,6 +109,8 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 		processPlatformAdhesion(storage);
 	}
 	
+	
+   
 	
 	processDerivedWallsSkinInfill(storage);
 	
@@ -143,8 +130,11 @@ void FffPolygonGenerator::processPlatformAdhesion(SliceDataStorage& storage)
 	
 	EPlatformAdhesion type = EPlatformAdhesion::BRIM;
 	SkirtBrim::getFirstLayerOutline(storage, primary_line_count, false, first_layer_outline);
-	//positive till here
+	
 	SkirtBrim::generate(storage, first_layer_outline, 0, primary_line_count);
+
+	
+	
 
 }
 
@@ -207,6 +197,7 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 	storage.model_size = storage.model_max - storage.model_min;
 
 	int slice_layer_count = total_layers;
+	storage.Layers.resize(slice_layer_count);
 
 	//slice_layer_count = (storage.model_max.z - layer_thickness) / ;
 	coord_tIrfan layer_thickness;
@@ -267,15 +258,7 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 		slicerList.push_back(slicer);
 		
 	}
-	/*
-	for (int i = 0; i < slicerList[0]->layers.size(); i++)
-	{
-		printf("the size of the polygons is %d in layer %d \n", slicerList[0]->layers[i].polygons.size(),i);
-	}
-	*/
-   
-	// No need for MOLD Process Checked requirements 
-	//carveMultipleVolumes(slicerList);no need as the slicer list is only 1;Mesh is a single 3D mesh Mesh group is a group of meshes;
+	
 	generateMultipleVolumesOverlap(slicerList);
 	
 	storage.print_layer_count = 0;
