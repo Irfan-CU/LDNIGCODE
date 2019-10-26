@@ -20,19 +20,24 @@ The most Important Part in this code for genrating LDNI FDM Toolpaths is
       2-After this each layer is processed seprately to write GCode to the final output file.
      
 
-*****Errors:
+**Errors:
 
-1-Code is working but the values being written in the file are not logical working on that.
-2-Printing Nozell Accelration after every Path.
-3-Output GCode Path coordinates are 10 times of what they should be.
+1-The coordinates are offset as righnow the code is working on relative coordinates wrt BBox of the part. This need to be changed to abs coordinates of the 3D Printer.
 
-******Solved Issues:
+**Solved Issues:
 
 1- Solved the accelration issues:
+2- Solved the extrusion values which were scaled by 10000 by introducing the Ratio class which reduced the line width factory by 100 and now the extrusion values are just like any other Gcode Path obtained.
+3- Solved the negative (-) Extrusion values related to Gcode Path.
+4- Solved the Repeating reset command of extrusion which was also related to the scaled vales of the exxtrusion.
 
-******Progress:
+**Progress:
 
-1- Working on optimizing the G-code path values.
+1- Solved the issues (2-4) mentioned in above lines.
+
+**Current Work
+
+1- Working on changing the coordinates and reading research for FGM in LDNI.
 
       
       
