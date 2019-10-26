@@ -21,7 +21,7 @@
 		int layernum = layer_plan.getLayerNr();
 		coord_tIrfan layer_thickness = layer_plan.layer_thickness;
 		LayerPlan* to_be_written = processBuffer(layernum, layer_thickness);
-		printf("processed buffer for the layer number \%d \n", layer_plan.getLayerNr());
+		//printf("processed buffer for the layer number \%d \n", layer_plan.getLayerNr());
 		if (to_be_written)
 		{
 			to_be_written->writeGCode(gcode);
@@ -32,10 +32,10 @@
 	LayerPlan* LayerPlanBuffer::processBuffer(int layernum, coord_tIrfan layer_thickness)
 	{
 		
-		printf("indide Process Buffer and buffer size is  %d\n",buffer.size());
+		//printf("indide Process Buffer and buffer size is  %d\n",buffer.size());
 		if (buffer.empty())
 		{
-			printf("Is buffer empty for the layer %d layer\n",layernum);
+			//printf("Is buffer empty for the layer %d layer\n",layernum);
 			return nullptr;
 		}
 		processFanSpeedLayerTime();
@@ -51,9 +51,9 @@
 		if (buffer.size() > buffer_size)
 		{
 			LayerPlan* ret = buffer.front();
-			printf("the buffer frint is done \n");
+			//printf("the buffer frint is done \n");
 			buffer.pop_front();
-			printf("the pop_front  is done \n");
+			//printf("the pop_front  is done \n");
 			return ret;
 		}
 		return nullptr;

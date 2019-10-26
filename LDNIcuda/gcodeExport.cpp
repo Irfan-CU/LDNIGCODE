@@ -340,6 +340,7 @@ void GCodeExport::writeExtrusion(const int x, const int y, const int z, const do
 	}
 	   
 	Point3 diff = Point3(x, y, z) - currentPosition;
+	//printf(" diff is %d %d %d and the current poisitions is %d %d %d and Point  is %d %d %d  \n", diff.x, diff.y, diff.z, x, y, z, currentPosition.x, currentPosition.y, currentPosition.z);
 
 	writeUnretractionAndPrime();
 
@@ -363,7 +364,7 @@ void GCodeExport::writeExtrusion(const int x, const int y, const int z, const do
 	
 	extruder_attr[current_extruder].last_e_value_after_wipe += extrusion_per_mm * diff.vSizeMM();
 	double new_e_value = current_e_value + extrusion_per_mm * diff.vSizeMM();
-	printf("the values of the extrusiona are %f %f %f \n", current_e_value, extrusion_per_mm, diff.vSizeMM());
+	//printf("the values of the extrusiona are %f %f %f \n", current_e_value, extrusion_per_mm, diff.vSizeMM());
 	*output_stream << "G1";
 	writeFXYZE(speed, x, y, z, new_e_value,feature);
 }
@@ -620,16 +621,13 @@ void GCodeExport::writeRetraction(const RetractionConfig& config)
 double GCodeExport::mm3ToE(double mm3)
 {
 	{
+		
 		return mm3 / extruder_attr[0].filament_area;
 	}
 }
 double GCodeExport::eToMm(double e)
 {
-	if (is_volumetric)
-	{
-		return e / extruder_attr[current_extruder].filament_area;
-	}
-	else
+	
 	{
 		return e;
 	}
@@ -637,11 +635,7 @@ double GCodeExport::eToMm(double e)
 
 double GCodeExport::mmToE(double mm)
 {
-	if (is_volumetric)
-	{
-		return mm * extruder_attr[current_extruder].filament_area;
-	}
-	else
+	
 	{
 		return mm;
 	}
@@ -649,11 +643,7 @@ double GCodeExport::mmToE(double mm)
 
 double GCodeExport::eToMm3(double e, size_t extruder)
 {
-	if (is_volumetric)
-	{
-		return e;
-	}
-	else
+	
 	{
 		return e * extruder_attr[extruder].filament_area;
 	}

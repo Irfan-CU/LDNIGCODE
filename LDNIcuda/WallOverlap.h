@@ -12,6 +12,7 @@
 #include <vector>
 
  //For flow ratios.
+#include "Ratio.h"
 #include "LinearAlgebra2D.h"
 #include "IntPointIrfan.h"
 #include "Polygon.h"
@@ -59,7 +60,7 @@
 		 * \param to The ending of the line segment
 		 * \return a value between zero and one representing the reduced flow of the line segment
 		 */
-		double getFlow(const curaIrfan::PointIrfan& from, const curaIrfan::PointIrfan& to);
+		Ratio getFlow(const curaIrfan::PointIrfan& from, const curaIrfan::PointIrfan& to);
 
 		/*!
 		 * Computes the neccesary priliminaries in order to efficiently compute the flow when generatign gcode paths.

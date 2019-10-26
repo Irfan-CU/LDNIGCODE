@@ -2,9 +2,10 @@
 //CuraEngine is released under the terms of the AGPLv3 or higher.
 
 
-
+#include <fstream>
 #include "SkirtBrim.h"
 #include "sliceDataStorage.h"
+#include "Ratio.h"
 
 
 	void SkirtBrim::getFirstLayerOutline(SliceDataStorage& storage, const size_t primary_line_count, const bool is_skirt, Polygons& first_layer_outline)
@@ -70,7 +71,7 @@
 	int SkirtBrim::generatePrimarySkirtBrimLines(const coord_tIrfan start_distance, size_t primary_line_count, const coord_tIrfan primary_extruder_minimal_length, const Polygons& first_layer_outline, Polygons& skirt_brim_primary_extruder)
 	{
 		//const Settings& adhesion_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings.get<ExtruderTrain&>("adhesion_extruder_nr").settings;
-		const coord_tIrfan primary_extruder_skirt_brim_line_width = MM2INT(0.35) * 120;// adhesion_settings.get<coord_tIrfan>("skirt_brim_line_width") * adhesion_settings.get<Ratio>("initial_layer_line_width_factor");
+		const coord_tIrfan primary_extruder_skirt_brim_line_width = MM2INT(0.35) * Ratio(120/100);// adhesion_settings.get<coord_tIrfan>("skirt_brim_line_width") * adhesion_settings.get<Ratio>("initial_layer_line_width_factor");
 		coord_tIrfan offset_distance = start_distance - primary_extruder_skirt_brim_line_width / 2;
 		printf("thee offset distance is %d \n", offset_distance);
 		for (unsigned int skirt_brim_number = 0; skirt_brim_number < primary_line_count; skirt_brim_number++)
@@ -108,7 +109,7 @@
 		//Scene& scene = Application::getInstance().current_slice->scene;
 		const size_t adhesion_extruder_nr = 0;// scene.current_mesh_group->settings.get<ExtruderTrain&>("adhesion_extruder_nr").extruder_nr;
 		//const Settings& adhesion_settings = scene.extruders[adhesion_extruder_nr].settings;
-		const coord_tIrfan primary_extruder_skirt_brim_line_width = MM2INT(0.35) * 120; ;// adhesion_settings.get<coord_tIrfan>("skirt_brim_line_width") * adhesion_settings.get<Ratio>("initial_layer_line_width_factor");
+		const coord_tIrfan primary_extruder_skirt_brim_line_width = MM2INT(0.35) * Ratio(120/100); ;// adhesion_settings.get<coord_tIrfan>("skirt_brim_line_width") * adhesion_settings.get<Ratio>("initial_layer_line_width_factor");
 		const coord_tIrfan primary_extruder_minimal_length = MM2INT(250);// adhesion_settings.get<coord_tIrfan>("skirt_brim_minimal_length");
 
 		Polygons& skirt_brim_primary_extruder = storage.skirt_brim[adhesion_extruder_nr];
@@ -128,8 +129,7 @@
 		}
 
 		int offset_distance = generatePrimarySkirtBrimLines(start_distance, primary_line_count, primary_extruder_minimal_length, first_layer_outline, skirt_brim_primary_extruder);
-		printf("offset_distance is %d \n", offset_distance);
-		// handle support-brim
+		
 	//	const ExtruderTrain& support_infill_extruder = scene.current_mesh_group->settings.get<ExtruderTrain&>("support_infill_extruder_nr");
 		bool support_brim_enable = false;
 		if (allow_helpers && support_brim_enable )
@@ -199,7 +199,7 @@
 					continue;
 				}
 				//const ExtruderTrain& train = Application::getInstance().current_slice->scene.extruders[extruder_nr];
-				const coord_tIrfan width = MM2INT(0.35) * 120;// train.settings.get<coord_tIrfan>("skirt_brim_line_width") * train.settings.get<Ratio>("initial_layer_line_width_factor");
+				const coord_tIrfan width = MM2INT(0.35) * Ratio(120/100);// train.settings.get<coord_tIrfan>("skirt_brim_line_width") * train.settings.get<Ratio>("initial_layer_line_width_factor");
 				const coord_tIrfan minimal_length = MM2INT(250);// train.settings.get<coord_tIrfan>("skirt_brim_minimal_length");
 				offset_distance += last_width / 2 + width / 2;
 				last_width = width;
@@ -208,18 +208,8 @@
 					storage.skirt_brim[extruder_nr].add(first_layer_outline.offset(offset_distance, ClipperLib::jtRound));
 					offset_distance += width;
 				}
-				
-			}
-			Polygons&check1 = storage.skirt_brim[0];
-			ConstPolygonRef check2 = check1[0];
-			for (int i = 0; i < check2.size(); i++)
-			{
-				const curaIrfan::PointIrfan point_check = check2[i];
-				Point3 check = Point3(point_check.X, point_check.Y, 0.0);
-				printf("the point at the start of the polygon is inside the platformadhesion %f and %f \n", INT2MM(check.x), INT2MM(check.y));
 
 			}
-			
 		}
 	}
 
@@ -229,7 +219,7 @@
 
 		//Scene& scene = Application::getInstance().current_slice->scene;
 		//const ExtruderTrain& support_infill_extruder = scene.current_mesh_group->settings.get<ExtruderTrain&>("support_infill_extruder_nr");
-		const coord_tIrfan brim_line_width = MM2INT(0.35) * 120;// support_infill_extruder.settings.get<coord_tIrfan>("skirt_brim_line_width") * support_infill_extruder.settings.get<Ratio>("initial_layer_line_width_factor");
+		const coord_tIrfan brim_line_width = MM2INT(0.35) * Ratio(120 / 100);// support_infill_extruder.settings.get<coord_tIrfan>("skirt_brim_line_width") * support_infill_extruder.settings.get<Ratio>("initial_layer_line_width_factor");
 		size_t line_count = 20;// support_infill_extruder.settings.get<size_t>("support_brim_line_count");
 		const coord_tIrfan minimal_length = MM2INT(250);// support_infill_extruder.settings.get<coord_tIrfan>("skirt_brim_minimal_length");
 		if (!storage.support.generated || line_count <= 0 || storage.support.supportLayers.empty())

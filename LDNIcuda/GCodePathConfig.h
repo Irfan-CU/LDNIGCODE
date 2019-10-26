@@ -5,8 +5,10 @@
 #ifndef G_CODE_PATH_CONFIG_H
 #define G_CODE_PATH_CONFIG_H
 
+#include "Ratio.h"
 #include "PrintFeature.h"
 #include "Coord_tIrfan.h"
+
 
 
 	class GCodePathConfig
@@ -28,12 +30,12 @@
 		SpeedDerivatives speed_derivatives; //!< The speed settings (and acceleration and jerk) of the extruded line. May be changed when smoothSpeed is called.
 		const coord_tIrfan line_width; //!< width of the line extruded
 		const coord_tIrfan layer_thickness; //!< current layer height in micron
-		const double flow; //!< extrusion flow modifier.
+		const Ratio flow; //!< extrusion flow modifier.
 		const double extrusion_mm3_per_mm;//!< current mm^3 filament moved per mm line traversed
 		const bool is_bridge_path; //!< whether current config is used when bridging
 		const double fan_speed; //!< fan speed override for this path, value should be within range 0-100 (inclusive) and ignored otherwise
 	public:
-		GCodePathConfig(const PrintFeatureType& type, const coord_tIrfan line_width, const coord_tIrfan layer_height, const double& flow, const SpeedDerivatives speed_derivatives, const bool is_bridge_path = false, const double fan_speed = FAN_SPEED_DEFAULT);
+		GCodePathConfig(const PrintFeatureType& type, const coord_tIrfan line_width, const coord_tIrfan layer_height, const Ratio& flow, const SpeedDerivatives speed_derivatives, const bool is_bridge_path = false, const double fan_speed = FAN_SPEED_DEFAULT);
 
 		/*!
 		 * copy constructor
@@ -81,7 +83,7 @@
 
 		double getFanSpeed() const;
 
-		double getFlowRatio() const;
+		Ratio getFlowRatio() const;
 
 		coord_tIrfan getLayerThickness() const;
 

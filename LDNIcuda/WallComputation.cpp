@@ -27,9 +27,9 @@
 		if (layer_nr == 0)
 		{
 			//const ExtruderTrain& train_wall_0 = 0;// settings.get<ExtruderTrain&>("wall_0_extruder_nr");
-			line_width_0 *= 120;// train_wall_0.settings.get<Ratio>("initial_layer_line_width_factor");
+			line_width_0 *= 120/100;// train_wall_0.settings.get<Ratio>("initial_layer_line_width_factor");
 			//const ExtruderTrain& train_wall_x = 0;// settings.get<ExtruderTrain&>("wall_x_extruder_nr");
-			line_width_x *= 120;// train_wall_x.settings.get<Ratio>("initial_layer_line_width_factor");
+			line_width_x *= 120/100;// train_wall_x.settings.get<Ratio>("initial_layer_line_width_factor");
 		}
 		bool support_enable = false;
 		bool support_tree_enable = true;

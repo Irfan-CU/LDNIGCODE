@@ -15,7 +15,7 @@
 	}
 
 
-	double WallOverlapComputation::getFlow(const curaIrfan::PointIrfan& from, const curaIrfan::PointIrfan& to)
+	Ratio WallOverlapComputation::getFlow(const curaIrfan::PointIrfan& from, const curaIrfan::PointIrfan& to)
 	{
 		using Point2LinkIt = PolygonProximityLinker::Point2Link::iterator;
 
@@ -93,10 +93,10 @@
 		}
 
 		coord_tIrfan normal_area = curaIrfan::vSize(curaIrfan::operator-(from, to)) * line_width;
-		double ratio = double(normal_area - overlap_area) / normal_area;
+		Ratio ratio = Ratio(normal_area - overlap_area) / normal_area;
 		// clamp the ratio because overlap compensation might be faulty because
 		// WallOverlapComputation::getApproxOverlapArea only gives roughly accurate results
-		return std::min(1.0, std::max(0.0, ratio));
+		return std::min(1.0_r, std::max(0.0_r, ratio));
 	}
 
 	coord_tIrfan WallOverlapComputation::handlePotentialOverlap(const ListPolyIt from_it, const ListPolyIt to_it, const ProximityPointLink& to_link, const ListPolyIt from_other_it, const ListPolyIt to_other_it)

@@ -7,6 +7,7 @@
 #include "SkininfillAreaComputation.h"
 #include "SliceDataStorage.h"
 #include "EnumSettings.h" 
+#include "Ratio.h"
 #include "math.h"
 //For EFillMethod.
  //For the infill support angle.
@@ -20,7 +21,7 @@
 		if (layer_nr == 0)
 		{
 			//const ExtruderTrain& train_skin = mesh.settings.get<ExtruderTrain&>("top_bottom_extruder_nr");
-			skin_line_width *= 120;// train_skin.settings.get<Ratio>("initial_layer_line_width_factor");
+			skin_line_width *= Ratio(120/100);// train_skin.settings.get<Ratio>("initial_layer_line_width_factor");
 		}
 		return skin_line_width;
 	}
@@ -31,7 +32,7 @@
 		if (layer_nr == 0)
 		{
 			//const ExtruderTrain& train_wall_0 = mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr");
-			wall_line_width_0 *= 120;// train_wall_0.settings.get<Ratio>("initial_layer_line_width_factor");
+			wall_line_width_0 *= Ratio(120 / 100);// train_wall_0.settings.get<Ratio>("initial_layer_line_width_factor");
 		}
 		return wall_line_width_0;
 	}
@@ -41,7 +42,7 @@
 		if (layer_nr == 0)
 		{
 			//const ExtruderTrain& train_wall_x = mesh.settings.get<ExtruderTrain&>("wall_x_extruder_nr");
-			wall_line_width_x *= 120;// train_wall_x.settings.get<Ratio>("initial_layer_line_width_factor");
+			wall_line_width_x *= Ratio(120 / 100);// train_wall_x.settings.get<Ratio>("initial_layer_line_width_factor");
 		}
 		return wall_line_width_x;
 	}
@@ -50,7 +51,7 @@
 		coord_tIrfan infill_skin_overlap = MM2INT(0);
 		{ // compute infill_skin_overlap
 			//const ExtruderTrain& train_infill = mesh.settings.get<ExtruderTrain&>("infill_extruder_nr");
-			const double infill_line_width_factor = (layer_nr == 0) ? 120 : double(1.0);
+			const Ratio infill_line_width_factor = (layer_nr == 0) ? Ratio(120 / 100) : Ratio(1.0);
 			coord_tIrfan infill_line_distance = MM2INT(6.3); //20%infill Density
 			coord_tIrfan infill_line_width =  MM2INT(0.42);
 			const bool infill_is_dense = infill_line_distance < infill_line_width * infill_line_width_factor + 10;

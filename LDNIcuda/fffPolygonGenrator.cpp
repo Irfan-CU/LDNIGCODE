@@ -99,18 +99,12 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 	//TreeSupport tree_support_generator(storage);
 	//tree_support_generator.generateSupportAreas(storage);
 	
-    
-	
-
-	
 	if (!isEmptyLayer(storage, 0))
 	{
 		printf("Processing platform adhesion\n");
 		processPlatformAdhesion(storage);
 	}
 	
-	
-   
 	
 	processDerivedWallsSkinInfill(storage);
 	
@@ -130,12 +124,8 @@ void FffPolygonGenerator::processPlatformAdhesion(SliceDataStorage& storage)
 	
 	EPlatformAdhesion type = EPlatformAdhesion::BRIM;
 	SkirtBrim::getFirstLayerOutline(storage, primary_line_count, false, first_layer_outline);
-	
 	SkirtBrim::generate(storage, first_layer_outline, 0, primary_line_count);
-
-	
-	
-
+	//Skirt Polygons are accurate till here
 }
 
 /*
@@ -281,15 +271,7 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 
 	storage.support.supportLayers.resize(storage.print_layer_count);
 	storage.meshes.reserve(slicerList.size());
-
-	/*
-	for (int i = 0; i < slice_layer_count; i++)
-	{
-		printf("the polygons point count is %d \n", slicerList[0]->layers[i].polygons.pointCount());
-	}
-	*/
-
-	for (unsigned int meshIdx = 0; meshIdx < slicerList.size(); meshIdx++)
+    for (unsigned int meshIdx = 0; meshIdx < slicerList.size(); meshIdx++)
 	{
 		Slicer* slicer = slicerList[meshIdx];
 		// I dont have any mesh in my code	storage.meshes.emplace_back(&meshgroup->meshes[meshIdx], slicer->layers.size()); // new mesh in storage had settings from the Mesh

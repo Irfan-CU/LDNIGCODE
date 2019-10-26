@@ -30,6 +30,7 @@
 	double GCodePath::getExtrusionMM3perMM() const
 	{
 		return flow * config->getExtrusionMM3perMM();
+		
 	}
 
 	coord_tIrfan GCodePath::getLineWidthForLayerView() const

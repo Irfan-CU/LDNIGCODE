@@ -73,9 +73,9 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 	total_layers = 10;
 	const std::function<LayerPlan* (int)>& produce_item = [&storage, total_layers, this](int layer_nr)
 	{
-		printf("starting the layer plan for the layer %d \n", layer_nr);
+		//printf("starting the layer plan for the layer %d \n", layer_nr);
 		LayerPlan& gcode_layer = processLayer(storage, layer_nr, total_layers);
-		printf("got the Gcode for the layer plan %d \n", layer_nr);
+		//printf("got the Gcode for the layer plan %d \n", layer_nr);
 		return &gcode_layer;
 	};
 	 
@@ -83,7 +83,7 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 		[this, total_layers](LayerPlan* gcode_layer)
 	{
 		//Progress::messageProgress(Progress::Stage::EXPORT, std::max(0, gcode_layer->getLayerNr()) + 1, total_layers);
-		printf("processing the layer number %d \n", gcode_layer->getLayerNr());
+		//printf("processing the layer number %d \n", gcode_layer->getLayerNr());
 
 	 	layer_plan_buffer.handle(*gcode_layer, gcode);
 	};
@@ -141,7 +141,7 @@ LayerPlan& FffGcodeWriter::processLayer(SliceDataStorage& storage, int layer_nr,
 	coord_tIrfan max_inner_wall_width = MM2INT(0.3);
 	if (layer_nr == 0)
 	{
-		max_inner_wall_width *= 120;
+		max_inner_wall_width *= Ratio(120/100);
 	}
 	const coord_tIrfan comb_offset_from_outlines = max_inner_wall_width * 2;// inner_wall_width * 2; defalut is 120
 	//no need for extruder order as I ma using only extruder
@@ -302,9 +302,9 @@ void FffGcodeWriter::setConfigFanSpeedLayerTime()
 		
 		fan_speed_layer_time_settings.cool_min_layer_time = 5.000;
 		fan_speed_layer_time_settings.cool_min_layer_time_fan_speed_max = 10.000;
-		fan_speed_layer_time_settings.cool_fan_speed_0 = 0.000 * 100.0;
-		fan_speed_layer_time_settings.cool_fan_speed_min = 50.0000 * 100.0;
-		fan_speed_layer_time_settings.cool_fan_speed_max = 100.00 * 100.0;
+		fan_speed_layer_time_settings.cool_fan_speed_0 = Ratio(0.000/100) * 100.0;
+		fan_speed_layer_time_settings.cool_fan_speed_min = Ratio(50.0000/100) * 100.0;
+		fan_speed_layer_time_settings.cool_fan_speed_max = Ratio(100.00/100) * 100.0;
 		fan_speed_layer_time_settings.cool_min_speed = 5.000;
 		fan_speed_layer_time_settings.cool_fan_full_layer = 6.000;
 		
@@ -571,7 +571,7 @@ void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage&storage, const si
 		coord_tIrfan innermost_wall_line_width = MM2INT(0.3);// mesh.settings.get<coord_tIrfan>((mesh.settings.get<size_t>("wall_line_count") > 1) ? "wall_line_width_x" : "wall_line_width_0");
 		if (gcode_layer.getLayerNr() == 0)
 		{
-			innermost_wall_line_width *= 120;// mesh.settings.get<Ratio>("initial_layer_line_width_factor");
+			innermost_wall_line_width *= Ratio(120/100);// mesh.settings.get<Ratio>("initial_layer_line_width_factor");
 		}
 		gcode_layer.moveInsideCombBoundary(gcode_layer.getLayerNr(), innermost_wall_line_width);
 	}																

@@ -5,6 +5,7 @@
 #include "IntpointIrfan.h"
 #include "GCodePathConfig.h"
 
+
 GCodePathConfig::GCodePathConfig(const GCodePathConfig& other)
 	: type(other.type)
 	, speed_derivatives(other.speed_derivatives)
@@ -19,7 +20,7 @@ GCodePathConfig::GCodePathConfig(const GCodePathConfig& other)
 
 
 
-GCodePathConfig::GCodePathConfig(const PrintFeatureType& type, const coord_tIrfan line_width, const coord_tIrfan layer_height, const double& flow, const GCodePathConfig::SpeedDerivatives speed_derivatives, const bool is_bridge_path, const double fan_speed)
+GCodePathConfig::GCodePathConfig(const PrintFeatureType& type, const coord_tIrfan line_width, const coord_tIrfan layer_height, const Ratio& flow, const GCodePathConfig::SpeedDerivatives speed_derivatives, const bool is_bridge_path, const double fan_speed)
 	: type(type)
 	, speed_derivatives(speed_derivatives)
 	, line_width(line_width)
@@ -84,13 +85,14 @@ GCodePathConfig::GCodePathConfig(const PrintFeatureType& type, const coord_tIrfa
 		return fan_speed;
 	}
 
-	double GCodePathConfig::getFlowRatio() const
+	Ratio GCodePathConfig::getFlowRatio() const
 	{
 		return flow;
 	}
 
 	double GCodePathConfig::calculateExtrusion() const
 	{
+		printf("the values for caluclating extrusions are %d %d %d and %f %f %f \n", line_width, layer_thickness, flow, INT2MM(line_width), INT2MM(layer_thickness), double(flow));
 		return INT2MM(line_width) * INT2MM(layer_thickness) * double(flow);
 	}
 

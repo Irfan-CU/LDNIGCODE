@@ -3,15 +3,16 @@
 #include "Raft.h"
 #include "SliceDataStorage.h" // SliceDataStorage
 #include "EnumSettings.h" 
+#include "Ratio.h"
 
-std::vector<double> PathConfigStorage::getLineWidthFactorPerExtruder(const int& layer_nr)
+std::vector<Ratio> PathConfigStorage::getLineWidthFactorPerExtruder(const int& layer_nr)
 {
-	std::vector<double> ret;
+	std::vector<Ratio> ret;
 	for (int i=0;i<1;i++)
 	{
 		if (layer_nr <= 0)
 		{
-			const double factor = 120;
+			const Ratio factor = Ratio(120/100);
 			ret.push_back(factor);
 		}
 		else
@@ -34,90 +35,90 @@ GCodePathConfig createPerimeterGapConfig(const SliceDataStorage& mesh, int layer
 		PrintFeatureType::Skin
 		, perimeter_gaps_line_width
 		, layer_thickness
-		, 100 * ((layer_nr == 0) ? 100 : 1.0)
+		, (100/100) * ((layer_nr == 0) ? (100/100) : (1.0))
 		, GCodePathConfig::SpeedDerivatives{ 500, 5 }
 	);
 }
 
-PathConfigStorage::MeshPathConfigs::MeshPathConfigs(const SliceDataStorage& storage, const coord_tIrfan layer_thickness, const int& layer_nr, const std::vector<double>& line_width_factor_per_extruder)
+PathConfigStorage::MeshPathConfigs::MeshPathConfigs(const SliceDataStorage& storage, const coord_tIrfan layer_thickness, const int& layer_nr, const std::vector<Ratio>& line_width_factor_per_extruder)
 	: inset0_config(
 		PrintFeatureType::OuterWall
-		, MM2INT(0.35)* 120//line_width_factor_per_extruder[mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr]
+		, MM2INT(0.35)* Ratio(120 / 100) //line_width_factor_per_extruder[mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr]
 		, layer_thickness
-		, (layer_nr==0)? 100: 100
+		, Ratio (100 / 100) * ((layer_nr==0)? (100/100): Ratio(1.0))
 		, GCodePathConfig::SpeedDerivatives{ 20, 500,5}
 	)
 	, insetX_config(
 		PrintFeatureType::InnerWall
-		, MM2INT(0.35) * 120//line_width_factor_per_extruder[mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr]
+		, MM2INT(0.35) * 120 / 100 //line_width_factor_per_extruder[mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr]
 		, layer_thickness
-		, (layer_nr == 0) ? 100 : 100
+		, Ratio (100 / 100) * ((layer_nr == 0) ? (100 / 100) : Ratio(1.0))
 		, GCodePathConfig::SpeedDerivatives{ 20, 500,5 }
 	)
 	, bridge_inset0_config(
 		PrintFeatureType::OuterWall
-		, MM2INT(0.35) * 120//line_width_factor_per_extruder[mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr]
+		, MM2INT(0.35) * Ratio(120 / 100) //line_width_factor_per_extruder[mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr]
 		, layer_thickness
-		, 50.0
+		, Ratio (50.0/100)
 		, GCodePathConfig::SpeedDerivatives{ 10, 500, 5 }
 		, true // is_bridge_path
-		, 0 * 100.0
+		, Ratio(0) * 100.0
 	)
 	, bridge_insetX_config(
 		PrintFeatureType::InnerWall
-		, MM2INT(0.35) * 120
+		, MM2INT(0.35) *Ratio(120 / 100)
 		, layer_thickness
-		, 50.0
+		, Ratio(50.0 / 100)
 		, GCodePathConfig::SpeedDerivatives{ 10,1000, 10 }
 		, true // is_bridge_path
-		, 0 * 100.0
+		, Ratio(0) * 100.0
 	)
 	, skin_config(
 		PrintFeatureType::Skin
-		, MM2INT(0.35) * 120
+		, MM2INT(0.35) * Ratio(120 / 100)
 		, layer_thickness
-		, 100 * ((layer_nr == 0) ? 100 : double(1.0))
+		, Ratio(100/100) * ((layer_nr == 0) ? Ratio(100/100) : Ratio(1.0))
 		, GCodePathConfig::SpeedDerivatives{ 20, 500, 5 }
 	)
 	, bridge_skin_config( // use bridge skin flow, speed and fan
 		PrintFeatureType::Skin
-		, MM2INT(0.35) * 120
+		, MM2INT(0.35) * Ratio(120 / 100)
 		, layer_thickness
-		, 100.0
+		, Ratio(100 / 100)
 		, GCodePathConfig::SpeedDerivatives{ 10.0, 500, 5 }
 		, true // is_bridge_path
-		, 0* 100.0
+		, Ratio (0)* 100.0
 	)
 	, bridge_skin_config2( // use bridge skin 2 flow, speed and fan
 		PrintFeatureType::Skin
-		, MM2INT(0.35) * 120
+		, MM2INT(0.35) * Ratio(120 / 100)
 		, layer_thickness
-		, 100
+		, Ratio(100 / 100)
 		, GCodePathConfig::SpeedDerivatives{ 10,500,5 }
 		, true // is_bridge_path
-		, 0* 100.0
+		, Ratio(0)* 100.0
 	)
 	, bridge_skin_config3( // use bridge skin 3 flow, speed and fan
 		PrintFeatureType::Skin
-		, MM2INT(0.35) * 120
+		, MM2INT(0.35) *Ratio(120 / 100)
 		, layer_thickness
-		, 100
+		, Ratio(100 / 100)
 		, GCodePathConfig::SpeedDerivatives{ 10,500,5 }
 		, true // is_bridge_path
-		, 0 * 100.0
+		, Ratio(0)* 100.0
 	)
 	, roofing_config(
 		PrintFeatureType::Skin
 		, MM2INT(0.3) 
 		, layer_thickness
-		, 100 * ((layer_nr == 0) ?100 : double(1.0))
+		, Ratio(100/100) * ((layer_nr == 0) ? Ratio(100 / 100) : Ratio(1.0))
 		, GCodePathConfig::SpeedDerivatives{20, 500, 5 }
 	)
 	, ironing_config(
 		PrintFeatureType::Skin
 		, MM2INT(0.3)
 		, layer_thickness
-		, 10.0
+		, Ratio (10.0/100)
 		, GCodePathConfig::SpeedDerivatives{ 13.33,500, 5 }
 	)
 
@@ -129,9 +130,9 @@ PathConfigStorage::MeshPathConfigs::MeshPathConfigs(const SliceDataStorage& stor
 	{
 		infill_config.emplace_back(
 			PrintFeatureType::Infill
-			, 0.42 * (combine_idx + 1) * 120
+			, 0.42 * (combine_idx + 1) * Ratio(120/100)
 			, layer_thickness
-			, 100* ((layer_nr == 0) ? 100 : double(1.0))
+			, Ratio(100 / 100) * ((layer_nr == 0) ? Ratio(100 / 100) : Ratio(1.0))
 			, GCodePathConfig::SpeedDerivatives{ 60, 3000, 25 }
 		);
 		printf("******************intialized the constructor \n");
@@ -147,35 +148,35 @@ PathConfigStorage::PathConfigStorage(const SliceDataStorage& storage, const int&
 		PrintFeatureType::SupportInterface
 		, MM2INT(0.8)
 		, MM2INT(0.24122)//adhesion_extruder_train.settings.get<coord_t>("raft_base_thickness")
-		, ((layer_nr == 0) ? 100 : double(1.0))
+		, ((layer_nr == 0) ? Ratio(100 / 100) : Ratio(1.0))
 		, GCodePathConfig::SpeedDerivatives{ 13.125, 4000, 25 }
 	)
 	, raft_interface_config(
 		PrintFeatureType::Support
 		, MM2INT (0.7)//adhesion_extruder_train.settings.get<coord_t>("raft_interface_line_width")
 		, MM2INT (0.300)//adhesion_extruder_train.settings.get<coord_t>("raft_interface_thickness")
-		, (layer_nr == 0) ? 100 : double(1.0)
+		, ((layer_nr == 0) ? Ratio(100 / 100) : Ratio(1.0))
 		, GCodePathConfig::SpeedDerivatives{13.125, 400, 25}
 	)
 	, raft_surface_config(
 		PrintFeatureType::SupportInterface
 		, MM2INT(0.35)
 		, MM2INT(0.20)//adhesion_extruder_train.settings.get<coord_t>("raft_surface_thickness")
-		, (layer_nr == 0) ? 100 : double(1.0)
+		, ((layer_nr == 0) ? Ratio(100 / 100) : Ratio(1.0))
 		, GCodePathConfig::SpeedDerivatives{ 17.5, 4000, 25 }
 	)
 	, support_roof_config(
 		PrintFeatureType::SupportInterface
-		, MM2INT(0.35) * 120
+		, MM2INT(0.35) * Ratio(120/100)
 		, layer_thickness
-		,100 * ((layer_nr == 0) ? 100 : double(1.0))
+		, Ratio(100 / 100) * ((layer_nr == 0) ? Ratio(100 / 100) : Ratio(1.0))
 		, GCodePathConfig::SpeedDerivatives{ 40, 3000, 20}
 	)
 	, support_bottom_config(
 		PrintFeatureType::SupportInterface
-		, MM2INT(0.35) * 120
+		, MM2INT(0.35) * Ratio(120 / 100)
 		, layer_thickness
-		, 100 * ((layer_nr == 0) ? 100 : double(1.0))
+		, Ratio(100 / 100) * ((layer_nr == 0) ? Ratio(100 / 100) : Ratio(1.0))
 		, GCodePathConfig::SpeedDerivatives{ 23, 500, 5 }
 	)
 {
@@ -196,18 +197,16 @@ PathConfigStorage::PathConfigStorage(const SliceDataStorage& storage, const int&
 		);
 		skirt_brim_config_per_extruder.emplace_back(
 			PrintFeatureType::SkirtBrim
-			, MM2INT(0.35)
-			* (120)//mesh_group_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::RAFT) ? 1.0_r : line_width_factor_per_extruder[extruder_nr]) // cause it's also used for the draft/ooze shield
+			, MM2INT(0.35)* Ratio(120 / 100)//mesh_group_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::RAFT) ? 1.0_r : line_width_factor_per_extruder[extruder_nr]) // cause it's also used for the draft/ooze shield
 			, layer_thickness
-			, 100 * ((layer_nr == 0) ? 100 : double(1.0))
+			, Ratio(100 / 100) * ((layer_nr == 0) ? Ratio(100 / 100) : Ratio(1.0))
 			, GCodePathConfig::SpeedDerivatives{20, 500, 5 }
 		);
 		prime_tower_config_per_extruder.emplace_back(
 			PrintFeatureType::PrimeTower
-			, MM2INT(0.35)
-			* (120)//((mesh_group_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::RAFT) ? 1.0_r : line_width_factor_per_extruder[extruder_nr])
+			, MM2INT(0.35) * Ratio (120/100)//((mesh_group_settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::RAFT) ? 1.0_r : line_width_factor_per_extruder[extruder_nr])
 			, layer_thickness
-			, 100 * ((layer_nr == 0) ? 100 : double(1.0))
+			, Ratio(100 / 100) * ((layer_nr == 0) ? Ratio(100 / 100) : Ratio(1.0))
 			, GCodePathConfig::SpeedDerivatives{ 20, 500, 5 }//GCodePathConfig::SpeedDerivatives{ train.settings.get<Velocity>("speed_prime_tower"), train.settings.get<Acceleration>("acceleration_prime_tower"), train.settings.get<Velocity>("jerk_prime_tower") }
 		);
 	}
@@ -217,14 +216,14 @@ PathConfigStorage::PathConfigStorage(const SliceDataStorage& storage, const int&
 	
 
 	support_infill_config.reserve(MAX_INFILL_COMBINE);
-	const float support_infill_line_width_factor = 120.0;
+	const float support_infill_line_width_factor = Ratio(120 / 100);
 	for (int combine_idx = 0; combine_idx < MAX_INFILL_COMBINE; combine_idx++)
 	{
 		support_infill_config.emplace_back(
 			PrintFeatureType::Support
 			, MM2INT(0.35) * (combine_idx + 1) * support_infill_line_width_factor
 			, layer_thickness
-			, 100 * ((layer_nr == 0) ? 100 : double(1.0))
+			, Ratio(100 / 100) * ((layer_nr == 0) ? Ratio(100 / 100) : Ratio(1.0))
 			, GCodePathConfig::SpeedDerivatives{ 60, 3000, 20 }
 		);
 	}

@@ -1,5 +1,6 @@
 
 #include <cstring>
+#include <fstream>
 
 #include "ExtruderTrain.h"
 #include "LayerPlan.h"
@@ -146,7 +147,7 @@ void LayerPlan::addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePa
 	
 }
 
-void LayerPlan::addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathConfig& config, curaIrfan::PointIrfan p, int layernum, SpaceFillType space_fill_type, const double& flow, bool spiralize, double speed_factor, double fan_speed)
+void LayerPlan::addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathConfig& config, curaIrfan::PointIrfan p, int layernum, SpaceFillType space_fill_type, const Ratio& flow, bool spiralize, Ratio speed_factor, double fan_speed)
 {
 	
 	GCodePath* path = getLatestPathWithConfig(layer_thickness, config, space_fill_type, flow, spiralize, speed_factor);
@@ -309,12 +310,12 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 				
 				if (path.isTravelPath())
 				{
-					printf("writing travel accelrations \n");
+					//printf("writing travel accelrations \n");
 					gcode.writeTravelAcceleration(path.config->getAcceleration());
 				}
 				else
 				{
-					printf("writing print accelrations \n");
+					//printf("writing print accelrations \n");
 					gcode.writePrintAcceleration(path.config->getAcceleration());
 				}
 			}
@@ -390,7 +391,31 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 			}
 			gcode.writeextrusion();
 			bool spiralize = false;
+			std::ofstream myfile;
+			myfile.open("Polygon3.txt");
+
+			std::vector<GCodePath>& paths1 = extruder_plan.paths;
+
+			for (unsigned int z = 0; z < paths1.size(); z++)
+			{
+				GCodePath& path1 = paths1[z];
+
+				for (unsigned int x = 0; x < path1.points.size(); x++)
+				{
+					//communication->sendLineTo(path.config->type, path.points[point_idx], path.getLineWidthForLayerView(), path.config->getLayerThickness(), speed);
+					const curaIrfan::PointIrfan& p1 = path1.points[x];
+					Point3  z1 = Point3(p1.X, p1.Y, 0.0);
+					myfile << z1.x << "\n";
+				}
+
+			}
 			
+
+			myfile.close();
+			
+
+
+
 			if (!spiralize) // normal (extrusion) move (with coasting
 			{
 				// if path provides a valid (in range 0-100) fan speed, use it
@@ -724,7 +749,7 @@ GCodePath& LayerPlan::addTravel(coord_tIrfan layer_thickness, int layernum, cura
 			coord_tIrfan innermost_wall_line_width = ((wall_line_count > 1) ? wall_line_width_x : wall_line_width_0);
 			if (layer_nr == 0)
 			{
-				double initial_layer_line_width_factor = 120;
+				Ratio initial_layer_line_width_factor = Ratio(120/100);
 			}
 			moveInsideCombBoundary(layernum, innermost_wall_line_width);
 		}
