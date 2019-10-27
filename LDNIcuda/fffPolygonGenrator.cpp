@@ -108,9 +108,6 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 	
 	processDerivedWallsSkinInfill(storage);
 	
-
-	//printf("Processing gradual support\n");
-	// generate gradual support
 	AreaSupport::generateSupportInfillFeatures(storage);
 }
 
@@ -189,52 +186,24 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 	int slice_layer_count = total_layers;
 	storage.Layers.resize(slice_layer_count);
 
-	//slice_layer_count = (storage.model_max.z - layer_thickness) / ;
 	coord_tIrfan layer_thickness;
 	
 	(layer_thickness) = (storage.model_max.z - slice_layer_count) / (slice_layer_count - 1);
 
 	storage.setlayer_thickness(layer_thickness);
 
-	printf("slice layer count is %d and %d \n", slice_layer_count, layer_thickness);
-	printf("the sotrage model dimensions are %f %f %f \n", INT2MM(storage.model_max.x), INT2MM(storage.model_max.y), INT2MM(storage.model_max.z));
-
-
-//	printf("the storage.model_min.x is %d and storage.model_min.y is %d  storage.model_min.z is %d storage.model_max.x is %d storage.model_max.y is %d  storage.model_max.z is %d \n", storage.model_min.x, storage.model_min.y, storage.model_min.z, storage.model_max.x, storage.model_max.y, storage.model_max.z);
-	
-	// regular layers
-	//Use signed int because we need to subtract the initial layer in a calculation temporarily.
-	
-	// Initial layer height of 0 is not allowed. Negative layer height is nonsense.
-	//coord_tIrfan initial_layer_thickness = MM2INT(0.01*27); //mesh_group_settings.get<coord_t>("layer_height_0");													initial_layer_thickness
-	//printf("the initial_layer_thickness is %d \n", initial_layer_thickness);
 	if (layer_thickness <= 0)
 	{
-		//logError("Initial layer height %i is disallowed.\n", initial_layer_thickness);
+		printf("###Error layer height %i is disallowed.\n", layer_thickness);
 		return false;
 	}
 
-	// Layer height of 0 is not allowed. Negative layer height is nonsense.
-	//const coord_tIrfan layer_thickness = MM2INT(0.01*15);// mesh_group_settings.get<coord_t>("layer_height");
-	//printf("the layer_thickness is %d \n", layer_thickness);
-	if (layer_thickness <= 0)
-	{
-		//logError("Layer height %i is disallowed.\n", layer_thickness);
-		return false;
-	}
+	slice_layer_count = total_layers; 
 	
-
-	// variable layers
-	//AdaptiveLayerHeights* adaptive_layer_heights = nullptr;
-	const bool use_variable_layer_heights = false;// mesh_group_settings.get<bool>("adaptive_layer_height_enabled");
-	slice_layer_count = total_layers; //(storage.model_max.z - initial_layer_thickness) / layer_thickness + 1;
-	//printf("slice layer count is %d \n", slice_layer_count);
-	
-	//printf("the slice layer count is %d \n", total_layers);
-	// Model is shallower than layer_height_0, so not even the first layer is sliced. Return an empty model then.
 	if (slice_layer_count <= 0)
 	{
-		return true; // This is NOT an error state!
+		printf("###Error slice_layer_count height %i is disallowed.\n", slice_layer_count);
+		return false; // This is NOT an error state!
 	}
 	
 	std::vector<Slicer*> slicerList;
