@@ -7,8 +7,10 @@
 #include "fffGcodeWriter.h"
 #include "GcodeLayerThreader.h"
 #include "Infill.h"
+#include "InsetOrderOptimizer.h"
 #include "LayerPlan.h"
 #include "Raft.h"
+#include "WallOverlap.h"
 #include "SliceDataStorage.h"
 #include "Slicer.h"
 
@@ -556,11 +558,12 @@ void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage&storage, const si
 
 	added_something = added_something | processInfill(storage, gcode_layer, extruder_nr,mesh_config, part);
 	
-	//added_something = added_something | processInsets(storage, gcode_layer, mesh, extruder_nr, mesh_config, part);
+	added_something = added_something | processInsets(storage, gcode_layer, extruder_nr, mesh_config, part);
 
-	//processOutlineGaps(storage, gcode_layer, mesh, extruder_nr, mesh_config, part, added_something);
-
+	//Not needed
+	//processOutlineGaps(storage, gcode_layer, extruder_nr, mesh_config, part, added_something);
 	//added_something = added_something | processSkinAndPerimeterGaps(storage, gcode_layer, mesh, extruder_nr, mesh_config, part);
+
 	coord_tIrfan layer_thickness = storage.Layers[0].thickness;
 	bool  magic_spiralize = false;
 
@@ -732,8 +735,8 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, c
 		
 		coord_tIrfan outline_offset = 0 ;
 
-		Infill infill_comp(pattern, zig_zaggify_infill, connect_polygons, in_outline, outline_offset, infill_line_width, infill_line_distance_here, infill_overlap, infill_multiplier, infill_angle, gcode_layer.z, infill_shift, wall_line_count, infill_origin
-			, /*Polygons* perimeter_gaps =*/ nullptr
+		Infill infill_comp(pattern, zig_zaggify_infill, connect_polygons, in_outline, 0, infill_line_width, infill_line_distance_here, infill_overlap, infill_multiplier, infill_angle, gcode_layer.z, infill_shift, wall_line_count, infill_origin
+			, /*Polygons* perimeter_gaps =*/ false
 			, /*bool connected_zigzags =*/ false
 			, /*bool use_endpieces =*/ false
 			, /*bool skip_some_zags =*/ false
@@ -745,7 +748,7 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, c
 	if (infill_lines.size() > 0)
 	{
 		added_something = true;
-		//setExtruder_addPrime(storage, gcode_layer, extruder_nr);
+		//setExtruder_addPrime(storage, gcode_layer, extruder_nr);	not needed
 		gcode_layer.setIsInside(true); // going to print stuff inside print object
 		const bool enable_travel_optimization = false;// mesh.settings.get<bool>("infill_enable_travel_optimization");
 		printf("outside the lineoptimizer \n");
@@ -757,8 +760,8 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, c
 
 	return added_something;
 }
- /*
-bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& gcode_layer,  const size_t extruder_nr, const SliceLayerPart& part) const
+ 
+bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& gcode_layer,  const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const
 {
 	bool added_something = false;
 	const bool compensate_overlap_0 = true;// mesh.settings.get<bool>("travel_compensate_overlapping_walls_0_enabled");
@@ -847,13 +850,13 @@ bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& g
 		// one part higher up. Once all the parts have merged, layers above that level will be spiralized
 		if (InsetOrderOptimizer::optimizingInsetsIsWorthwhile(part))
 		{
-			InsetOrderOptimizer ioo(*this, storage, gcode_layer, mesh, extruder_nr, mesh_config, part, gcode_layer.getLayerNr());
+			InsetOrderOptimizer ioo(*this, storage, gcode_layer, extruder_nr, mesh_config, part, gcode_layer.getLayerNr());
 			return ioo.processInsetsWithOptimizedOrdering();
 		}
 		else
 		{
-			const bool outer_inset_first = mesh.settings.get<bool>("outer_inset_first")
-				|| (gcode_layer.getLayerNr() == 0 && mesh.settings.get<EPlatformAdhesion>("adhesion_type") == EPlatformAdhesion::BRIM);
+			bool outer_inset_first = false;
+			const bool outer_inset_first = outer_inset_first || (gcode_layer.getLayerNr() == 0);
 			int processed_inset_number = -1;
 			for (int inset_number = part.insets.size() - 1; inset_number > -1; inset_number--)
 			{
@@ -866,42 +869,42 @@ bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& g
 				if (processed_inset_number == 0)
 				{
 					constexpr float flow = 1.0;
-					if (part.insets[0].size() > 0 && extruder_nr == mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr)
+					if (part.insets[0].size() > 0 && extruder_nr ==0)
 					{
 						added_something = true;
-						setExtruder_addPrime(storage, gcode_layer, extruder_nr);
+						//setExtruder_addPrime(storage, gcode_layer, extruder_nr);
 						gcode_layer.setIsInside(true); // going to print stuff inside print object
-						ZSeamConfig z_seam_config(mesh.settings.get<EZSeamType>("z_seam_type"), mesh.getZSeamHint(), mesh.settings.get<EZSeamCornerPrefType>("z_seam_corner"));
+						ZSeamConfig z_seam_config(EZSeamType::SHARPEST_CORNER, storage.getZSeamHint(),EZSeamCornerPrefType::Z_SEAM_CORNER_PREF_INNER);
 						Polygons outer_wall = part.insets[0];
 						if (!compensate_overlap_0)
 						{
 							WallOverlapComputation* wall_overlap_computation(nullptr);
-							gcode_layer.addWalls(outer_wall, mesh, mesh_config.inset0_config, mesh_config.bridge_inset0_config, wall_overlap_computation, z_seam_config, mesh.settings.get<coord_t>("wall_0_wipe_dist"), flow, retract_before_outer_wall);
+							gcode_layer.addWalls(outer_wall, mesh_config.inset0_config, mesh_config.bridge_inset0_config, wall_overlap_computation, z_seam_config, MM2INT(0.2), flow, retract_before_outer_wall);
 						}
 						else
 						{
 							WallOverlapComputation wall_overlap_computation(outer_wall, mesh_config.inset0_config.getLineWidth());
-							gcode_layer.addWalls(outer_wall, mesh, mesh_config.inset0_config, mesh_config.bridge_inset0_config, &wall_overlap_computation, z_seam_config, mesh.settings.get<coord_t>("wall_0_wipe_dist"), flow, retract_before_outer_wall);
+							gcode_layer.addWalls(outer_wall, mesh_config.inset0_config, mesh_config.bridge_inset0_config, &wall_overlap_computation, z_seam_config, MM2INT(0.2), flow, retract_before_outer_wall);
 						}
 					}
 				}
 				// Inner walls are processed
-				else if (!part.insets[processed_inset_number].empty() && extruder_nr == mesh.settings.get<ExtruderTrain&>("wall_x_extruder_nr").extruder_nr)
+				else if (!part.insets[processed_inset_number].empty() && extruder_nr == -1)
 				{
 					added_something = true;
-					setExtruder_addPrime(storage, gcode_layer, extruder_nr);
+					//setExtruder_addPrime(storage, gcode_layer, extruder_nr);
 					gcode_layer.setIsInside(true); // going to print stuff inside print object
-					ZSeamConfig z_seam_config(mesh.settings.get<EZSeamType>("z_seam_type"), mesh.getZSeamHint(), mesh.settings.get<EZSeamCornerPrefType>("z_seam_corner"));
+					ZSeamConfig z_seam_config(EZSeamType::SHARPEST_CORNER, storage.getZSeamHint(), EZSeamCornerPrefType::Z_SEAM_CORNER_PREF_INNER);
 					Polygons inner_wall = part.insets[processed_inset_number];
 					if (!compensate_overlap_x)
 					{
 						WallOverlapComputation* wall_overlap_computation(nullptr);
-						gcode_layer.addWalls(part.insets[processed_inset_number], mesh, mesh_config.insetX_config, mesh_config.bridge_insetX_config, wall_overlap_computation, z_seam_config);
+						gcode_layer.addWalls(part.insets[processed_inset_number], mesh_config.insetX_config, mesh_config.bridge_insetX_config, wall_overlap_computation, z_seam_config);
 					}
 					else
 					{
 						WallOverlapComputation wall_overlap_computation(inner_wall, mesh_config.insetX_config.getLineWidth());
-						gcode_layer.addWalls(inner_wall, mesh, mesh_config.insetX_config, mesh_config.bridge_insetX_config, &wall_overlap_computation, z_seam_config);
+						gcode_layer.addWalls(inner_wall, mesh_config.insetX_config, mesh_config.bridge_insetX_config, &wall_overlap_computation, z_seam_config);
 					}
 				}
 			}
@@ -909,7 +912,10 @@ bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& g
 	}
 	return added_something;
 }
-*/
+
+
+
+
 
 
 

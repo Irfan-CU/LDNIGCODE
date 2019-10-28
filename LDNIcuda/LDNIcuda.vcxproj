@@ -190,6 +190,7 @@
     <ClCompile Include="GcodePathConfig.cpp" />
     <ClCompile Include="gettime.cpp" />
     <ClCompile Include="Infill.cpp" />
+    <ClCompile Include="InsetOrderOptimizer.cpp" />
     <ClCompile Include="LayerBufferPlan.cpp" />
     <ClCompile Include="layerpart.cpp" />
     <ClCompile Include="LayerPlan.cpp" />
@@ -253,6 +254,7 @@
     <ClInclude Include="GCodePathConfig.h" />
     <ClInclude Include="gettime.h" />
     <ClInclude Include="Infill.h" />
+    <ClInclude Include="InsetOrderOptimizer.h" />
     <ClInclude Include="LayerIndex.h" />
     <ClInclude Include="layerPart.h" />
     <ClInclude Include="LinearAlgebra2D.h" />

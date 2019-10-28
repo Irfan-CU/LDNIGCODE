@@ -6,10 +6,12 @@
 
 #include "PathOrderOptimizer.h"
 #include "SliceDataStorage.h"
+#include "PathConfigStorage.h"
 
 	class FffGcodeWriter;
 	class LayerPlan;
 	class WallOverlapComputation;
+	
 
 	class InsetOrderOptimizer
 	{
@@ -25,11 +27,10 @@
 		 * \param part The part for which to create gcode
 		 * \param layer_nr The current layer number
 		 */
-		InsetOrderOptimizer(const FffGcodeWriter& gcode_writer, const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const int extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, unsigned int layer_nr) :
+		InsetOrderOptimizer(const FffGcodeWriter& gcode_writer, const SliceDataStorage& storage, LayerPlan& gcode_layer, const int extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, unsigned int layer_nr) :
 			gcode_writer(gcode_writer),
 			storage(storage),
 			gcode_layer(gcode_layer),
-			mesh(mesh),
 			extruder_nr(extruder_nr),
 			mesh_config(mesh_config),
 			part(part),
@@ -41,12 +42,11 @@
 		{
 		}
 	private:
-
+		
 		const FffGcodeWriter& gcode_writer;
 		const SliceDataStorage& storage;
 		LayerPlan& gcode_layer;
-		const SliceMeshStorage& mesh;
-		const size_t extruder_nr;
+	    const size_t extruder_nr;
 		const PathConfigStorage::MeshPathConfigs& mesh_config;
 		const SliceLayerPart& part;
 		const unsigned int layer_nr;
@@ -59,28 +59,28 @@
 		/*!
 		 * Generate the insets for the holes of a given layer part after optimizing the ordering.
 		 */
-		//void processHoleInsets();
+		void processHoleInsets();
 
 		/*!
 		 * Generate the insets for the outer walls of a given layer part after optimizing the ordering.
 		 * \param include_outer true if the outermost inset is to be output
 		 * \param include_inners true if the innermost insets are to be output
 		 */
-		//void processOuterWallInsets(const bool include_outer, const bool include_inners);
+		void processOuterWallInsets(const bool include_outer, const bool include_inners);
 
 		/*!
 		 * Generate a travel move from the current position to inside the part.
 		 * This is used after generating an outer wall so that if a retraction occurs immediately afterwards,
 		 * the extruder won't be on the outer wall.
 		 */
-		//void moveInside();
+		void moveInside();
 
 	public:
 		/*!
 		 * Generate the insets for all of the walls of a given layer part after optimizing the ordering.
 		 * \return Whether this function added anything to the layer plan
 		 */
-		//bool processInsetsWithOptimizedOrdering();
+		bool processInsetsWithOptimizedOrdering();
 
 		/*!
 		 * Test whether it looks to be worthwhile to optimize the inset order of a given layer part.

@@ -49,8 +49,10 @@ void Infill::_generate(Polygons& result_lines)
 		
 	if (line_distance == 0)
 	{
+		printf("##Error line_distance == 0 \n");
 		return;
 	}
+
 	outline_offset -= infill_line_width / 2; // the infill line zig zag connections must lie next to the border, not on it
 
 	generatetriangleinfill(result_lines);
@@ -73,17 +75,27 @@ void Infill::generatetriangleinfill(Polygons& result)
 
 	printf("generatetriangleinfill \n");
 	generateLineInfill(result, line_distance, fill_angle, 0);
-	//generateLineInfill(result, line_distance, fill_angle + 60, 0);
-	//generateLineInfill(result, line_distance, fill_angle + 120, 0);
-   //	generateLineInfill(result, line_distance, fill_angle + 60, polygon1);
+	generateLineInfill(result, line_distance, fill_angle + 60, 0);
+	generateLineInfill(result, line_distance, fill_angle + 120, 0);
+  // generateLineInfill(result, line_distance, fill_angle + 60, polygon1);
 	//generateLineInfill(result, line_distance, fill_angle + 120, polygon1);
 }
+
+coord_tIrfan Infill::getShiftOffsetFromInfillOriginAndRotation(const double& infill_rotation)
+{
+	if (infill_origin.X != 0 || infill_origin.Y != 0)
+	{
+		const double rotation_rads = infill_rotation * M_PI / 180;
+		return infill_origin.X * std::cos(rotation_rads) - infill_origin.Y * std::sin(rotation_rads);
+	}
+	return 0;
+}
+
 
 void Infill::generateLineInfill(Polygons& result, int line_distance, int infill_rotation, coord_tIrfan shift)
 {
 	
-	printf("inside generateLineInfill genrate \n");
-	shift = 0;
+	shift += getShiftOffsetFromInfillOriginAndRotation(infill_rotation);
 	curaIrfan::PointMatrix rotation_matrix(infill_rotation);
 	NoZigZagConnectorProcessor lines_processor(rotation_matrix, result);
 	bool connected_zigzags = false;
@@ -92,7 +104,6 @@ void Infill::generateLineInfill(Polygons& result, int line_distance, int infill_
 
 void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& result, const int line_distance, const curaIrfan::PointMatrix& rotation_matrix, ZigzagConnectorProcessor& zigzag_connector_processor, const bool connected_zigzags, coord_tIrfan extra_shift)
 {
-	printf("inside generateLinearBasedInfill genrate \n");
 	if (line_distance == 0)
 	{
 		return;
@@ -129,11 +140,11 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	}
 
 	AABB boundary(outline);
-	printf("genrated the bb box \n");
+	
 	int scanline_min_idx = computeScanSegmentIdx(boundary.min.X - shift, line_distance);
-	printf("the scanline_min_idx is %d \n", scanline_min_idx);
+	
 	int line_count = computeScanSegmentIdx(boundary.max.X - shift, line_distance) + 1 - scanline_min_idx;
-	printf("the line count is %d \n", line_count);
+
 	std::vector<std::vector<coord_tIrfan>> cut_list; // mapping from scanline to all intersections with polygon segments
 
 	for (int scanline_idx = 0; scanline_idx < line_count; scanline_idx++)
@@ -156,16 +167,16 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	};
 	std::vector<std::vector<Crossing>> crossings_per_scanline; //For each scanline, a list of crossings.
 	const int min_scanline_index = computeScanSegmentIdx(boundary.min.X - shift, line_distance) + 1;
-	printf("the min_scanline_index is %d and the line distance is %d \n", min_scanline_index, line_distance);
+
 	const int max_scanline_index = computeScanSegmentIdx(boundary.max.X - shift, line_distance) + 1;
-	printf("the max_scanline_index is %d and the line distance is %d \n", max_scanline_index, line_distance);
+	
 	crossings_per_scanline.resize(max_scanline_index - min_scanline_index);
-	printf("the outline size is %d \n", outline.size());
+	
 	for (size_t poly_idx = 0; poly_idx < outline.size(); poly_idx++)
 	{
 		PolygonRef poly = outline[poly_idx];
 		crossings_on_line[poly_idx].resize(poly.size()); //One for each line in this polygon.
-		printf("the poly size is %d \n", poly.size());
+		
 		curaIrfan::PointIrfan p0 = poly.back();
 		zigzag_connector_processor.registerVertex(p0); // always adds the first point to ZigzagConnectorProcessorEndPieces::first_zigzag_connector when using a zigzag infill type
 
@@ -203,7 +214,7 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 			{
 				int x = scanline_idx * line_distance + shift;
 				int y = p1.Y + (p0.Y - p1.Y) * (x - p1.X) / (p0.X - p1.X);
-				//assert(scanline_idx - scanline_min_idx >= 0 && scanline_idx - scanline_min_idx < int(cut_list.size()) && "reading infill cutlist index out of bounds!");
+				assert(scanline_idx - scanline_min_idx >= 0 && scanline_idx - scanline_min_idx < int(cut_list.size()) && "reading infill cutlist index out of bounds!");
 				cut_list[scanline_idx - scanline_min_idx].push_back(y);
 				curaIrfan::PointIrfan scanline_linesegment_intersection(x, y);
 				zigzag_connector_processor.registerScanlineSegmentIntersection(scanline_linesegment_intersection, scanline_idx);
@@ -439,7 +450,6 @@ void Infill::generateLinearBasedInfill( int outline_offset, Polygons& result, in
 */
 void Infill::addLineInfill(Polygons& result, const curaIrfan::PointMatrix& rotation_matrix, int scanline_min_idx, int line_distance, AABB boundary, std::vector<std::vector<coord_tIrfan>>& cut_list, coord_tIrfan shift)
 {
-	printf("add line infill is \n");
 	auto compare_coord_t = [](const void* a, const void* b)
 	{
 		coord_tIrfan n = (*(coord_tIrfan*)a) - (*(coord_tIrfan*)b);
@@ -470,16 +480,15 @@ void Infill::addLineInfill(Polygons& result, const curaIrfan::PointMatrix& rotat
 				continue;
 			}
 			//We have to create our own lines when they are not created by the method connectLines.
-			/*
+			
 			if (!zig_zaggify || pattern == EFillMethod::ZIG_ZAG || pattern == EFillMethod::LINES)
 			{
-				result.addLine(rotation_matrix.unapply(Point(x, crossings[crossing_idx])), rotation_matrix.unapply(Point(x, crossings[crossing_idx + 1])));
+				result.addLine(rotation_matrix.unapply(curaIrfan::PointIrfan(x, crossings[crossing_idx])), rotation_matrix.unapply(curaIrfan::PointIrfan(x, crossings[crossing_idx + 1])));
 			}
-			*/
+			
 		}
 		scanline_idx += 1;
 	}
-	printf("Done with add line fill \n");
 }
 
 bool Infill::InfillLineSegment::operator ==(const InfillLineSegment& other) const
@@ -492,7 +501,7 @@ void Infill::connectLines(Polygons& result_lines)
 	//TODO: We're reconstructing the outline here. We should store it and compute it only once.
 	Polygons outline = in_outline.offset(outline_offset);//infill_overlap deleted for simplification
 
-UnionFind<InfillLineSegment*> connected_lines; //Keeps track of which lines are connected to which.
+    UnionFind<InfillLineSegment*> connected_lines; //Keeps track of which lines are connected to which.
 	for (std::vector<std::vector<InfillLineSegment*>>& crossings_on_polygon : crossings_on_line)
 	{
 		for (std::vector<InfillLineSegment*>& crossings_on_polygon_segment : crossings_on_polygon)

@@ -485,7 +485,6 @@ void FffPolygonGenerator::processInsets(SliceDataStorage& storage, int layer_nr)
 	WallsComputation walls_computation(layer_nr);
 	walls_computation.generateInsets(layer);
 	
-	
 }
 
 	// fuzzy skin

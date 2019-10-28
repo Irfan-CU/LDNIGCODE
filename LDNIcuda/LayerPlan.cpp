@@ -588,6 +588,417 @@ void LayerPlan::addPolygon(coord_tIrfan layer_thickness, int layer_nr, ConstPoly
 	}
 }
 
+static const float max_non_bridge_line_volume = 100000.0f;
+unsigned LayerPlan::locateFirstSupportedVertex(ConstPolygonRef wall, const unsigned start_idx) const
+{
+	if (bridge_wall_mask.empty() && overhang_mask.empty())
+	{
+		return start_idx;
+	}
+
+	Polygons air_below(bridge_wall_mask.unionPolygons(overhang_mask));
+
+	unsigned curr_idx = start_idx;
+
+	while (true)
+	{
+		const curaIrfan::PointIrfan & vertex = wall[curr_idx];
+		if (!air_below.inside(vertex, true))
+		{
+			// vertex isn't above air so it's OK to use
+			return curr_idx;
+		}
+
+		if (++curr_idx >= wall.size())
+		{
+			curr_idx = 0;
+		}
+
+		if (curr_idx == start_idx)
+		{
+			// no vertices are supported so just return the original index
+			return start_idx;
+		}
+	}
+}
+
+void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::PointIrfan& p1, const SliceMeshStorage& mesh, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, float flow, float& non_bridge_line_volume, Ratio speed_factor, double distance_to_bridge_start)
+{
+	const coord_tIrfan min_line_len = 5; // we ignore lines less than 5um long
+	const double acceleration_segment_len = 1000; // accelerate using segments of this length
+	const double acceleration_factor = 0.85; // must be < 1, the larger the value, the slower the acceleration
+	const bool spiralize = false;
+
+	const coord_tIrfan min_bridge_line_len = MM2INT(5); 
+	const Ratio bridge_wall_coast = Ratio(100 / 100);//mesh.settings.get<Ratio>("bridge_wall_coast");
+	const Ratio overhang_speed_factor = Ratio(1);// mesh.settings.get<Ratio>("wall_overhang_speed_factor");
+
+	curaIrfan::PointIrfan cur_point = p0;
+
+	// helper function to add a single non-bridge line
+
+	// If the line precedes a bridge line, it may be coasted to reduce the nozzle pressure before the bridge is reached
+
+	// alternatively, if the line follows a bridge line, it may be segmented and the print speed gradually increased to reduce under-extrusion
+
+	auto addNonBridgeLine = [&](const curaIrfan::PointIrfan& line_end)
+	{										
+		coord_tIrfan distance_to_line_end = curaIrfan::vSize(curaIrfan::operator-(cur_point , line_end));
+
+		while (distance_to_line_end > min_line_len)
+		{
+			// if we are accelerating after a bridge line, the segment length is less than the whole line length
+			curaIrfan::PointIrfan segment_end = (speed_factor == 1 || distance_to_line_end < acceleration_segment_len) ? line_end : curaIrfan::operator+( cur_point , (curaIrfan::operator*(curaIrfan::operator-(line_end, cur_point), acceleration_segment_len / distance_to_line_end)));
+
+			// flow required for the next line segment - when accelerating after a bridge segment, the flow is increased in inverse proportion to the speed_factor
+			// so the slower the feedrate, the greater the flow - the idea is to get the extruder back to normal pressure as quickly as possible
+			const float segment_flow = (speed_factor < 1) ? flow * (1 / speed_factor) : flow;
+
+			// if a bridge is present in this wall, this particular segment may need to be partially or wholely coasted
+			if (distance_to_bridge_start > 0)
+			{
+				// speed_flow_factor approximates how the extrusion rate alters between the non-bridge wall line and the following bridge wall line
+				// if the extrusion rates are the same, its value will be 1, if the bridge config extrusion rate is < the non-bridge config extrusion rate, the value is < 1
+
+				const Ratio speed_flow_factor((bridge_config.getSpeed() * bridge_config.getFlowRatio()) / (non_bridge_config.getSpeed() * non_bridge_config.getFlowRatio()));
+
+				// coast distance is proportional to distance, speed and flow of non-bridge segments just printed and is throttled by speed_flow_factor
+				const double coast_dist = std::min(non_bridge_line_volume, max_non_bridge_line_volume) * (1 - speed_flow_factor) * bridge_wall_coast / 40;
+
+				if ((distance_to_bridge_start - distance_to_line_end) <= coast_dist)
+				{
+					// coast takes precedence over acceleration
+					segment_end = line_end;
+				}
+
+				const coord_tIrfan len = curaIrfan::vSize(curaIrfan::operator-(cur_point , segment_end));
+				if (coast_dist > 0 && ((distance_to_bridge_start - len) <= coast_dist))
+				{
+					if ((len - coast_dist) > min_line_len)
+					{
+						// segment is longer than coast distance so extrude using non-bridge config to start of coast
+						curaIrfan::PointIrfan point=  curaIrfan::operator+(segment_end, curaIrfan::operator*(coast_dist, curaIrfan::operator/((curaIrfan::operator-(cur_point, segment_end)), len)));
+										
+						addExtrusionMove(layer_thickness, non_bridge_config, point, layer_nr, SpaceFillType::Polygons, segment_flow, spiralize, speed_factor);
+					}
+					// then coast to start of bridge segment
+					addExtrusionMove(layer_thickness, non_bridge_config, segment_end, layer_nr, SpaceFillType::Polygons, 0, spiralize, speed_factor);
+				}
+				else
+				{
+					// no coasting required, just normal segment using non-bridge config
+					addExtrusionMove(layer_thickness, non_bridge_config, segment_end, layer_nr, SpaceFillType::Polygons, segment_flow, spiralize,
+						(overhang_mask.empty() || (!overhang_mask.inside(p0, true) && !overhang_mask.inside(p1, true))) ? speed_factor : overhang_speed_factor);
+				}
+
+				distance_to_bridge_start -= len;
+			}
+			else
+			{
+				// no coasting required, just normal segment using non-bridge config
+				addExtrusionMove(layer_thickness, non_bridge_config, segment_end, layer_nr, SpaceFillType::Polygons, segment_flow, spiralize,
+					(overhang_mask.empty() || (!overhang_mask.inside(p0, true) && !overhang_mask.inside(p1, true))) ? speed_factor : overhang_speed_factor);
+			}
+			curaIrfan::PointIrfan flow_multiplier= curaIrfan::operator*(curaIrfan::operator*(segment_flow, speed_factor), non_bridge_config.getSpeed());
+			non_bridge_line_volume += curaIrfan::vSize(curaIrfan::operator-(cur_point , segment_end)) * segment_flow * speed_factor * non_bridge_config.getSpeed();
+			cur_point = segment_end;
+			speed_factor = 1 - (1 - speed_factor) * acceleration_factor;
+			distance_to_line_end = curaIrfan::vSize(curaIrfan::operator-(cur_point , line_end));
+		}
+	};
+
+	if (bridge_wall_mask.empty())
+	{
+		// no bridges required
+		addExtrusionMove(layer_thickness, non_bridge_config, p1, layer_nr, SpaceFillType::Polygons, flow, spiralize,
+			(overhang_mask.empty() || (!overhang_mask.inside(p0, true) && !overhang_mask.inside(p1, true))) ? 1.0_r : overhang_speed_factor);
+	}
+	else
+	{
+		// bridges may be required
+		if (PolygonUtils::polygonCollidesWithLineSegment(bridge_wall_mask, p0, p1))
+		{
+			// the line crosses the boundary between supported and non-supported regions so one or more bridges are required
+
+			// determine which segments of the line are bridges
+
+			Polygon line_poly;
+			line_poly.add(p0);
+			line_poly.add(p1);
+			Polygons line_polys;
+			line_polys.add(line_poly);
+			line_polys = bridge_wall_mask.intersectionPolyLines(line_polys);
+
+			// line_polys now contains the wall lines that need to be printed using bridge_config
+
+			while (line_polys.size() > 0)
+			{
+				// find the bridge line segment that's nearest to the current point
+				int nearest = 0;
+				float smallest_dist2 = curaIrfan::vSize2f(curaIrfan::operator-(cur_point , line_polys[0][0]));
+				for (unsigned i = 1; i < line_polys.size(); ++i)
+				{
+					float dist2 = curaIrfan::vSize2f(curaIrfan::operator-(cur_point , line_polys[i][0]));
+					if (dist2 < smallest_dist2)
+					{
+						nearest = i;
+						smallest_dist2 = dist2;
+					}
+				}
+				ConstPolygonRef bridge = line_polys[nearest];
+
+				// set b0 to the nearest vertex and b1 the furthest
+				curaIrfan::PointIrfan b0 = bridge[0];
+				curaIrfan::PointIrfan b1 = bridge[1];
+
+				if (curaIrfan::vSize2f(curaIrfan::operator-(cur_point , b1)) < curaIrfan::vSize2f(curaIrfan::operator-(cur_point , b0)))
+				{
+					// swap vertex order
+					b0 = bridge[1];
+					b1 = bridge[0];
+				}
+
+				// extrude using non_bridge_config to the start of the next bridge segment
+
+				addNonBridgeLine(b0);
+
+				const double bridge_line_len = curaIrfan::vSize(curaIrfan::operator-(b1 , cur_point));
+
+				if (bridge_line_len >= min_bridge_line_len)
+				{
+					// extrude using bridge_config to the end of the next bridge segment
+
+					if (bridge_line_len > min_line_len)
+					{
+						addExtrusionMove(layer_thickness , bridge_config, b1, layer_nr, SpaceFillType::Polygons, flow);
+						non_bridge_line_volume = 0;
+						cur_point = b1;
+						// after a bridge segment, start slow and accelerate to avoid under-extrusion due to extruder lag
+						speed_factor = std::min(Ratio(bridge_config.getSpeed() / non_bridge_config.getSpeed()), 1.0_r);
+					}
+				}
+				else
+				{
+					// treat the short bridge line just like a normal line
+
+					addNonBridgeLine(b1);
+				}
+
+				// finished with this segment
+				line_polys.remove(nearest);
+			}
+
+			// if we haven't yet reached p1, fill the gap with non_bridge_config line
+			addNonBridgeLine(p1);
+		}
+		else if (bridge_wall_mask.inside(p0, true) && curaIrfan::vSize(curaIrfan::operator-(p0 , p1)) >= min_bridge_line_len)
+		{
+			// both p0 and p1 must be above air (the result will be ugly!)
+			addExtrusionMove(layer_thickness, bridge_config, p1, layer_nr ,SpaceFillType::Polygons, flow);
+			non_bridge_line_volume = 0;
+		}
+		else
+		{
+			// no part of the line is above air or the line is too short to print as a bridge line
+			addNonBridgeLine(p1);
+		}
+	}
+}
+
+void LayerPlan::addWall(ConstPolygonRef wall, int start_idx, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, WallOverlapComputation* wall_overlap_computation, coord_tIrfan wall_0_wipe_dist, float flow_ratio, bool always_retract)
+{
+	// make sure wall start point is not above air!
+	start_idx = locateFirstSupportedVertex(wall, start_idx);
+
+	float non_bridge_line_volume = max_non_bridge_line_volume; // assume extruder is fully pressurised before first non-bridge line is output
+	double speed_factor = 1.0; // start first line at normal speed
+	coord_tIrfan distance_to_bridge_start = 0; // will be updated before each line is processed
+
+	const coord_tIrfan min_bridge_line_len = MM2INT(5);// mesh.settings.get<coord_tIrfan>("bridge_wall_min_length");
+	const Ratio wall_min_flow = 0;// mesh.settings.get<Ratio>("wall_min_flow");
+	const bool wall_min_flow_retract = false;// mesh.settings.get<bool>("wall_min_flow_retract");
+
+	// helper function to calculate the distance from the start of the current wall line to the first bridge segment
+
+	auto computeDistanceToBridgeStart = [&](unsigned current_index)
+	{
+		distance_to_bridge_start = 0;
+
+		if (!bridge_wall_mask.empty())
+		{
+			// there is air below the part so iterate through the lines that have not yet been output accumulating the total distance to the first bridge segment
+			for (unsigned point_idx = current_index; point_idx < wall.size(); ++point_idx)
+			{
+				const curaIrfan::PointIrfan& p0 = wall[point_idx];
+				const curaIrfan::PointIrfan& p1 = wall[(point_idx + 1) % wall.size()];
+
+				if (PolygonUtils::polygonCollidesWithLineSegment(bridge_wall_mask, p0, p1))
+				{
+					// the line crosses the boundary between supported and non-supported regions so it will contain one or more bridge segments
+
+					// determine which segments of the line are bridges
+
+					Polygon line_poly;
+					line_poly.add(p0);
+					line_poly.add(p1);
+					Polygons line_polys;
+					line_polys.add(line_poly);
+					line_polys = bridge_wall_mask.intersectionPolyLines(line_polys);
+
+					while (line_polys.size() > 0)
+					{
+						// find the bridge line segment that's nearest to p0
+						int nearest = 0;
+						float smallest_dist2 = curaIrfan::vSize2f(curaIrfan::operator-(p0 , line_polys[0][0]));
+						for (unsigned i = 1; i < line_polys.size(); ++i)
+						{
+							float dist2 = curaIrfan::vSize2f(curaIrfan::operator-(p0 , line_polys[i][0]));
+							if (dist2 < smallest_dist2)
+							{
+								nearest = i;
+								smallest_dist2 = dist2;
+							}
+						}
+						ConstPolygonRef bridge = line_polys[nearest];
+
+						// set b0 to the nearest vertex and b1 the furthest
+						curaIrfan::PointIrfan b0 = bridge[0];
+						curaIrfan::PointIrfan b1 = bridge[1];
+
+						if (curaIrfan::vSize2f(curaIrfan::operator-(p0 , b1)) < curaIrfan::vSize2f(curaIrfan::operator-(p0 , b0)))
+						{
+							// swap vertex order
+							b0 = bridge[1];
+							b1 = bridge[0];
+						}
+
+						distance_to_bridge_start += curaIrfan::vSize(curaIrfan::operator-(b0 , p0));
+
+						const double bridge_line_len = curaIrfan::vSize(curaIrfan::operator-(b1 , b0));
+
+						if (bridge_line_len >= min_bridge_line_len)
+						{
+							// job done, we have found the first bridge line
+							return;
+						}
+
+						distance_to_bridge_start += bridge_line_len;
+
+						// finished with this segment
+						line_polys.remove(nearest);
+					}
+				}
+				else if (!bridge_wall_mask.inside(p0, true))
+				{
+					// none of the line is over air
+					distance_to_bridge_start += curaIrfan::vSize(curaIrfan::operator-(p1 , p0));
+				}
+			}
+
+			// we have got all the way to the end of the wall without finding a bridge segment so disable coasting by setting distance_to_bridge_start back to 0
+
+			distance_to_bridge_start = 0;
+		}
+	};
+
+	bool travel_required = false; // true when a wall has been omitted due to its flow being less than the minimum required
+
+	bool first_line = true;
+
+	curaIrfan::PointIrfan p0 = wall[start_idx];
+
+	for (unsigned int point_idx = 1; point_idx < wall.size(); point_idx++)
+	{
+		const curaIrfan::PointIrfan& p1 = wall[(start_idx + point_idx) % wall.size()];
+		const float flow = (wall_overlap_computation) ? flow_ratio * wall_overlap_computation->getFlow(p0, p1) : flow_ratio;
+
+		if (!bridge_wall_mask.empty())
+		{
+			computeDistanceToBridgeStart((start_idx + point_idx - 1) % wall.size());
+		}
+
+		if (flow >= wall_min_flow)
+		{
+			if (first_line || travel_required)
+			{
+				addTravel(layer_thickness,layer_nr, p0, (first_line) ? always_retract : wall_min_flow_retract);
+				first_line = false;
+				travel_required = false;
+			}
+			addWallLine(p0, p1, mesh, non_bridge_config, bridge_config, flow, non_bridge_line_volume, speed_factor, distance_to_bridge_start);
+		}
+		else
+		{
+			travel_required = true;
+		}
+
+		p0 = p1;
+	}
+
+	if (wall.size() > 2)
+	{
+		const curaIrfan::PointIrfan& p1 = wall[start_idx];
+		const float flow = (wall_overlap_computation) ? flow_ratio * wall_overlap_computation->getFlow(p0, p1) : flow_ratio;
+
+		if (!bridge_wall_mask.empty())
+		{
+			computeDistanceToBridgeStart((start_idx + wall.size() - 1) % wall.size());
+		}
+
+		if (flow >= wall_min_flow)
+		{
+			if (travel_required)
+			{
+				addTravel(layer_thickness, layer_nr, p0, wall_min_flow_retract);
+			}
+			addWallLine(p0, p1, mesh, non_bridge_config, bridge_config, flow, non_bridge_line_volume, speed_factor, distance_to_bridge_start);
+
+			if (wall_0_wipe_dist > 0)
+			{ // apply outer wall wipe
+				p0 = wall[start_idx];
+				int distance_traversed = 0;
+				for (unsigned int point_idx = 1; ; point_idx++)
+				{
+					curaIrfan::PointIrfan p1 = wall[(start_idx + point_idx) % wall.size()];
+					int p0p1_dist = curaIrfan::vSize(curaIrfan::operator-( p1 , p0));
+					if (distance_traversed + p0p1_dist >= wall_0_wipe_dist)
+					{
+						curaIrfan::PointIrfan vector = curaIrfan::operator-(p1, p0);
+						curaIrfan::PointIrfan half_way = curaIrfan::operator+(p0 , curaIrfan::normal(vector, wall_0_wipe_dist - distance_traversed));
+						addTravel_simple(layer_nr, half_way);
+						break;
+					}
+					else
+					{
+						addTravel_simple(layer_nr, p1);
+						distance_traversed += p0p1_dist;
+					}
+					p0 = p1;
+				}
+				forceNewPathStart();
+			}
+		}
+	}
+	else
+	{
+		printf("WARNING: line added as polygon! (LayerPlan)\n");
+	}
+}
+
+void LayerPlan::addWalls(const Polygons& walls,const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, WallOverlapComputation* wall_overlap_computation, const ZSeamConfig& z_seam_config, coord_tIrfan wall_0_wipe_dist, float flow_ratio, bool always_retract)
+{
+	PathOrderOptimizer orderOptimizer(getLastPlannedPositionOrStartingPosition(), z_seam_config);
+	for (unsigned int poly_idx = 0; poly_idx < walls.size(); poly_idx++)
+	{
+		orderOptimizer.addPolygon(walls[poly_idx]);
+	}
+	orderOptimizer.optimize();
+	for (unsigned int poly_idx : orderOptimizer.polyOrder)
+	{
+		addWall(walls[poly_idx], orderOptimizer.polyStart[poly_idx], non_bridge_config, bridge_config, wall_overlap_computation, wall_0_wipe_dist, flow_ratio, always_retract);
+	}
+}
+
 void LayerPlan::moveInsideCombBoundary(int layernum,const coord_tIrfan distance)
 {
 	constexpr coord_tIrfan max_dist2 = MM2INT(2.0) * MM2INT(2.0); // if we are further than this distance, we conclude we are not inside even though we thought we were.
