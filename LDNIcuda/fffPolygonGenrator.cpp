@@ -207,17 +207,18 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 	}
 	
 	std::vector<Slicer*> slicerList;
+
+	bool use_variable_layer_heights = false;
 	
 	for (unsigned int mesh_idx = 0; mesh_idx < 1; mesh_idx++) //only one mesh
 	{
-		//printf("going for the slicer program \n");
-		//Mesh& mesh = storage.meshes[mesh_idx];
+		
 		Slicer* slicer = new Slicer(storage, meshlist, c_mesh, layer_thickness, slice_layer_count, use_variable_layer_heights, meshin_layer);
 
 		slicerList.push_back(slicer);
 		
 	}
-	
+
 	generateMultipleVolumesOverlap(slicerList);
 	
 	storage.print_layer_count = 0;

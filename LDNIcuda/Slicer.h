@@ -70,21 +70,6 @@
 		const Mesh* mesh = nullptr;
 		Slicer(SliceDataStorage& storage, GLKObList& mesh_list,ContourMesh& c_mesh, const coord_tIrfan thickness, int slice_layer_count, bool use_variable_layer_heights, std::vector<int>& meshin_layer);
 		
-		
-
-		/*!
-		 * \brief Linear interpolation between coordinates of a line.
-		 *
-		 * Get the Y of a point with X \p x in the line through (\p x0, \p y0) and
-		 * (\p x1, \p y1).
-		 * \param x The X coordinate of the point to find.
-		 * \param x0 The X coordinate of the first end point of the line segment.
-		 * \param x1 The X coordinate of the second end point of the line segment.
-		 * \param y0 The Y coordinate of the first end point of the line segment.
-		 * \param y1 The Y coordinate of the second end point of the line segment.
-		 * \return The Y coordinate of the point to find.
-		 */
-	
 	};
 
 //namespace cura

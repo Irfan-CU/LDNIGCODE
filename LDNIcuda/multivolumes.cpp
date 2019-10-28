@@ -6,7 +6,7 @@
 #include "slicer.h"
 #include "EnumSettings.h"
 
-
+/*
 void carveMultipleVolumes(std::vector<Slicer*> &volumes)
 {
 	//Go trough all the volumes, and remove the previous volume outlines from our own outline, so we never have overlapped areas.
@@ -41,7 +41,7 @@ void carveMultipleVolumes(std::vector<Slicer*> &volumes)
 			{
 				continue;
 			}
-			/*
+			
 			if (!volume_1.mesh->getAABB().hit(volume_2.mesh->getAABB()))
 			{
 				continue;
@@ -59,11 +59,11 @@ void carveMultipleVolumes(std::vector<Slicer*> &volumes)
 					layer1.polygons = layer1.polygons.difference(layer2.polygons);
 				}
 			}
-			*/
+			
 		}
 	}
 }
-
+ */
 void generateMultipleVolumesOverlap(std::vector<Slicer*> &volumes)
 	{
 		if (volumes.size() < 2)

@@ -12,7 +12,7 @@ class Slicer;
 
 
 
-void carveMultipleVolumes(std::vector<Slicer*> &volumes);
+//void carveMultipleVolumes(std::vector<Slicer*> &volumes);
 
 void generateMultipleVolumesOverlap(std::vector<Slicer*> &meshes);
 

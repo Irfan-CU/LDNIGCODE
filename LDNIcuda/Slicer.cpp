@@ -188,8 +188,7 @@
 		{
 		layers[layer_nr].z = adjusted_layer_offset + (thickness * (layer_nr - 1));
 		}
-		//printf("@ 190 of slicer.cpp\n");
-		//loop over all mesh faces
+		
 		unsigned int layer_nr = 0; 
 		
 		SlicerSegment segment; SlicerLayer	slicerlayer; int mesh_count = 0;
