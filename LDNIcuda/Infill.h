@@ -195,9 +195,9 @@ private:
 	};
 
 	std::vector<std::vector<std::vector<InfillLineSegment*>>> crossings_on_line;
-	void multiplyInfill(Polygons& result_lines);
+	//void multiplyInfill(Polygons& result_lines);
 	void connectLines(Polygons& result_lines);
-	coord_tIrfan getShiftOffsetFromInfillOriginAndRotation(const double& infill_rotation)
+	coord_tIrfan getShiftOffsetFromInfillOriginAndRotation(const double& infill_rotation);
 
 
 

@@ -225,9 +225,9 @@ unsigned int FffGcodeWriter::getStartExtruder(const SliceDataStorage& storage)
 {
 	
 	size_t start_extruder_nr = 0;
-	std::vector<bool> extruder_is_used = storage.getExtrudersUsed();
 	assert(start_extruder_nr < 1);
 	return start_extruder_nr;
+
 }
 /*
 void FffGcodeWriter::processSkirtBrim(const SliceDataStorage& storage, LayerPlan& gcode_layer, unsigned int extruder_nr) const
@@ -557,13 +557,14 @@ void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage&storage, const si
 	bool added_something = false;		
 
 	added_something = added_something | processInfill(storage, gcode_layer, extruder_nr,mesh_config, part);
-	
+	/*
+	printf("processing insets now");
 	added_something = added_something | processInsets(storage, gcode_layer, extruder_nr, mesh_config, part);
-
+	printf("outside insets now");
 	//Not needed
 	//processOutlineGaps(storage, gcode_layer, extruder_nr, mesh_config, part, added_something);
 	//added_something = added_something | processSkinAndPerimeterGaps(storage, gcode_layer, mesh, extruder_nr, mesh_config, part);
-
+*/
 	coord_tIrfan layer_thickness = storage.Layers[0].thickness;
 	bool  magic_spiralize = false;
 
@@ -821,7 +822,7 @@ bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& g
 					}
 				}
 			
-
+			printf("inside insets at line 825 \n");
 			const int half_outer_wall_width = mesh_config.inset0_config.getLineWidth() / 2;
 
 			// remove those parts of the layer below that are narrower than a wall line width as they will not be printed
@@ -844,7 +845,7 @@ bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& g
 			// clear to disable overhang detection
 			gcode_layer.setOverhangMask(Polygons());
 		}
-
+		printf("@line848\n");
 		// Only spiralize the first part in the mesh, any other parts will be printed using the normal, non-spiralize codepath.
 		// This sounds weird but actually does the right thing when you have a model that has multiple parts at the bottom that merge into
 		// one part higher up. Once all the parts have merged, layers above that level will be spiralized
@@ -856,7 +857,7 @@ bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& g
 		else
 		{
 			bool outer_inset_first = false;
-			const bool outer_inset_first = outer_inset_first || (gcode_layer.getLayerNr() == 0);
+			outer_inset_first = outer_inset_first || (gcode_layer.getLayerNr() == 0);
 			int processed_inset_number = -1;
 			for (int inset_number = part.insets.size() - 1; inset_number > -1; inset_number--)
 			{

@@ -410,12 +410,8 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 
 			}
 			
-
 			myfile.close();
 			
-
-
-
 			if (!spiralize) // normal (extrusion) move (with coasting
 			{
 				// if path provides a valid (in range 0-100) fan speed, use it
@@ -622,7 +618,7 @@ unsigned LayerPlan::locateFirstSupportedVertex(ConstPolygonRef wall, const unsig
 	}
 }
 
-void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::PointIrfan& p1, const SliceMeshStorage& mesh, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, float flow, float& non_bridge_line_volume, Ratio speed_factor, double distance_to_bridge_start)
+void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::PointIrfan& p1, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, float flow, float& non_bridge_line_volume, Ratio speed_factor, double distance_to_bridge_start)
 {
 	const coord_tIrfan min_line_len = 5; // we ignore lines less than 5um long
 	const double acceleration_segment_len = 1000; // accelerate using segments of this length
@@ -925,7 +921,7 @@ void LayerPlan::addWall(ConstPolygonRef wall, int start_idx, const GCodePathConf
 				first_line = false;
 				travel_required = false;
 			}
-			addWallLine(p0, p1, mesh, non_bridge_config, bridge_config, flow, non_bridge_line_volume, speed_factor, distance_to_bridge_start);
+			addWallLine(p0, p1,non_bridge_config, bridge_config, flow, non_bridge_line_volume, speed_factor, distance_to_bridge_start);
 		}
 		else
 		{
@@ -951,7 +947,7 @@ void LayerPlan::addWall(ConstPolygonRef wall, int start_idx, const GCodePathConf
 			{
 				addTravel(layer_thickness, layer_nr, p0, wall_min_flow_retract);
 			}
-			addWallLine(p0, p1, mesh, non_bridge_config, bridge_config, flow, non_bridge_line_volume, speed_factor, distance_to_bridge_start);
+			addWallLine(p0, p1, non_bridge_config, bridge_config, flow, non_bridge_line_volume, speed_factor, distance_to_bridge_start);
 
 			if (wall_0_wipe_dist > 0)
 			{ // apply outer wall wipe
