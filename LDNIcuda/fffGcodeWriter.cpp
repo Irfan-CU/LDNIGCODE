@@ -30,6 +30,7 @@ FffGcodeWriter::FffGcodeWriter()
 
 void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 {
+	storage.extruders.resize(2);
 	const size_t start_extruder_nr = getStartExtruder(storage);
 	gcode.preSetup(start_extruder_nr);
 	
@@ -59,7 +60,7 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 	{
 		processNextMeshGroupCode(storage);
 	}
-	
+
 	size_t total_layers = 0;
 	for (SliceLayer& layer_storage: storage.Layers)
 	{
@@ -67,12 +68,13 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 		total_layers = std::max(total_layers, storage.Layers.size());
 		setInfillAndSkinAngles(storage);
 	}
+	calculateExtruderOrderPerLayer(storage);
 	gcode.writeLayerCountComment(total_layers);
 	std::string current_mesh = "NONMESH";
 	int process_layer_starting_layer_nr = 0;
 	//printf("the program is at line 98\n");
 	//LayerPlan& gcode_layer = processLayer(storage, process_layer_starting_layer_nr, total_layers);
-	total_layers = 10;
+	
 	const std::function<LayerPlan* (int)>& produce_item = [&storage, total_layers, this](int layer_nr)
 	{
 		//printf("starting the layer plan for the layer %d \n", layer_nr);
@@ -80,7 +82,7 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 		//printf("got the Gcode for the layer plan %d \n", layer_nr);
 		return &gcode_layer;
 	};
-	 
+	total_layers = 6;
 	const std::function<void(LayerPlan*)>& consume_item =
 		[this, total_layers](LayerPlan* gcode_layer)
 	{
@@ -98,12 +100,12 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 		, max_task_count
 	);
 
-	printf("Done with middel processses for layer %d\n");
+	//printf("Done with middel processses for layer %d\n");
 	// process all layers, process buffer for preheating and minimal layer time etc, write layers to gcode:
 	threader.run();
 
 	layer_plan_buffer.flush();
-	printf("flushed the layer \n");
+	//printf("flushed the layer \n");
 	//Progress::messageProgressStage(Progress::Stage::FINISH, &time_keeper);
 
 	//Store the object height for when we are printing multiple objects, as we need to clear every one of them when moving to the next position.
@@ -111,18 +113,96 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 
 
 	constexpr bool force = true;
-	printf("going for the retractions \n");
+	//printf("going for the retractions \n");
 	gcode.writeRetraction(storage.retraction_config_per_extruder[0]); // retract after finishing each meshgroup
-	printf("wrote the layer \n");
+	//printf("wrote the layer \n");
 
 }
 
+void FffGcodeWriter::calculateExtruderOrderPerLayer(const SliceDataStorage& storage)
+{
+	size_t last_extruder;
+	// set the initial extruder of this meshgroup
+//	Scene& scene = Application::getInstance().current_slice->scene;
+	last_extruder = getStartExtruder(storage);
+	for (int layer_nr = 0; layer_nr < static_cast<int>(storage.print_layer_count); layer_nr++)
+	{
+		std::vector<std::vector<size_t>>& extruder_order_per_layer_here = extruder_order_per_layer;
+		extruder_order_per_layer_here.push_back(getUsedExtrudersOnLayerExcludingStartingExtruder(storage, last_extruder, layer_nr));
+		last_extruder = extruder_order_per_layer_here.back().back();
+		extruder_prime_layer_nr[last_extruder] = std::min(extruder_prime_layer_nr[last_extruder], layer_nr);
+	}
+}
 
+std::vector<size_t> FffGcodeWriter::getUsedExtrudersOnLayerExcludingStartingExtruder(const SliceDataStorage& storage, const size_t start_extruder, const int& layer_nr) const
+{
+	size_t extruder_count =1;
+	assert(static_cast<int>(extruder_count) > 0);
+	std::vector<size_t> ret;
+	ret.push_back(start_extruder);
+	std::vector<bool> extruder_is_used_on_this_layer = storage.getExtrudersUsed(layer_nr);
+
+	//The outermost prime tower extruder is always used if there is a prime tower.
+	
+
+	// check if we are on the first layer
+	if (layer_nr == 0)
+	{
+		// check if we need prime blob on the first layer
+		for (size_t used_idx = 0; used_idx < extruder_is_used_on_this_layer.size(); used_idx++)
+		{
+			if (getExtruderNeedPrimeBlobDuringFirstLayer(storage, used_idx))
+			{
+				extruder_is_used_on_this_layer[used_idx] = true;
+			}
+		}
+	}
+
+	for (size_t extruder_nr = 0; extruder_nr < extruder_count; extruder_nr++)
+	{
+		if (extruder_nr == start_extruder)
+		{ // skip the current extruder, it's the one we started out planning
+			continue;
+		}
+		if (!extruder_is_used_on_this_layer[extruder_nr])
+		{
+			continue;
+		}
+		ret.push_back(extruder_nr);
+	}
+	assert(ret.size() <= (size_t)extruder_count && "Not more extruders may be planned in a layer than there are extruders!");
+	return ret;
+}
+
+bool FffGcodeWriter::getExtruderNeedPrimeBlobDuringFirstLayer(const SliceDataStorage& storage, const size_t extruder_nr) const
+{
+	bool need_prime_blob = false;
+	need_prime_blob = true;
+	
+	// check the settings if the prime blob is disabled
+	if (need_prime_blob)
+	{
+		const bool is_extruder_used_overall = storage.getExtrudersUsed()[extruder_nr];
+		const bool extruder_prime_blob_enabled = storage.getExtruderPrimeBlobEnabled(extruder_nr);
+
+		need_prime_blob = is_extruder_used_overall && extruder_prime_blob_enabled;
+	}
+
+	return need_prime_blob;
+}
+
+bool SliceDataStorage::getExtruderPrimeBlobEnabled(const size_t extruder_nr) const
+{
+	if (extruder_nr >= 1)
+	{
+		return false;
+	}
+
+	return true;
+}
 
 LayerPlan& FffGcodeWriter::processLayer(SliceDataStorage& storage, int layer_nr, const size_t total_layers) const
 {
-	
-	//printf("The program is at line 142 and the layerthickness is %f for the layer %d \n",layer_thickness,layer_nr);
 	coord_tIrfan z;
 	bool include_helper_parts = true;
 
@@ -130,11 +210,10 @@ LayerPlan& FffGcodeWriter::processLayer(SliceDataStorage& storage, int layer_nr,
 	coord_tIrfan layer_thickness = storage.Layers[layer_nr].thickness;
 	coord_tIrfan avoid_distance = 0; // minimal avoid distance is zero
 	const std::vector<bool> extruder_is_used = storage.getExtrudersUsed();
-	for (size_t extruder_nr = 0; extruder_nr < 1; extruder_nr++)
+	for (size_t extruder_nr = 0; extruder_nr < 2; extruder_nr++)
 	{
 		if (extruder_is_used[extruder_nr])
 		{
-			
 			avoid_distance = MM2INT(3);// std::max(avoid_distance, extruder.settings.get<coord_t>("travel_avoid_distance"));
 		}
 	}
@@ -152,27 +231,39 @@ LayerPlan& FffGcodeWriter::processLayer(SliceDataStorage& storage, int layer_nr,
 	//size_t extruder_order = ;
 	size_t extruder_nr = 0;
 	LayerPlan& gcode_layer = *new LayerPlan(storage, layer_nr, z, layer_thickness, extruder_nr, fan_speed_layer_time_settings_per_extruder, comb_offset_from_outlines, first_outer_wall_line_width, avoid_distance);
-	printf("set the layer plan for layer %d \n", gcode_layer.getLayerNr());
+	//printf("set the layer plan for layer %d \n", gcode_layer.getLayerNr());
 	if (include_helper_parts && layer_nr == 0)
 	{ // process the skirt or the brim of the starting extruder.
 		
-		processSkirtBrim(storage, gcode_layer, extruder_nr);
-		printf("processed SkirtBrim \n");
+		int extruder_nr = gcode_layer.getExtruder();
+		if (storage.skirt_brim[extruder_nr].size() > 0)
+		{
+			processSkirtBrim(storage, gcode_layer, extruder_nr);
+		}
 		
-	}
+		
 	
+	}
+	const std::vector<size_t>& extruder_order = extruder_order_per_layer[layer_nr];
+
+	const size_t support_roof_extruder_nr = 0;
+	const size_t support_bottom_extruder_nr = 0;
+	const size_t support_infill_extruder_nr = 0;
+
 	bool disable_path_optimisation = false;
 	int mesh_idx = 0;
 	
-	const SliceMeshStorage& mesh = storage.meshes[mesh_idx];
-	const PathConfigStorage::MeshPathConfigs& mesh_config = gcode_layer.configs_storage.mesh_configs[mesh_idx];
-	printf("mesh_config is %d \n", mesh_config.infill_config[0].getLayerThickness());
 	
-	for (int extruder_nr = 0; extruder_nr <= 1; extruder_nr++)
+	//printf("mesh_config is %d \n", mesh_config.infill_config[0].getLayerThickness());
+	
+	for (const size_t& extruderorder: extruder_order)
 	{
-
+		printf("@@@@the layter nr ia %d \n", layer_nr);
 		if (layer_nr >= 0)
 		{
+		//	printf("the layer for addMeshLayerToGCode is %d \n", layer_nr);
+			const SliceMeshStorage& mesh = storage.meshes[mesh_idx];
+			const PathConfigStorage::MeshPathConfigs& mesh_config = gcode_layer.configs_storage.mesh_configs[mesh_idx];
 			addMeshLayerToGCode(storage, extruder_nr, mesh_config,gcode_layer);
 			//printf("the code is at the line 181of th eprogram \n");
 		}
@@ -183,7 +274,7 @@ LayerPlan& FffGcodeWriter::processLayer(SliceDataStorage& storage, int layer_nr,
 	
 	if (!disable_path_optimisation)	
 	{
-		printf("going for optimizing the paths \n");
+		//printf("going for optimizing the paths \n");
 		gcode_layer.optimizePaths(gcode.getPositionXY());
 		
 	}
@@ -195,10 +286,10 @@ void FffGcodeWriter::processSkirtBrim(SliceDataStorage& storage, LayerPlan& gcod
 {
 	
 	coord_tIrfan layer_thickness = storage.getlayer_thickness();
-	printf("inside skirt brim\n");
+	//printf("inside skirt brim\n");
 	if (gcode_layer.getSkirtBrimIsPlanned(extruder_nr))
 	{
-		printf("not processing brim \n");
+		//printf("not processing brim \n");
 		return;	 
 	}
 	
@@ -218,7 +309,7 @@ void FffGcodeWriter::processSkirtBrim(SliceDataStorage& storage, LayerPlan& gcod
 	gcode_layer.addPolygonsByOptimizer(layer_thickness, gcode_layer.getLayerNr(),skirt_brim, gcode_layer.configs_storage.skirt_brim_config_per_extruder[extruder_nr]);
 	
 	
-	printf("skirt brim is processed \n");
+	//printf("skirt brim is processed \n");
 }
 
 unsigned int FffGcodeWriter::getStartExtruder(const SliceDataStorage& storage)
@@ -461,9 +552,8 @@ void FffGcodeWriter::calculateExtruderOrderPerLayer(const SliceDataStorage& stor
 }
 */
 void FffGcodeWriter::addMeshLayerToGCode(const SliceDataStorage& storage, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer) const
-{	
-	
-	
+{
+
 	const SliceLayer& layer = storage.Layers[gcode_layer.getLayerNr()];	 // get layer # function tells that which layer to process
 
 	//printf("inside addMeshLayerToGCode for the layer %d and the parts are %d \n   ", gcode_layer.getLayerNr(), layer.parts.size());
@@ -472,11 +562,11 @@ void FffGcodeWriter::addMeshLayerToGCode(const SliceDataStorage& storage, const 
 	{
 		return;
 	}
-
+	
 	gcode_layer.setMesh("Mesh1");
-	printf("**@497 of addmeshlayertogcode \n");
+	//printf("**@497 of addmeshlayertogcode \n");
 	ZSeamConfig z_seam_config(EZSeamType::SHARPEST_CORNER , storage.getZSeamHint(), EZSeamCornerPrefType::Z_SEAM_CORNER_PREF_ANY);
-	const curaIrfan::PointIrfan layer_start_position(0.0, 0.0);
+	const curaIrfan::PointIrfan layer_start_position(MM2INT(213.0), MM2INT(198.0));
 	PathOrderOptimizer part_order_optimizer(layer_start_position, z_seam_config);
 	for (unsigned int part_idx = 0; part_idx < layer.parts.size(); part_idx++)
 	{
@@ -497,8 +587,7 @@ void FffGcodeWriter::addMeshLayerToGCode(const SliceDataStorage& storage, const 
 		addMeshPartToGCode(storage, extruder_nr, part,mesh_config, gcode_layer);//part n layer being added to the GCode
 	}
 	processIroning(layer,  gcode_layer);
-
-	gcode_layer.setMesh("NONMESH");
+   	gcode_layer.setMesh("NONMESH");
 }
 /*
 void FffGcodeWriter::setExtruder_addPrime(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr) const
@@ -584,16 +673,16 @@ void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage&storage, const si
 
 bool FffGcodeWriter::processInfill(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const
 {
-	printf("inside processInfill \n ");
+	//printf("inside processInfill \n ");
 	//bool added_something = processMultiLayerInfill(storage, gcode_layer, extruder_nr, part);
 	bool added_something = processSingleLayerInfill(storage, mesh_config, gcode_layer, extruder_nr, part);
-	printf("the boolean added_something is %d \n", added_something);
+	//printf("the boolean added_something is %d \n", added_something);
 	return added_something;
 }
 
 bool FffGcodeWriter::processMultiLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer, const size_t extruder_nr, const SliceLayerPart& part) const
 {
-	printf("inside processMultiLayerInfill \n ");
+	//printf("inside processMultiLayerInfill \n ");
 	const coord_tIrfan infill_line_distance = MM2INT(6.3);// mesh.settings.get<coord_t>("infill_line_distance");
 	const coord_tIrfan infill_overlap = MM2INT(0.00);// mesh.settings.get<coord_t>("infill_overlap_mm");
 	double infill_angle = 45.0; //Original default. This will get updated to an element from mesh->infill_angles.
@@ -611,11 +700,11 @@ bool FffGcodeWriter::processMultiLayerInfill(const SliceDataStorage& storage, co
 	EFillMethod infill_pattern = EFillMethod::TRIANGLES;
 	//Print the thicker infill lines first. (double or more layer thickness, infill combined with previous layers)
 	bool added_something = false;
-	printf("in multilayerinfill 401 fffGCODEwriter.cpp %d \n", part.infill_area_per_combine_per_density[0].size());
+	//printf("in multilayerinfill 401 fffGCODEwriter.cpp %d \n", part.infill_area_per_combine_per_density[0].size());
 
 	for (unsigned int combine_idx = 1; combine_idx < part.infill_area_per_combine_per_density[0].size(); combine_idx++)
 	{
-		printf("line 404 in fffGCODEwriter.cpp \n");
+		//printf("line 404 in fffGCODEwriter.cpp \n");
 		int layernum = gcode_layer.getLayerNr();
 		const coord_tIrfan layer_thickness = storage.Layers[0].thickness;
 		const coord_tIrfan infill_line_width = MM2INT(6.3);// 0.42;
@@ -640,14 +729,14 @@ bool FffGcodeWriter::processMultiLayerInfill(const SliceDataStorage& storage, co
 			constexpr bool use_endpieces = true;
 			constexpr bool skip_some_zags = false;
 			constexpr size_t zag_skip_count = 0;
-			printf("line 422 in fffGCODEwriter.cpp \n");
+			//printf("line 422 in fffGCODEwriter.cpp \n");
 			Infill infill_comp(infill_pattern, zig_zaggify_infill, connect_polygons, part.infill_area_per_combine_per_density[density_idx][combine_idx], /*outline_offset =*/ 0
 				, infill_line_width, infill_line_distance_here, infill_overlap, infill_multiplier, infill_angle, gcode_layer.z, infill_shift, wall_line_count, infill_origin
 				, perimeter_gaps, connected_zigzags, use_endpieces, skip_some_zags, zag_skip_count
 				, MM2INT(0.42));
 			
-			infill_comp.generate(infill_lines, part);
-			printf("line 429 in fffGCODEwriter.cpp \n");
+			infill_comp.generate(infill_polygons, infill_lines);
+		//	printf("line 429 in fffGCODEwriter.cpp \n");
 		}
 
 		if (!infill_lines.empty())
@@ -660,81 +749,64 @@ bool FffGcodeWriter::processMultiLayerInfill(const SliceDataStorage& storage, co
 			gcode_layer.addLinesByOptimizer(layer_thickness, mesh_config.infill_config[combine_idx], infill_lines, layernum, SpaceFillType::Lines, enable_travel_optimization);
 		}
 	}
-	printf("line  in 445 fffGCODEwriter.cpp %d \n", part.infill_area_per_combine_per_density.size());
+	//printf("line  in 445 fffGCODEwriter.cpp %d \n", part.infill_area_per_combine_per_density.size());
 	return added_something;
 }
 
 bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer, const size_t extruder_nr, const SliceLayerPart& part) const
 {
-	printf("inside processSingleLayerInfill \n ");
-	
 	const coord_tIrfan infill_line_distance = MM2INT(6.3);
-	printf("inside processSingleLayerInfill @ 634\n");
-	bool added_something = false;
-	PathConfigStorage::MeshPathConfigs *meshpath;
-	const coord_tIrfan infill_line_width = mesh_config.infill_config[0].getLineWidth();
-		
-	Polygons infill_lines;
-	//const double infill_line_width = 0.42;
-	//const coord_tIrfan infill_line_width_int = MM2INT(infill_line_width);
-	//printf("Inside Singel Layer Infill and the infill area per is %d \n", part.infill_area_per_combine_per_density[0].size());
 	if (infill_line_distance == 0 || part.infill_area_per_combine_per_density[0].size() == 0)
 	{
-		printf("error in single layer infill \n");
+		printf("@@error in single layer infill for the layer %d \n", gcode_layer.getLayerNr());
 		return false;
 	}
-
+	bool added_something = false;
+	const coord_tIrfan infill_line_width = mesh_config.infill_config[0].getLineWidth();
+	Polygons infill_polygons;
+	Polygons infill_lines;
 	const EFillMethod pattern = EFillMethod::TRIANGLES;
 	const bool zig_zaggify_infill = true;// mesh.settings.get<bool>("zig_zaggify_infill") || pattern == EFillMethod::ZIG_ZAG;
 	const bool connect_polygons = false;// mesh.settings.get<bool>("connect_infill_polygons");
-	const coord_tIrfan infill_overlap =0 ;//sh.settings.get<coord_tIrfan>("infill_overlap_mm");
+	const coord_tIrfan infill_overlap = 0;//sh.settings.get<coord_tIrfan>("infill_overlap_mm");
 	const size_t infill_multiplier = 1;// mesh.settings.get<size_t>("infill_multiplier");
 	const size_t wall_line_count = 0;
 	double infill_angle = 45; //Original default. This will get updated to an element from mesh->infill_angles.
-	PrintFeatureType feature = PrintFeatureType::Infill;
-	coord_tIrfan layer_height = gcode_layer.z;
-	
-	coord_tIrfan layer_thickness = mesh_config.infill_config[0].getLayerThickness();
-	printf("the layer thickness in the sigle layer is %d \n", layer_thickness);
-	int layernum = gcode_layer.getLayerNr();
-	//printf("inside the singellayerinfill line 474 \n");
+
 	if (storage.infill_angles.size() > 0)
 	{
 		const size_t combined_infill_layers = 1;// std::max(unsigned(1), round_divide(mesh.settings.get<coord_t>("infill_sparse_thickness"), std::max(mesh.settings.get<coord_t>("layer_height"), coord_t(1))));
 		infill_angle = storage.infill_angles.at((gcode_layer.getLayerNr() / combined_infill_layers) % storage.infill_angles.size());
 	}
-	//printf("inside the singellayerinfill loop 473\n");
+
 	const Point3 mesh_middle = storage.bounding_box.getMiddle();
-	const curaIrfan::PointIrfan infill_origin(mesh_middle.x , mesh_middle.y);
+	const curaIrfan::PointIrfan infill_origin(mesh_middle.x, mesh_middle.y);
 	for (unsigned int density_idx = part.infill_area_per_combine_per_density.size() - 1; (int)density_idx >= 0; density_idx--)
 	{
 		//printf("inside the singellayerinfill loop\n");
-		int infill_line_distance_here = infill_line_distance<<(density_idx +1) ; // the highest density infill combines with the next to create a grid with density_factor 1
+		int infill_line_distance_here = infill_line_distance << (density_idx + 1); // the highest density infill combines with the next to create a grid with density_factor 1
 		int infill_shift = infill_line_distance_here / 2;
 
-		SlicerLayer slicerlayer;
-	//	printf("inside the singellayerinfill loop 494\n");
-		
-		Polygons in_outline = part.infill_area_per_combine_per_density[density_idx][0];	 //part.outline;
-		
-		if (in_outline.empty())
+		if (density_idx == part.infill_area_per_combine_per_density.size() - 1)
 		{
-			printf("*********************the outnline is empty******************************* \n");
+			infill_line_distance_here /= 2;
 		}
-		
+
+		Polygons in_outline = part.infill_area_per_combine_per_density[density_idx][0];	 //part.outline;
 		const coord_tIrfan circumference = in_outline.polygonLength();
+			   	
 		//printf("the polygn length is %d\n ",circumference);
 		//Originally an area of 0.4*0.4*2 (2 line width squares) was found to be a good threshold for removal.
 		//However we found that this doesn't scale well with polygons with larger circumference (https://github.com/Ultimaker/Cura/issues/3992).
 		//Given that the original test worked for approximately 2x2cm models, this scaling by circumference should make it work for any size.
 		const double minimum_small_area = 0.4 * 0.4 * circumference / 40000;
-
+		in_outline.removeSmallAreas(minimum_small_area);
 		// This is only for density infill, because after generating the infill might appear unnecessary infill on walls
 		// especially on vertical surfaces
 		//printf("inside the singellayerinfill loop 520\n");
-		//in_outline.removeSmallAreas(minimum_small_area);
-		
-		coord_tIrfan outline_offset = 0 ;
+		//
+
+		coord_tIrfan outline_offset = 0;
 
 		Infill infill_comp(pattern, zig_zaggify_infill, connect_polygons, in_outline, 0, infill_line_width, infill_line_distance_here, infill_overlap, infill_multiplier, infill_angle, gcode_layer.z, infill_shift, wall_line_count, infill_origin
 			, /*Polygons* perimeter_gaps =*/ false
@@ -743,8 +815,13 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, c
 			, /*bool skip_some_zags =*/ false
 			, /*int zag_skip_count =*/ 0
 			, MM2INT(0.42));
-		infill_comp.generate(infill_lines, part);	 
+		infill_comp.generate(infill_polygons, infill_lines);
+		
 	}
+	
+	coord_tIrfan layer_thickness = mesh_config.infill_config[0].getLayerThickness();
+	int layernum = gcode_layer.getLayerNr();
+		
 	printf("the infill lines size is %d and the layer number is %d \n", infill_lines.size(), gcode_layer.getLayerNr());
 	if (infill_lines.size() > 0)
 	{
@@ -752,13 +829,12 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, c
 		//setExtruder_addPrime(storage, gcode_layer, extruder_nr);	not needed
 		gcode_layer.setIsInside(true); // going to print stuff inside print object
 		const bool enable_travel_optimization = false;// mesh.settings.get<bool>("infill_enable_travel_optimization");
-		printf("outside the lineoptimizer \n");
+		//printf("outside the lineoptimizer \n");
 		gcode_layer.addLinesByOptimizer(layer_thickness, mesh_config.infill_config[0], infill_lines, layernum, SpaceFillType::Lines, enable_travel_optimization);
 		//gcode_layer.addLinesByOptimizer(in/fill_lines,SpaceFillType::Lines, enable_travel_optimization,0);
 		
 	}
 	
-
 	return added_something;
 }
  

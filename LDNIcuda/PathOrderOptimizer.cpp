@@ -209,12 +209,13 @@ void LineOrderOptimizer::optimize(bool find_chains)
 	std::vector<bool> picked(polygons.size(), false);
 
 	loc_to_line = nullptr;
-
+	//printf("@@the polygons size is %d \n", polygons.size());
 	for (unsigned int poly_idx = 0; poly_idx < polygons.size(); poly_idx++) /// find closest point to initial starting point within each polygon +initialize picked
 	{
 		int best_point_idx = -1;
 		float best_point_dist = std::numeric_limits<float>::infinity();
 		ConstPolygonRef poly = *polygons[poly_idx];
+		//printf("@@the poly size is %d \n", poly.size());
 		for (unsigned int point_idx = 0; point_idx < poly.size(); point_idx++) /// get closest point from polygon
 		{
 			float dist = curaIrfan::vSize2f(curaIrfan::operator- (poly[point_idx], startPoint));

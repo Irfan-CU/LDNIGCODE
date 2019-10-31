@@ -19,43 +19,49 @@ static inline int computeScanSegmentIdx(int x, int line_width)
 	return x / line_width;
 }
 
-void Infill::generate(Polygons& result_lines, const SliceLayerPart& part)
+void Infill::generate(Polygons& result_polygons, Polygons& result_lines)
 {
-	printf("inside Infill genrate \n");
+	
 	coord_tIrfan outline_offset_raw = outline_offset;
 	outline_offset -= wall_line_count * infill_line_width; // account for extra walls
+	Polygons generated_result_polygons;
 	Polygons generated_result_lines;
+
 	//Polygons polygon = part.infill_area;
 	if (in_outline.empty())
 	{
 		
-		printf("**********************the part infill area is empty************************************* \n");
+		//printf("@@the part infill area is empty************************************* \n");
 		return;
 	}
 
 	//_generate(generated_result_lines, polygon);
-	_generate(generated_result_lines);
+
+	_generate(generated_result_polygons, generated_result_lines);
+	result_polygons.add(generated_result_polygons);
 	result_lines.add(generated_result_lines);
 
 }
 
-void Infill::_generate(Polygons& result_lines)
+void Infill::_generate(Polygons& result_polygons, Polygons& result_lines)
 {
 	if (in_outline.empty())
 	{
-			printf("Inside generate in_outline is empty \n");
+			//printf("Inside generate in_outline is empty \n");
 			return; 
 	}
 		
 	if (line_distance == 0)
 	{
-		printf("##Error line_distance == 0 \n");
+		//printf("@@Error line_distance == 0 inside generate \n");
 		return;
 	}
 
 	outline_offset -= infill_line_width / 2; // the infill line zig zag connections must lie next to the border, not on it
 
 	generatetriangleinfill(result_lines);
+
+	//printf("@@the infill linzes size inside the infill is %d ", result_lines.size());
 
 	if (zig_zaggify && (pattern == EFillMethod::LINES || pattern == EFillMethod::TRIANGLES || pattern == EFillMethod::GRID || pattern == EFillMethod::CUBIC || pattern == EFillMethod::TETRAHEDRAL || pattern == EFillMethod::QUARTER_CUBIC || pattern == EFillMethod::TRIHEXAGON))
 	{
@@ -64,7 +70,7 @@ void Infill::_generate(Polygons& result_lines)
 
 		connectLines(result_lines);
 	}
-
+	//printf("@@the connected infill linzes size inside the infill is %d ", result_lines.size());
 	//connectLines(result_lines, polygon);
 	
 	crossings_on_line.clear();
@@ -73,12 +79,10 @@ void Infill::_generate(Polygons& result_lines)
 void Infill::generatetriangleinfill(Polygons& result)
 {
 
-	printf("generatetriangleinfill \n");
 	generateLineInfill(result, line_distance, fill_angle, 0);
 	generateLineInfill(result, line_distance, fill_angle + 60, 0);
 	generateLineInfill(result, line_distance, fill_angle + 120, 0);
-  // generateLineInfill(result, line_distance, fill_angle + 60, polygon1);
-	//generateLineInfill(result, line_distance, fill_angle + 120, polygon1);
+
 }
 
 coord_tIrfan Infill::getShiftOffsetFromInfillOriginAndRotation(const double& infill_rotation)
@@ -140,10 +144,11 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	}
 
 	AABB boundary(outline);
-	
+	//printf(" the boundary max in %d and max is %d and line distance is %d \n", boundary.min.X, boundary.max.Y, line_distance);
 	int scanline_min_idx = computeScanSegmentIdx(boundary.min.X - shift, line_distance);
 	
 	int line_count = computeScanSegmentIdx(boundary.max.X - shift, line_distance) + 1 - scanline_min_idx;
+	//printf("the line count is %d zn", line_count);
 
 	std::vector<std::vector<coord_tIrfan>> cut_list; // mapping from scanline to all intersections with polygon segments
 
@@ -167,8 +172,9 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	};
 	std::vector<std::vector<Crossing>> crossings_per_scanline; //For each scanline, a list of crossings.
 	const int min_scanline_index = computeScanSegmentIdx(boundary.min.X - shift, line_distance) + 1;
-
 	const int max_scanline_index = computeScanSegmentIdx(boundary.max.X - shift, line_distance) + 1;
+
+	//printf("the min scaline idx is %d nad max is %d \n", min_scanline_index, max_scanline_index);
 	
 	crossings_per_scanline.resize(max_scanline_index - min_scanline_index);
 	
@@ -256,7 +262,7 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	{
 		return;  // don't add connection if boundary already contains whole outline!
 	}
-
+	//printf("the cutlist size is %d \n", cut_list.size());
 	addLineInfill(result, rotation_matrix, scanline_min_idx, line_distance, boundary, cut_list, shift);
 }
 

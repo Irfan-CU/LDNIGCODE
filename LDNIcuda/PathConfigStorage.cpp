@@ -130,12 +130,12 @@ PathConfigStorage::MeshPathConfigs::MeshPathConfigs(const SliceDataStorage& stor
 	{
 		infill_config.emplace_back(
 			PrintFeatureType::Infill
-			, 0.42 * (combine_idx + 1) * Ratio(120/100)
+			, MM2INT(0.42) * (combine_idx + 1) * Ratio(120/100)
 			, layer_thickness
 			, Ratio(100 / 100) * ((layer_nr == 0) ? Ratio(100 / 100) : Ratio(1.0))
 			, GCodePathConfig::SpeedDerivatives{ 60, 3000, 25 }
 		);
-		printf("******************intialized the constructor \n");
+	
 	}
 }
 

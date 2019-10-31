@@ -185,6 +185,9 @@
     <ClCompile Include="InsetOrderOptimizer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ExtruderTrain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LDNIcpuOperation.h">

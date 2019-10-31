@@ -707,7 +707,7 @@
 	void AreaSupport::generateOverhangAreasForMesh(SliceDataStorage& storage, SliceMeshStorage& mesh)
 	{
 		bool support_enable = false;
-		bool support_tree_enable = true;
+		bool support_tree_enable = false;
 		bool support_mesh = false;
 		
 		if (!support_enable && !support_tree_enable && !support_mesh)

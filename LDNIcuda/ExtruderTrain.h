@@ -9,6 +9,8 @@
 	{
 	public:
 		
+		ExtruderTrain(const size_t extruder_nr);
+		
 		const size_t extruder_nr;
 	};
 

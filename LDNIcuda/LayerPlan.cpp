@@ -40,6 +40,7 @@ GCodePath* LayerPlan::getLatestPathWithConfig(coord_tIrfan layer_thickness, cons
 	
 	std::vector<GCodePath>& paths = extruder_plans.back().paths;
 	
+	
 	if (paths.size() > 0 && paths.back().config == &config && !paths.back().done && paths.back().flow == flow && paths.back().speed_factor == speed_factor && paths.back().mesh_id == current_mesh) // spiralize can only change when a travel path is in between
 	{
 		
@@ -119,17 +120,19 @@ Polygons LayerPlan::computeCombBoundaryInside(const size_t max_inset)
  
 void LayerPlan::addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePathConfig& config, const Polygons& polygons, int layernum, SpaceFillType space_fill_type, bool enable_travel_optimization, int wipe_dist, float flow_ratio, std::optional<curaIrfan::PointIrfan> near_start_location, double fan_speed)
 {
-	printf("inside the add Linesoptimer \n");
+	
 	Polygons boundary;
-	LineOrderOptimizer orderOptimizer(near_start_location.value_or(getLastPlannedPositionOrStartingPosition()), &boundary);
-	printf("the polygon sizse for the line order optimizer is %d \n", polygons.size());
+	
+	curaIrfan::PointIrfan startPoint = near_start_location.value_or(getLastPlannedPositionOrStartingPosition());
+	//printf("near_start_location.value_or(getLastPlannedPositionOrStartingPosition() is %d and %d \n",startPoint.X,startPoint.Y);
+	LineOrderOptimizer orderOptimizer(startPoint, &boundary);
+	//printf("the polygon sizse for the line order optimizer is %d \n", polygons.size());
 	
 	for (unsigned int line_idx = 0; line_idx < polygons.size(); line_idx++)
 	{
 		orderOptimizer.addPolygon(polygons[line_idx]);
 	}
 	orderOptimizer.optimize();
-	printf("the loop after line order optimizer is satisfied and polyorder size is %d \n", orderOptimizer.polyOrder.size());
 	for (unsigned int order_idx = 0; order_idx < orderOptimizer.polyOrder.size(); order_idx++)
 	{
 		const unsigned int poly_idx = orderOptimizer.polyOrder[order_idx];
@@ -138,12 +141,14 @@ void LayerPlan::addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePa
 		const size_t end = 1 - start;
 		const curaIrfan::PointIrfan& p0 = polygon[start];
 		addTravel(layer_thickness, layernum,p0);
+		//printf("@@the polygon starting point is %d and %d the start id is %d  \n", p0.X, p0.Y,start);
 		const curaIrfan::PointIrfan& p1 = polygon[end];
+		//printf("@@the polygon ending point is %d and %d end id is %d \n", p1.X,p1.Y,end );
 		//const GCodePathConfig *config;
 		//addExtrusionMove(p1,space_fill_type, flow_ratio, false, 1.0, fan_speed);
 		addExtrusionMove(layer_thickness, config, p1, layernum, space_fill_type, flow_ratio, false, 1.0, fan_speed);
 	}
-	printf("***** the extruder plans and paths size are %d ", extruder_plans[0].paths.size());
+	//printf("***** the extruder plans and paths size are %d \n", extruder_plans[0].paths.size());
 	
 }
 
@@ -237,15 +242,15 @@ bool LayerPlan::setExtruder(const size_t extruder_nr)
 */
 void LayerPlan::writeGCode(GCodeExport& gcode)
 {
+	printf("}}}}{}}{}{}{}{}}}{}{}}}{}{}}{}{}}{}{}}{}{}{}{}{}}{}{}{}{}{}{Inside Gcode layer is %d \n", layer_nr);
 	coord_tIrfan layer_thicnkess = storage.Layers[0].thickness;
 	gcode.setLayerNr(layer_nr);
-	printf("done with  setLayerNr\n");
 	gcode.writeLayerComment(layer_nr);
-	gcode.writeextrusion();
+
 
 	// flow-rate compensation
 	//const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
-	gcode.setFlowRateExtrusionSettings(MM2INT(0), Ratio(100)); //Offset is in mm.
+	gcode.setFlowRateExtrusionSettings(MM2INT(0), Ratio(100/100)); //Offset is in mm.
 
 	if (layer_nr == 0 ) //- true and 60;........static_cast<LayerIndex>(Raft::getTotalExtraLayers()) && mesh_group_settings.get<bool>("machine_heated_bed") && mesh_group_settings.get<Temperature>("material_bed_temperature") != 0)
 	{
@@ -254,18 +259,64 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 	}
 
 	gcode.setZ(z);
-	printf("done with  setz\n");
-	const GCodePathConfig* last_extrusion_config; // used to check whether we need to insert a TYPE comment in the gcode.
-
+	
+	const GCodePathConfig* last_extrusion_config= nullptr; // used to check whether we need to insert a TYPE comment in the gcode.
 	size_t extruder_nr = gcode.getExtruderNr();
+	
 	const bool acceleration_enabled = true;// mesh_group_settings.get<bool>("acceleration_enabled");
 	const bool jerk_enabled = true;// mesh_group_settings.get<bool>("jerk_enabled");
-	
+	bool retraction_hop_after_extruder_switch = true;
+	bool retraction_enable = false;
+
+	std::string current_mesh = "NONMESH";
+
 	for (size_t extruder_plan_idx = 0; extruder_plan_idx < extruder_plans.size(); extruder_plan_idx++)
 	{
 		ExtruderPlan& extruder_plan = extruder_plans[extruder_plan_idx];
 		const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[extruder_plan.extruder_nr];
 		coord_tIrfan z_hop_height = retraction_config.zHop;
+		
+		if (extruder_nr != extruder_plan.extruder_nr)
+		{
+			int prev_extruder = extruder_nr;
+			extruder_nr = extruder_plan.extruder_nr;
+
+			gcode.ResetLastEValueAfterWipe(prev_extruder);
+
+			
+			if (retraction_hop_after_extruder_switch)
+			{
+				z_hop_height = storage.extruder_switch_retraction_config_per_extruder[prev_extruder].zHop;
+				gcode.switchExtruder(extruder_nr, storage.extruder_switch_retraction_config_per_extruder[prev_extruder], z_hop_height);
+			}
+			else
+			{
+				gcode.switchExtruder(extruder_nr, storage.extruder_switch_retraction_config_per_extruder[prev_extruder]);
+			}
+
+			
+
+			{ // require printing temperature to be met
+				constexpr bool wait = true;
+				gcode.writeTemperatureCommand(extruder_nr, extruder_plan.required_start_temperature, wait);
+			}
+
+			if (extruder_plan.prev_extruder_standby_temp)
+			{ // turn off previous extruder
+				constexpr bool wait = false;
+				float prev_extruder_temp = *extruder_plan.prev_extruder_standby_temp;
+				const int prev_layer_nr = (extruder_plan_idx == 0) ? layer_nr - 1 : layer_nr;
+				if (prev_layer_nr == storage.max_print_height_per_extruder[prev_extruder])
+				{
+					prev_extruder_temp = 0; // TODO ? should there be a setting for extruder_off_temperature ?
+				}
+				gcode.writeTemperatureCommand(prev_extruder, prev_extruder_temp, wait);
+			}
+
+			const double extra_prime_amount = MM2INT(0.0);
+			//gcode.addExtraPrimeAmount(extra_prime_amount);
+		}
+		
 		if (extruder_plan_idx == 0)
 		{
 			const WipeScriptConfig& wipe_config = storage.wipe_config_per_extruder[extruder_plan.extruder_nr];
@@ -282,26 +333,25 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 		{
 			return  a.path_idx < b.path_idx;
 		});
-		printf("sorted the paths here and the sorted paths size is %d \n",paths.size());
+		printf("sorted the paths here and the sorted paths size is %d and layer nr is %d \n",paths.size(),layer_nr);
 		bool update_extrusion_offset = true;
-
 
 		for (unsigned int path_idx = 0; path_idx < paths.size(); path_idx++)
 		{
+			
 			extruder_plan.handleInserts(path_idx, gcode);
 
 			GCodePath& path = paths[path_idx];
 
-			if (path.perform_prime)
+			if (layer_nr == 5 && path.isTravelPath())
 			{
-				gcode.writePrimeTrain(250, layer_thicnkess);
-				gcode.writeRetraction(retraction_config);
-			}
 
+			}
+			
 			if (!path.retract && path.isTravelPath() && path.points.size() == 1 && path.points[0] == gcode.getPositionXY() && z == gcode.getPositionZ())
 			{
 				
-				// ignore travel moves to the current location to avoid needless change of acceleration/jerk
+				printf("here in wrong place 356\n");
 				continue;
 			}
 
@@ -338,6 +388,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 					gcode.writeZhopEnd();
 				}
 			}
+
 			if (!path.isTravelPath() && last_extrusion_config != path.config)
 			{
 				gcode.writeTypeComment(path.config->type);
@@ -389,29 +440,9 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 				}
 				continue;
 			}
-			gcode.writeextrusion();
+			
 			bool spiralize = false;
-			std::ofstream myfile;
-			myfile.open("Polygon3.txt");
-
-			std::vector<GCodePath>& paths1 = extruder_plan.paths;
-
-			for (unsigned int z = 0; z < paths1.size(); z++)
-			{
-				GCodePath& path1 = paths1[z];
-
-				for (unsigned int x = 0; x < path1.points.size(); x++)
-				{
-					//communication->sendLineTo(path.config->type, path.points[point_idx], path.getLineWidthForLayerView(), path.config->getLayerThickness(), speed);
-					const curaIrfan::PointIrfan& p1 = path1.points[x];
-					Point3  z1 = Point3(p1.X, p1.Y, 0.0);
-					myfile << z1.x << "\n";
-				}
-
-			}
-			
-			myfile.close();
-			
+					
 			if (!spiralize) // normal (extrusion) move (with coasting
 			{
 				// if path provides a valid (in range 0-100) fan speed, use it
@@ -425,13 +456,18 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 				}
 				if (!coasting) // not same as 'else', cause we might have changed [coasting] in the line above...
 				{ // normal path to gcode algorithm
+					if (layer_nr == 0 || layer_nr == 5)
+					{
+						printf("::::::::pats.points size is %d nad layer ius %d \n", path.points.size(),layer_nr);
+					}
+					
 					for (unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
 					{
 						//communication->sendLineTo(path.config->type, path.points[point_idx], path.getLineWidthForLayerView(), path.config->getLayerThickness(), speed);
 						gcode.writeExtrusion(path.points[point_idx], layer_thicnkess, speed, path.getExtrusionMM3perMM(), path.config->type, update_extrusion_offset);
 					}
 				}
-				gcode.writeComment(";done with one path");
+				
 			}
 		}
 		extruder_plan.handleAllRemainingInserts(gcode);
@@ -1052,7 +1088,7 @@ GCodePath& LayerPlan::addTravel(coord_tIrfan layer_thickness, int layernum, cura
 {
 	const GCodePathConfig& travel_config = configs_storage.travel_config_per_extruder[getExtruder()];
 	const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[getExtruder()];
-	const PrintFeatureType& check = travel_config.type;
+	
 	
 	GCodePath* path = getLatestPathWithConfig(layer_thickness, travel_config, SpaceFillType::None);
 	

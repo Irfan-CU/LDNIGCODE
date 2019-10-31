@@ -93,10 +93,12 @@ public:
 
 public:
 
-	void generate(Polygons& result_lines, const SliceLayerPart& part);
+	void generate(Polygons& result_polygons, Polygons& result_lines);
 private:
 	//void _generate(Polygons& result_lines, Polygons polygon);
-	void _generate(Polygons& result_lines);
+	
+	void _generate(Polygons& result_polygons, Polygons& result_lines);
+
 	void generatetriangleinfill(Polygons& result);
 
 	void generateLineInfill(Polygons& result, int line_distance, int infill_rotation, coord_tIrfan shift);

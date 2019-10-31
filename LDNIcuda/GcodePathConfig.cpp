@@ -92,7 +92,7 @@ GCodePathConfig::GCodePathConfig(const PrintFeatureType& type, const coord_tIrfa
 
 	double GCodePathConfig::calculateExtrusion() const
 	{
-		printf("the values for caluclating extrusions are %d %d %d and %f %f %f \n", line_width, layer_thickness, flow, INT2MM(line_width), INT2MM(layer_thickness), double(flow));
+		//printf("the values for caluclating extrusions are %d %d %d and %f %f %f \n", line_width, layer_thickness, flow, INT2MM(line_width), INT2MM(layer_thickness), double(flow));
 		return INT2MM(line_width) * INT2MM(layer_thickness) * double(flow);
 	}
 

@@ -390,7 +390,8 @@ void FffPolygonGenerator::processBasicWallsSkinInfill(SliceDataStorage& storage,
 			}
 			
 #ifdef _OPENMP
-			//if (omp_get_thread_num() == 0)
+			
+
 #endif
 			{ // progress estimation is done only in one thread so that no two threads message progress at the same time
 				//int _processed_layer_count;

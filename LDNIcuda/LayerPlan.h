@@ -299,7 +299,7 @@
 
 		curaIrfan::PointIrfan getLastPlannedPositionOrStartingPosition() const
 		{
-			return last_planned_position.value_or(layer_start_pos_per_extruder[0]);
+			return last_planned_position.value_or(layer_start_pos_per_extruder[getExtruder()]);
 		}
 
 		void writeGCode(GCodeExport& gcode);

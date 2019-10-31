@@ -76,7 +76,7 @@ void GCodeExport::setOutputStream(std::ostream* stream)
 
 int GCodeExport::getExtruderNr() const
 {
-	return 0;
+	return current_extruder;
 }
 
 void GCodeExport::setInitialAndBuildVolumeTemps(const unsigned int start_extruder_nr)
@@ -566,17 +566,17 @@ void GCodeExport::writeTravel(const coord_tIrfan& x, const coord_tIrfan& y, cons
 
 }
 
-void GCodeExport::writeRetraction(const RetractionConfig& config)
+void GCodeExport::writeRetraction(const RetractionConfig& config, bool force , bool extruder_switch)
 {
 	ExtruderTrainAttributes& extr_attr = extruder_attr[current_extruder];
-	bool force = false;
+	force = false;
 	double old_retraction_e_amount = extr_attr.retraction_e_amount_current;
 	double new_retraction_e_amount = mmToE(config.distance);
 	double retraction_diff_e_amount = old_retraction_e_amount - new_retraction_e_amount;
 	
 	if (std::abs(retraction_diff_e_amount) < 0.000001)
 	{
-		printf("returning from the write retraction function\n");
+		
 		return;
 	}
 	printf("the code is working till line 379 of gcode export.cpp \n");
@@ -807,4 +807,48 @@ void GCodeExport::insertWipeScript(const WipeScriptConfig& wipe_config, coord_tI
 	}
 
 	writeComment("WIPE_SCRIPT_END");
+}
+
+
+void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& retraction_config_old_extruder, coord_tIrfan perform_z_hop /*= 0*/)
+{
+	bool retraction_enable = true;
+	if (current_extruder == new_extruder)
+	{
+		return;
+	}
+
+	
+	if (retraction_enable)
+	{
+		constexpr bool force = true;
+		constexpr bool extruder_switch = true;
+		writeRetraction(retraction_config_old_extruder, force, extruder_switch);
+	}
+
+	if (perform_z_hop > 0)
+	{
+		writeZhopStart(perform_z_hop);
+	}
+
+	resetExtrusionValue(); // zero the E value on the old extruder, so that the current_e_value is registered on the old extruder
+
+	/*const std::string end_code = old_extruder_settings.get<std::string>("machine_extruder_end_code");
+
+	if (!end_code.empty())
+	{
+		if (relative_extrusion)
+		{
+			writeExtrusionMode(false); // ensure absolute extrusion mode is set before the end gcode
+		}
+
+		writeCode(end_code.c_str());
+
+		if (relative_extrusion)
+		{
+			writeExtrusionMode(true); // restore relative extrusion mode
+		}
+	}
+	 */
+	startExtruder(new_extruder);
 }

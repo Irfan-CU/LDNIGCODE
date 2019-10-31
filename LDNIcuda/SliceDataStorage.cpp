@@ -38,6 +38,130 @@ const Polygons& SliceLayerPart::getOwnInfillArea() const
 	//return infill_area;
 }
 
+bool SliceMeshStorage::getExtruderIsUsed(const size_t extruder_nr) const
+{
+	bool anti_overhang_mesh = false;
+	bool support_mesh = false;
+	size_t wall_line_count = 3;
+	if (anti_overhang_mesh || support_mesh)
+	{ // object is not printed as object, but as support.
+		return false;
+	}
+
+	if (wall_line_count > 0 && -1 == extruder_nr)
+	{
+		return true;
+	}
+	bool alternate_extra_perimeter = false;
+	if (wall_line_count > 1 && extruder_nr == -1)
+	{
+		return true;
+	}
+
+	if (extruder_nr == 1)
+	{
+		return true;
+	}
+	size_t bottom_layers = 5;
+	size_t top_layers = 5;
+	if (top_layers > 0 || bottom_layers && extruder_nr == -1)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool SliceMeshStorage::getExtruderIsUsed(const size_t extruder_nr, const int& layer_nr) const
+{
+	SliceDataStorage* storage;
+
+	const SliceLayer& layer = storage->Layers[layer_nr];
+
+	if (extruder_nr ==-1 )
+	{
+		for (const SliceLayerPart& part : layer.parts)
+		{
+			if (part.insets.size() > 0 && part.insets[0].size() > 0)
+			{
+				return true;
+			}
+			for (const SkinPart& skin_part : part.skin_parts)
+			{
+				if (!skin_part.insets.empty())
+				{
+					return true;
+				}
+			}
+		}
+	}
+	if (extruder_nr == -1)
+	{
+		for (const SliceLayerPart& part : layer.parts)
+		{
+			if (part.perimeter_gaps.size() > 0)
+			{
+				return true;
+			}
+			for (const SkinPart& skin_part : part.skin_parts)
+			{
+				if (skin_part.perimeter_gaps.size() > 0)
+				{
+					return true;
+				}
+			}
+		}
+	}
+	
+	if (extruder_nr == -1 )
+	{
+		for (const SliceLayerPart& part : layer.parts)
+		{
+			if (part.insets.size() > 1 && part.insets[1].size() > 0)
+			{
+				return true;
+			}
+		}
+	}
+	if (extruder_nr == 1)
+	{
+		for (const SliceLayerPart& part : layer.parts)
+		{
+			if (part.getOwnInfillArea().size() > 0)
+			{
+				return true;
+			}
+		}
+	}
+	if (extruder_nr == -1)
+	{
+		for (const SliceLayerPart& part : layer.parts)
+		{
+			for (const SkinPart& skin_part : part.skin_parts)
+			{
+				if (!skin_part.inner_infill.empty())
+				{
+					return true;
+				}
+			}
+		}
+	}
+	if (extruder_nr == -1)
+	{
+		for (const SliceLayerPart& part : layer.parts)
+		{
+			for (const SkinPart& skin_part : part.skin_parts)
+			{
+				if (!skin_part.roofing_fill.empty())
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+
 std::vector<bool> SliceDataStorage::getExtrudersUsed() const
 {
 	std::vector<bool> ret;
@@ -67,6 +191,37 @@ std::vector<bool> SliceDataStorage::getExtrudersUsed() const
 
 	return ret;
 }
+
+std::vector<bool> SliceDataStorage::getExtrudersUsed(int layer_nr) const
+{
+	std::vector<bool> ret;
+	ret.resize(1, false);
+	bool include_adhesion = true;
+	bool include_helper_parts = true;
+	bool include_models = true;
+	
+	if (layer_nr > 0)
+	{ // only include adhesion only for layers where platform adhesion actually occurs
+		// i.e. layers < 0 are for raft, layer 0 is for brim/skirt
+		include_adhesion = false;
+	}
+	
+	// TODO: ooze shield, draft shield ..?
+
+
+	if (include_models)
+	{
+		for (const SliceMeshStorage& mesh : meshes)
+		{
+			for (unsigned int extruder_nr = 0; extruder_nr < ret.size(); extruder_nr++)
+			{
+				ret[extruder_nr] = ret[extruder_nr] || mesh.getExtruderIsUsed(extruder_nr, layer_nr);
+			}
+		}
+	}
+	return ret;
+}
+
 
 std::vector<WipeScriptConfig> SliceDataStorage::initializeWipeConfigs()
 {
@@ -129,6 +284,8 @@ Polygons SliceDataStorage::getLayerOutlines(const int layer_nr, const bool inclu
 		return total;
 	}
 }
+
+
 
 /*
 

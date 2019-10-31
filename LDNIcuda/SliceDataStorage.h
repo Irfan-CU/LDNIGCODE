@@ -14,6 +14,7 @@
 #include "WipeScriptConfig.h"
 
 class Mesh;
+class ExtruderTrain;
 
 class SkinPart
 {
@@ -139,7 +140,8 @@ public:
 	Polygons openPolyLines; //!< A list of lines which were never hooked up into a 2D polygon. (Currently unused in normal operation)
 	mutable std::map<size_t, Polygons> innermost_walls_cache; //!< Cache for the in some cases computationaly expensive calculations in 'getInnermostWalls'.
 		// ^^^^ NOTE: Caching function-results like this, when they don't change but are expensive to calculate, is generally considered one of the few 'acceptable uses' of the 'mutable' keyword.
-
+	
+	std::vector<int> extruders;
 	/*!
 	 * \brief The parts of the model that are exposed at the very top of the
 	 * model.
@@ -241,14 +243,14 @@ public:
 	 * \param extruder_nr The extruder for which to check
 	 * \return whether a particular extruder is used by this mesh
 	 */
-	//bool getExtruderIsUsed(const size_t extruder_nr) const;
+	bool getExtruderIsUsed(const size_t extruder_nr) const;
 
 	/*!
 	 * \param extruder_nr The extruder for which to check
 	 * \param layer_nr the layer for which to check
 	 * \return whether a particular extruder is used by this mesh on a particular layer
 	 */
-	
+	bool getExtruderIsUsed(const size_t extruder_nr, const int& layer_nr) const;
 
 	/*!
 	 * Gets whether this is a printable mesh (not an infill mesh, slicing mesh,
@@ -260,6 +262,8 @@ public:
 	 * \return the mesh's user specified z seam hint
 	 */
 	
+	
+
 };
 
 class SliceDataStorage
@@ -311,6 +315,8 @@ public:
 	 */
 	//SliceDataStorage(const size_t slice_layer_count);
 
+	 std::vector<bool>  getExtrudersUsed(int layer_nr) const;
+
 	SliceDataStorage();
 
 	~SliceDataStorage()
@@ -358,7 +364,7 @@ public:
 	 * \param extruder_nr the extruder number to check.
 	 * \return a bool indicating whether prime blob is enabled for the given extruder number.
 	 */
-	//bool getExtruderPrimeBlobEnabled(const size_t extruder_nr) const;
+	bool getExtruderPrimeBlobEnabled(const size_t extruder_nr) const;
 
 	/*!
 	 * Gets the border of the usable print area for this machine.

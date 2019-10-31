@@ -163,7 +163,7 @@ public:
 
 	void GCodeExport::writeDelay(const Duration& time_amount);
 	
-	void writeRetraction(const RetractionConfig& config);
+	void writeRetraction(const RetractionConfig& config, bool force = false, bool extruder_switch = false);
 
 	double mm3ToE(double mm3);
 	double mmToE(double mm);
@@ -222,6 +222,8 @@ public:
 	void ResetLastEValueAfterWipe(size_t extruder);
 
 	void insertWipeScript(const WipeScriptConfig& wipe_config,coord_tIrfan layer_thicnkess);
+
+	void switchExtruder(size_t new_extruder, const RetractionConfig& retraction_config_old_extruder, coord_tIrfan perform_z_hop = 0);
 
 	GCodeExport();
 	~GCodeExport();

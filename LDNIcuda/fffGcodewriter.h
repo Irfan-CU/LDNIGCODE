@@ -209,6 +209,11 @@ public:
 	 */
 	bool getExtruderNeedPrimeBlobDuringFirstLayer(const SliceDataStorage& storage, const size_t extruder_nr) const;
 
+
+
+	std::vector<size_t> getUsedExtrudersOnLayerExcludingStartingExtruder(const SliceDataStorage& storage, const size_t start_extruder, const int& layer_nr) const;
+
+
 	/*!
 	 * Plan priming of all used extruders which haven't been primed yet
 	 * \param[in] storage where the slice data is stored.

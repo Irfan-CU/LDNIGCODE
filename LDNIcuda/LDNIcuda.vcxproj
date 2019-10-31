@@ -182,6 +182,7 @@
     <ClCompile Include="clipper.cpp" />
     <ClCompile Include="Combcpp.cpp" />
     <ClCompile Include="Date.cpp" />
+    <ClCompile Include="ExtruderTrain.cpp" />
     <ClCompile Include="fffGcodeWriter.cpp" />
     <ClCompile Include="fffPolygonGenrator.cpp" />
     <ClCompile Include="FlowTempGraph.cpp" />
