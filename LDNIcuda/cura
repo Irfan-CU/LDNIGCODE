@@ -22,14 +22,13 @@
 ;Generated with Cura_SteamEngine 4.2.1
 T0
 M82 ;absolute extrusion mode
-G92 E0+
+G92 E0
  
 G92 E0
 M109 S200
 G0 F15000.000000 X0.00 Y0.00 Z0.00
 G280
 G1 F1500.000000 E-6.500000
-;ProcessStatingCodeisfinished
 ;LAYER_COUNT:141
 ;LAYER:0
 M140 S60.000000

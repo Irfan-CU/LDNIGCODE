@@ -179,6 +179,7 @@
     <ClCompile Include="..\libs\clipper\clipper.cpp" />
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="AABB3D.cpp" />
+    <ClCompile Include="bridge.cpp" />
     <ClCompile Include="clipper.cpp" />
     <ClCompile Include="Combcpp.cpp" />
     <ClCompile Include="Date.cpp" />
@@ -217,6 +218,7 @@
     <ClCompile Include="PolygonProximityLinker.cpp" />
     <ClCompile Include="PolygonUtils.cpp" />
     <ClCompile Include="Preheat.cpp" />
+    <ClCompile Include="PrimeTower.cpp" />
     <ClCompile Include="Progress.cpp" />
     <ClCompile Include="ProgressStageEstimator.cpp" />
     <ClCompile Include="ProximityPointLink.cpp" />
@@ -238,6 +240,9 @@
     <ClInclude Include="AABB.h" />
     <ClInclude Include="AABB3D.h" />
     <ClInclude Include="algorithm.h" />
+    <ClInclude Include="AngleDegrees.h" />
+    <ClInclude Include="AngleRadiansh.h" />
+    <ClInclude Include="Bridge.h" />
     <ClInclude Include="Comb.h" />
     <ClInclude Include="CombPathh.h" />
     <ClInclude Include="Date.h" />
@@ -286,6 +291,7 @@
     <ClInclude Include="PathOrderOptimizer.h" />
     <ClInclude Include="PMBody.h" />
     <ClInclude Include="Point3.h" />
+    <ClInclude Include="PrimeTower.h" />
     <ClInclude Include="PrintFeature.h" />
     <ClInclude Include="Progress.h" />
     <ClInclude Include="ProgressEstimator.h" />

@@ -209,7 +209,7 @@ void LineOrderOptimizer::optimize(bool find_chains)
 	std::vector<bool> picked(polygons.size(), false);
 
 	loc_to_line = nullptr;
-	//printf("@@the polygons size is %d \n", polygons.size());
+	//printf("@@the polygons size inside the optimize is %d \n", polygons.size());
 	for (unsigned int poly_idx = 0; poly_idx < polygons.size(); poly_idx++) /// find closest point to initial starting point within each polygon +initialize picked
 	{
 		int best_point_idx = -1;

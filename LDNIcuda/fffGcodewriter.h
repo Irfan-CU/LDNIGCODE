@@ -15,6 +15,7 @@ namespace std
 template<typename T> class optional;
 }
 
+class AngleDegrees;
 class Polygons;
 class SliceDataStorage;
 class SliceMeshStorage;
@@ -232,11 +233,12 @@ public:
 	 * \param extruder_nr The extruder train for which to process the skirt or
 	 * brim.
 	 */
-	void processSkirtBrim(SliceDataStorage& storage, LayerPlan& gcodeLayer, unsigned int extruder_nr) const;
+	void processSkirtBrim(const SliceDataStorage& storage,  LayerPlan& gcodeLayer, unsigned int extruder_nr) const;
 	bool processIroning(const SliceLayer& part, LayerPlan& gcode_layer) const;
 	bool processInsets(const SliceDataStorage& storage, LayerPlan& gcodeLayer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config,const SliceLayerPart& part) const;
 	//void processOutlineGaps(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, bool& added_something) const;
-	//void setExtruder_addPrime(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr) const;
+	void addPrimeTower(const SliceDataStorage& storage, LayerPlan& gcodeLayer, int prev_extruder) const;
+	void setExtruder_addPrime(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr) const;
 	/*!
 	* Calculate in which order to plan the extruders for each layer
 	* Store the order of extruders for each layer in extruder_order_per_layer for normal layers
@@ -308,7 +310,7 @@ public:
 		 * \param mesh_config the line config with which to print a print feature
 		 * \param gcode_layer The initial planning of the gcode of the layer.
 		 */
-	void addMeshLayerToGCode(const SliceDataStorage& storage, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer) const;
+	void addMeshLayerToGCode(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer) const;
 
 	/*!
 	 * Add all features of the given extruder from a single part from a given layer of a mesh-volume to the layer plan \p gcode_layer.
@@ -322,7 +324,7 @@ public:
 	 * \param part The part to add
 	 * \param gcode_layer The initial planning of the gcode of the layer.
 	 */
-	void addMeshPartToGCode(const SliceDataStorage& storage, const size_t extruder_nr, const SliceLayerPart& part, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer) const;
+	void addMeshPartToGCode(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, LayerPlan& gcode_layer) const;
 
 	/*!
 	 * \brief Add infill for a given part in a layer plan.
@@ -349,7 +351,7 @@ public:
 	 * \param part The part for which to create gcode.
 	 * \return Whether this function added anything to the layer plan.
 	 */
-	bool processMultiLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcodeLayer, const size_t extruder_nr,  const SliceLayerPart& part) const;
+	bool processMultiLayerInfill(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const;
 
 	/*!
 	 * \brief Add normal sparse infill for a given part in a layer.
@@ -363,14 +365,14 @@ public:
 	 */
 	bool processSingleLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer, const size_t extruder_nr, const SliceLayerPart& part) const;
 
-	void finalize();
+	//void finalize();
 
 	/*!
 	* Calculate for each layer the index of the vertex that is considered to be the seam
 	* \param storage where the slice data is stored.
 	* \param total_layers The total number of layers
 	*/
-	void findLayerSeamsForSpiralize(SliceDataStorage& storage, size_t total_layers);
+	
 
 	/*!
 	 * Calculate the index of the vertex that is considered to be the seam for the given layer
@@ -382,6 +384,18 @@ public:
 	 */
 	 //	 unsigned int findSpiralizedLayerSeamVertexIndex(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const int layer_nr, const int last_layer_nr);
 	
+	bool processSkinAndPerimeterGaps(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const;
 
+	bool processSkinPart(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SkinPart& skin_part) const;
+
+	void processSkinInsets(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SkinPart& skin_part, bool& added_something) const;
+
+	void processTopBottom(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SkinPart& skin_part, Polygons& concentric_perimeter_gaps, bool& added_something) const;
+
+	void processPerimeterGaps(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, const Polygons& perimeter_gaps, const GCodePathConfig& perimeter_gap_config, bool& added_something) const;
+
+	void processSkinPrintFeature(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, const Polygons& area, const GCodePathConfig& config, EFillMethod pattern, const AngleDegrees skin_angle, const coord_tIrfan skin_overlap, const Ratio skin_density, Polygons* perimeter_gaps_output, bool& added_something, double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT) const;
+
+	std::optional<curaIrfan::PointIrfan> getSeamAvoidingLocation(const Polygons& filling_part, int filling_angle, curaIrfan::PointIrfan last_position) const;
 };
 #endif

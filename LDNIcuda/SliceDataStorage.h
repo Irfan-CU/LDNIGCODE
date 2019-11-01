@@ -4,8 +4,10 @@
 #define SLICE_DATA_STORAGE_H
 
 #include <map>
+#include "PrimeTower.h"
 #include "RetractionConfig.h"
 #include "SupportInfillPart.h"
+#include "AngleDegrees.h"
 #include "AABB.h"
 #include "AABB3D.h"
 #include "IntpointIrfan.h"
@@ -262,7 +264,14 @@ public:
 	 * \return the mesh's user specified z seam hint
 	 */
 	
-	
+	bool SliceMeshStorage::isPrinted() const
+	{
+		bool infill_mesh = false;
+		bool cutting_mesh = false;
+		bool anti_overhang_mesh = false;
+		return !infill_mesh && !cutting_mesh && !anti_overhang_mesh;
+	}
+
 
 };
 
@@ -304,7 +313,7 @@ public:
 	//std::vector<int> spiralize_seam_vertex_indices; //!< the index of the seam vertex for each layer
 	//std::vector<Polygons* > spiralize_wall_outlines; //!< the wall outline polygons for each layer
 
-	//PrimeTower primeTower;
+	PrimeTower primeTower;
 
 	//std::vector<Polygons> oozeShield;        //oozeShield per layer
 	//Polygons draft_protection_shield; //!< The polygons for a heightened skirt which protects from warping by gusts of wind and acts as a heated chamber.

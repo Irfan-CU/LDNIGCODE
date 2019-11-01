@@ -137,6 +137,8 @@ void LayerPlan::addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePa
 	{
 		const unsigned int poly_idx = orderOptimizer.polyOrder[order_idx];
 		ConstPolygonRef polygon = polygons[poly_idx];
+		
+		//printf("the pints size is %d \n", polygon.size());
 		const size_t start = orderOptimizer.polyStart[poly_idx];
 		const size_t end = 1 - start;
 		const curaIrfan::PointIrfan& p0 = polygon[start];
@@ -157,6 +159,7 @@ void LayerPlan::addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathCo
 	
 	GCodePath* path = getLatestPathWithConfig(layer_thickness, config, space_fill_type, flow, spiralize, speed_factor);
 	path->points.push_back(p);
+	//printf("@@the points size is %d \n", path->points.size());
 	path->setFanSpeed(fan_speed);
 	last_planned_position = p;
 	
@@ -171,7 +174,7 @@ ExtruderTrain* LayerPlan::getLastPlannedExtruderTrain()
 {
 	return last_planned_extruder;
 }
-/*void LayerPlan::planPrime()
+void LayerPlan::planPrime()
 {
 	forceNewPathStart();
 	constexpr float prime_blob_wipe_length = 10.0;
@@ -181,8 +184,8 @@ ExtruderTrain* LayerPlan::getLastPlannedExtruderTrain()
 	prime_travel.perform_prime = true;
 	forceNewPathStart();
 }
-*/
-/*
+
+
 bool LayerPlan::setExtruder(const size_t extruder_nr)
 {
 	if (extruder_nr == getExtruder())
@@ -193,19 +196,19 @@ bool LayerPlan::setExtruder(const size_t extruder_nr)
 	{ // handle end position of the prev extruder
 		ExtruderTrain* extruder = getLastPlannedExtruderTrain();
 		const bool end_pos_absolute = true;// extruder->settings.get<bool>("machine_extruder_end_pos_abs");
-		Point end_pos(extruder->settings.get<coord_t>("machine_extruder_end_pos_x"), extruder->settings.get<coord_t>("machine_extruder_end_pos_y"));
+		curaIrfan::PointIrfan end_pos(MM2INT(0.0), MM2INT(0.0));// extruder->settings.get<coord_t>("machine_extruder_end_pos_y"));
 		if (!end_pos_absolute)
 		{
-			end_pos += getLastPlannedPositionOrStartingPosition();
+			curaIrfan::operator+=(end_pos , getLastPlannedPositionOrStartingPosition());
 		}
 		else
 		{
 			const curaIrfan::PointIrfan extruder_offset(MM2INT(0.0), MM2INT(0.0));// extruder->settings.get<coord_t>("machine_nozzle_offset_x"), extruder->settings.get<coord_t>("machine_nozzle_offset_y"));
-			end_pos += extruder_offset; // absolute end pos is given as a head position
+			curaIrfan::operator+=(end_pos , extruder_offset); // absolute end pos is given as a head position
 		}
 		if (end_pos_absolute || last_planned_position)
 		{
-			addTravel(end_pos); //  + extruder_offset cause it
+			addTravel(layer_thickness, layer_nr, end_pos); //  + extruder_offset cause it
 		}
 	}
 	if (extruder_plans.back().paths.empty() && extruder_plans.back().inserts.empty())
@@ -215,23 +218,18 @@ bool LayerPlan::setExtruder(const size_t extruder_nr)
 	else
 	{
 		extruder_plans.emplace_back(extruder_nr, layer_nr, is_initial_layer, is_raft_layer, layer_thickness, fan_speed_layer_time_settings_per_extruder[extruder_nr], storage.retraction_config_per_extruder[extruder_nr]);
-		assert(extruder_plans.size() <= Application::getInstance().current_slice->scene.extruders.size() && "Never use the same extruder twice on one layer!");
+		assert(extruder_plans.size() <= 1 && "Never use the same extruder twice on one layer!");
 	}
-	last_planned_extruder = &Application::getInstance().current_slice->scene.extruders[extruder_nr];
+	
 
 	{ // handle starting pos of the new extruder
 		ExtruderTrain* extruder = getLastPlannedExtruderTrain();
-		const bool start_pos_absolute = extruder->settings.get<bool>("machine_extruder_start_pos_abs");
-		Point start_pos(extruder->settings.get<coord_t>("machine_extruder_start_pos_x"), extruder->settings.get<coord_t>("machine_extruder_start_pos_y"));
-		if (!start_pos_absolute)
-		{
-			start_pos += getLastPlannedPositionOrStartingPosition();
-		}
-		else
-		{
-			Point extruder_offset(extruder->settings.get<coord_t>("machine_nozzle_offset_x"), extruder->settings.get<coord_t>("machine_nozzle_offset_y"));
-			start_pos += extruder_offset; // absolute start pos is given as a head position
-		}
+		const bool start_pos_absolute =true;
+		curaIrfan::PointIrfan start_pos(MM2INT(2.0), MM2INT(2.0));
+		
+			curaIrfan::PointIrfan extruder_offset(MM2INT(0), MM2INT(0));
+			curaIrfan::operator+=(start_pos , extruder_offset); // absolute start pos is given as a head position
+		
 		if (start_pos_absolute || last_planned_position)
 		{
 			last_planned_position = start_pos;
@@ -239,10 +237,10 @@ bool LayerPlan::setExtruder(const size_t extruder_nr)
 	}
 	return true;
 }
-*/
+
 void LayerPlan::writeGCode(GCodeExport& gcode)
 {
-	printf("}}}}{}}{}{}{}{}}}{}{}}}{}{}}{}{}}{}{}}{}{}{}{}{}}{}{}{}{}{}{Inside Gcode layer is %d \n", layer_nr);
+//	printf("}}}}{}}{}{}{}{}}}{}{}}}{}{}}{}{}}{}{}}{}{}{}{}{}}{}{}{}{}{}{Inside Gcode layer is %d \n", layer_nr);
 	coord_tIrfan layer_thicnkess = storage.Layers[0].thickness;
 	gcode.setLayerNr(layer_nr);
 	gcode.writeLayerComment(layer_nr);
@@ -250,6 +248,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 
 	// flow-rate compensation
 	//const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
+	//const Settings& mesh_group_settings = Applicataion::getInstance().current_slice->scene.current_mesh_group->settings;
 	gcode.setFlowRateExtrusionSettings(MM2INT(0), Ratio(100/100)); //Offset is in mm.
 
 	if (layer_nr == 0 ) //- true and 60;........static_cast<LayerIndex>(Raft::getTotalExtraLayers()) && mesh_group_settings.get<bool>("machine_heated_bed") && mesh_group_settings.get<Temperature>("material_bed_temperature") != 0)
@@ -333,7 +332,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 		{
 			return  a.path_idx < b.path_idx;
 		});
-		printf("sorted the paths here and the sorted paths size is %d and layer nr is %d \n",paths.size(),layer_nr);
+		//printf("sorted the paths here and the sorted paths size is %d and layer nr is %d \n",paths.size(),layer_nr);
 		bool update_extrusion_offset = true;
 
 		for (unsigned int path_idx = 0; path_idx < paths.size(); path_idx++)
@@ -343,15 +342,10 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 
 			GCodePath& path = paths[path_idx];
 
-			if (layer_nr == 5 && path.isTravelPath())
-			{
-
-			}
-			
 			if (!path.retract && path.isTravelPath() && path.points.size() == 1 && path.points[0] == gcode.getPositionXY() && z == gcode.getPositionZ())
 			{
 				
-				printf("here in wrong place 356\n");
+				//printf("here in wrong place 356\n");
 				continue;
 			}
 
@@ -456,11 +450,6 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 				}
 				if (!coasting) // not same as 'else', cause we might have changed [coasting] in the line above...
 				{ // normal path to gcode algorithm
-					if (layer_nr == 0 || layer_nr == 5)
-					{
-						printf("::::::::pats.points size is %d nad layer ius %d \n", path.points.size(),layer_nr);
-					}
-					
 					for (unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
 					{
 						//communication->sendLineTo(path.config->type, path.points[point_idx], path.getLineWidthForLayerView(), path.config->getLayerThickness(), speed);

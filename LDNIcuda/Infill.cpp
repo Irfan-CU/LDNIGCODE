@@ -59,21 +59,18 @@ void Infill::_generate(Polygons& result_polygons, Polygons& result_lines)
 
 	outline_offset -= infill_line_width / 2; // the infill line zig zag connections must lie next to the border, not on it
 
-	generatetriangleinfill(result_lines);
+	generatetriangleinfill(result_lines); 
+	
+	printf("@@before connecting infill linzes size inside the infill is %d \n", result_lines.size());
 
-	//printf("@@the infill linzes size inside the infill is %d ", result_lines.size());
-
-	if (zig_zaggify && (pattern == EFillMethod::LINES || pattern == EFillMethod::TRIANGLES || pattern == EFillMethod::GRID || pattern == EFillMethod::CUBIC || pattern == EFillMethod::TETRAHEDRAL || pattern == EFillMethod::QUARTER_CUBIC || pattern == EFillMethod::TRIHEXAGON))
-	{
-		//The list should be empty because it will be again filled completely. Otherwise might have double lines.
-		result_lines.clear();
-
-		connectLines(result_lines);
-	}
-	//printf("@@the connected infill linzes size inside the infill is %d ", result_lines.size());
+	result_lines.clear();
+	connectLines(result_lines);
+	printf("@@the connected infill linzes size inside the infill is %d \n", result_lines.size());
+	crossings_on_line.clear();
+	
 	//connectLines(result_lines, polygon);
 	
-	crossings_on_line.clear();
+	
 }
 
 void Infill::generatetriangleinfill(Polygons& result)
@@ -144,11 +141,20 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	}
 
 	AABB boundary(outline);
+	for (int i = 0; i < outline.size(); i++)
+	{
+		ConstPolygonRef polyon = outline[i];
+		for (int j = 0; j < polyon.size(); j++)
+		{
+			curaIrfan::PointIrfan check = polyon[j];
+			printf("the check is %f  %f \n ", INT2MM(check.X), INT2MM(check.Y));
+		}
+	}
 	//printf(" the boundary max in %d and max is %d and line distance is %d \n", boundary.min.X, boundary.max.Y, line_distance);
 	int scanline_min_idx = computeScanSegmentIdx(boundary.min.X - shift, line_distance);
-	
+	printf("the boundary dimesions are %f %f  %f \n ",INT2MM(boundary.min.X),INT2MM(boundary.max.X),INT2MM(line_distance));
 	int line_count = computeScanSegmentIdx(boundary.max.X - shift, line_distance) + 1 - scanline_min_idx;
-	//printf("the line count is %d zn", line_count);
+	printf("the line count is %d zn", line_count);
 
 	std::vector<std::vector<coord_tIrfan>> cut_list; // mapping from scanline to all intersections with polygon segments
 
@@ -180,6 +186,7 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	
 	for (size_t poly_idx = 0; poly_idx < outline.size(); poly_idx++)
 	{
+		
 		PolygonRef poly = outline[poly_idx];
 		crossings_on_line[poly_idx].resize(poly.size()); //One for each line in this polygon.
 		
@@ -262,7 +269,8 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	{
 		return;  // don't add connection if boundary already contains whole outline!
 	}
-	//printf("the cutlist size is %d \n", cut_list.size());
+	printf("the cutlist size is %d \n", cut_list.size());
+
 	addLineInfill(result, rotation_matrix, scanline_min_idx, line_distance, boundary, cut_list, shift);
 }
 
@@ -456,6 +464,7 @@ void Infill::generateLinearBasedInfill( int outline_offset, Polygons& result, in
 */
 void Infill::addLineInfill(Polygons& result, const curaIrfan::PointMatrix& rotation_matrix, int scanline_min_idx, int line_distance, AABB boundary, std::vector<std::vector<coord_tIrfan>>& cut_list, coord_tIrfan shift)
 {
+	
 	auto compare_coord_t = [](const void* a, const void* b)
 	{
 		coord_tIrfan n = (*(coord_tIrfan*)a) - (*(coord_tIrfan*)b);
@@ -495,6 +504,7 @@ void Infill::addLineInfill(Polygons& result, const curaIrfan::PointMatrix& rotat
 		}
 		scanline_idx += 1;
 	}
+	printf("the result add line in add lines is %d \n", result.size());
 }
 
 bool Infill::InfillLineSegment::operator ==(const InfillLineSegment& other) const
@@ -663,7 +673,7 @@ void Infill::connectLines(Polygons& result_lines)
 	}
 
 	//Save all lines, now connected, to the output.
-
+	
 	std::unordered_set<size_t> completed_groups;
 	for (InfillLineSegment* infill_line : connected_lines)
 	{
@@ -703,4 +713,5 @@ void Infill::connectLines(Polygons& result_lines)
 
 		completed_groups.insert(group);
 	}
+	printf("the connected groups inside infill size is %d \n", completed_groups.size());
 }

@@ -306,9 +306,9 @@
 
 		void setMesh(const std::string mesh_id);
 		
-		//void planPrime();
+		void planPrime();
 
-		//bool setExtruder(const size_t extruder_nr);
+		bool setExtruder(const size_t extruder_nr);
 		
 		void addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePathConfig& config, const Polygons& polygons, int layernum, SpaceFillType space_fill_type, bool enable_travel_optimization = false, int wipe_dist = 0, float flow_ratio = 1.0, std::optional<curaIrfan::PointIrfan> near_start_location = std::optional<curaIrfan::PointIrfan>(), double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
 	        

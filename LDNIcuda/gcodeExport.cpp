@@ -579,10 +579,10 @@ void GCodeExport::writeRetraction(const RetractionConfig& config, bool force , b
 		
 		return;
 	}
-	printf("the code is working till line 379 of gcode export.cpp \n");
+	
 	{ // handle retraction limitation
 		double current_extruded_volume = getCurrentExtrudedVolume();
-		printf("The current extruded volume is %f\n", current_extruded_volume);
+		//printf("The current extruded volume is %f\n", current_extruded_volume);
 		std::deque<double>& extruded_volume_at_previous_n_retractions = extr_attr.extruded_volume_at_previous_n_retractions;
 		while (extruded_volume_at_previous_n_retractions.size() > config.retraction_count_max && !extruded_volume_at_previous_n_retractions.empty())
 		{

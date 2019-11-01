@@ -71,6 +71,29 @@ public:
 
 	bool _inside(curaIrfan::PointIrfan p, bool border_result = false) const;
 
+	curaIrfan::PointIrfan centerOfMass() const
+	{
+		double x = 0, y = 0;
+		curaIrfan::PointIrfan p0 = (*path)[path->size() - 1];
+		for (unsigned int n = 0; n < path->size(); n++)
+		{
+			curaIrfan::PointIrfan p1 = (*path)[n];
+			double second_factor = (p0.X * p1.Y) - (p1.X * p0.Y);
+
+			x += double(p0.X + p1.X) * second_factor;
+			y += double(p0.Y + p1.Y) * second_factor;
+			p0 = p1;
+		}
+
+		double area = Area(*path);
+
+		x = x / 6 / area;
+		y = y / 6 / area;
+
+		return curaIrfan::PointIrfan(x, y);
+	}
+
+
 	void smooth(int remove_length, PolygonRef result) const;
 	//void smooth_outward(const double angle, int shortcut_length, PolygonRef result) const;
 	void smooth2(int remove_length, PolygonRef result) const;
@@ -402,6 +425,9 @@ public:
 	{
 		paths.emplace_back(ClipperLib::Path{ from, to });
 	}
+
+	
+
 
 	template<typename... Args>
 	void emplace_back(Args... args)
