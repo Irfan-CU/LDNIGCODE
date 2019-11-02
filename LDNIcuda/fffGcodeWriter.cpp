@@ -83,7 +83,7 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 		//printf("got the Gcode for the layer plan %d \n", layer_nr);
 		return &gcode_layer;
 	};
-	total_layers = 6;
+	//total_layers = 6;
 	const std::function<void(LayerPlan*)>& consume_item =
 		[this, total_layers](LayerPlan* gcode_layer)
 	{

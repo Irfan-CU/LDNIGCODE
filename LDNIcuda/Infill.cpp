@@ -147,14 +147,14 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 		for (int j = 0; j < polyon.size(); j++)
 		{
 			curaIrfan::PointIrfan check = polyon[j];
-			printf("the check is %f  %f \n ", INT2MM(check.X), INT2MM(check.Y));
+			//printf("the check is %f  %f \n ", INT2MM(check.X), INT2MM(check.Y));
 		}
 	}
 	//printf(" the boundary max in %d and max is %d and line distance is %d \n", boundary.min.X, boundary.max.Y, line_distance);
 	int scanline_min_idx = computeScanSegmentIdx(boundary.min.X - shift, line_distance);
-	printf("the boundary dimesions are %f %f  %f \n ",INT2MM(boundary.min.X),INT2MM(boundary.max.X),INT2MM(line_distance));
+//	printf("the boundary dimesions are %f %f  %f \n ",INT2MM(boundary.min.X),INT2MM(boundary.max.X),INT2MM(line_distance));
 	int line_count = computeScanSegmentIdx(boundary.max.X - shift, line_distance) + 1 - scanline_min_idx;
-	printf("the line count is %d zn", line_count);
+//	printf("the line count is %d zn", line_count);
 
 	std::vector<std::vector<coord_tIrfan>> cut_list; // mapping from scanline to all intersections with polygon segments
 
