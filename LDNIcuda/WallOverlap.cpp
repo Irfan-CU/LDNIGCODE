@@ -11,9 +11,8 @@
 		: overlap_linker(polygons, line_width)
 		, line_width(line_width)
 	{
-
+		
 	}
-
 
 	Ratio WallOverlapComputation::getFlow(const curaIrfan::PointIrfan& from, const curaIrfan::PointIrfan& to)
 	{

@@ -63,7 +63,8 @@ static PointIrfan no_point(std::numeric_limits<ClipperLib::cInt>::min(), std::nu
 	INLINE PointIrfan operator*(const T i, const PointIrfan& p0) { return p0 * i; }
 	INLINE PointIrfan operator/(const PointIrfan& p0, const coord_tIrfan i) { return PointIrfan(p0.X / i, p0.Y / i); }
 	INLINE PointIrfan operator/(const PointIrfan& p0, const PointIrfan& p1) { return PointIrfan(p0.X / p1.X, p0.Y / p1.Y); }
-
+	//INLINE PointIrfan operatorx(const PointIrfan& p0) { return const PointIrfan(1, p0.Y); }
+	//INLINE PointIrfan operatory(const PointIrfan& p0) { return const PointIrfan(p0.X, 1); }
 	INLINE PointIrfan& operator += (PointIrfan& p0, const PointIrfan& p1) { p0.X += p1.X; p0.Y += p1.Y; return p0; }
 	INLINE PointIrfan& operator -= (PointIrfan& p0, const PointIrfan& p1) { p0.X -= p1.X; p0.Y -= p1.Y; return p0; }
 

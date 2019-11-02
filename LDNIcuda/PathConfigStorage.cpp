@@ -43,17 +43,17 @@ GCodePathConfig createPerimeterGapConfig(const SliceDataStorage& mesh, int layer
 PathConfigStorage::MeshPathConfigs::MeshPathConfigs(const SliceDataStorage& storage, const coord_tIrfan layer_thickness, const int& layer_nr, const std::vector<Ratio>& line_width_factor_per_extruder)
 	: inset0_config(
 		PrintFeatureType::OuterWall
-		, MM2INT(0.35)* Ratio(120 / 100) //line_width_factor_per_extruder[mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr]
+		, MM2INT(0.35)* Ratio(120/100) //line_width_factor_per_extruder[mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr]
 		, layer_thickness
-		, Ratio (100 / 100) * ((layer_nr==0)? (100/100): Ratio(1.0))
+		, Ratio (100 / 100) * ((layer_nr== 0 )? Ratio (100/100): Ratio(1.0))
 		, GCodePathConfig::SpeedDerivatives{ 20, 500,5}
 	)
 	, insetX_config(
 		PrintFeatureType::InnerWall
-		, MM2INT(0.35) * 120 / 100 //line_width_factor_per_extruder[mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr]
+		, MM2INT(0.3) * Ratio(120 / 100) //line_width_factor_per_extruder[mesh.settings.get<ExtruderTrain&>("wall_0_extruder_nr").extruder_nr]
 		, layer_thickness
-		, Ratio (100 / 100) * ((layer_nr == 0) ? (100 / 100) : Ratio(1.0))
-		, GCodePathConfig::SpeedDerivatives{ 20, 500,5 }
+		, Ratio (100 / 100) * ((layer_nr == 0) ? Ratio(100 / 100) : Ratio(1.0))
+		, GCodePathConfig::SpeedDerivatives{ 30, 1000,10 }
 	)
 	, bridge_inset0_config(
 		PrintFeatureType::OuterWall

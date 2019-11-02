@@ -48,13 +48,13 @@
 				//printf("Starting the inset of the i %d \n", i);
 				part->insets[0] = part->outline.offset(-line_width_0 / 2 - wall_0_inset);
 				//printf("the distance to offset is %d \n", -line_width_0_int / 2);
-				//printf("Succesffully did the inset of the i %d \n", part->insets[i].size());
+				//printf("Succesffully did the inset of the i %d \n", part->insets[0].size());
 			}
 			else if (i == 1)
 			{
 				//printf("Starting the inset of the i %d \n", i);
 				part->insets[1] = part->insets[0].offset(-line_width_0 / 2 + wall_0_inset - line_width_x / 2);
-				//printf("Succesffully did the inset of the i %d  \n", part->insets[i].size());
+				//printf("Succesffully did the inset of the i %d  \n", part->insets[1].size());
 			}
 			else
 			{
@@ -100,7 +100,7 @@
 			//part->insets[i].simplify();
 			//printf("After Simplification the size of the indie the insets functions is parts outline is %d and the inset is %d \n", part->insets[i].pointCount(),i);
 			//printf("succesfully simplified the inset of i %d \n", i);
-		//	part->insets[i].removeDegenerateVerts();
+		     part->insets[i].removeDegenerateVerts();
 			//printf("After removing vertices the size of the indie the insets functions is parts outline is %d \n", part->insets[i].pointCount());
 			//printf("succesfully removeDegenerateVerts the inset of i %d \n", i);
 			if (i == 0)

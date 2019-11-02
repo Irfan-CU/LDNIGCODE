@@ -565,7 +565,7 @@
 
 		const int min_layer = 0;//mesh.settings.get<size_t>("bottom_layers");
 		const int max_layer = storage.Layers.size()-1-0;// mesh.layers.size() - 1 - mesh.settings.get<size_t>("top_layers");
-		printf("the layer number is %d and the ART IS %d and the infill areas is %d \n",)
+		printf("the layer number is %d and the ART IS %d and the infill areas is %d \n");
 		for (int layer_idx = 0; layer_idx < static_cast<int>(storage.Layers.size()); layer_idx++)
 		{ // loop also over layers which don't contain infill cause of bottom_ and top_layer to initialize their infill_area_per_combine_per_density
 			SliceLayer& layer = storage.Layers[layer_idx];

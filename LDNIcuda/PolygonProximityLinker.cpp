@@ -15,6 +15,7 @@
 		, proximity_distance_2(proximity_distance * proximity_distance)
 		, line_grid(proximity_distance, polygons.pointCount(), 3.0f)
 	{
+		printf("inside the polygonproximitylinker \n");
 		// heuristic reserve a good amount of elements
 		proximity_point_links.reserve(polygons.pointCount()); // When the whole model consists of thin walls, there will generally be a link for every point, plus some endings minus some points which map to eachother
 
@@ -118,7 +119,9 @@
 					line_grid.processNearby(point_it.p(), proximity_distance, process_func);
 					for (const ListPolyIt& nearby_line : nearby_lines)
 					{
+						//printf("inside findProximatePoints \n");
 						findProximatePoints(point_it, *nearby_line.poly, nearby_line, nearby_line.next());
+						//printf("outside findProximatePoints \n");
 					}
 				}
 			}
@@ -173,8 +176,9 @@
 		{
 			return;
 		}
-
+		//printf("inside getClosestOnLineSegment \n");
 		curaIrfan::PointIrfan closest = LinearAlg2D::getClosestOnLineSegment(a_point, b_from, b_to);
+		//printf("outside getClosestOnLineSegment \n");
 
 		int64_t dist2 = curaIrfan::vSize2(curaIrfan::operator-(closest , a_point));
 

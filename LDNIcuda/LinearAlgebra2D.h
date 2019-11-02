@@ -100,10 +100,9 @@
 		*/
 		static curaIrfan::PointIrfan getClosestOnLineSegment(const curaIrfan::PointIrfan& from, const curaIrfan::PointIrfan& p0, const curaIrfan::PointIrfan& p1)
 		{
-			curaIrfan::PointIrfan check3 = curaIrfan::operator-(p1,p0);
-			const curaIrfan::PointIrfan direction = check3;
-			curaIrfan::PointIrfan check4 = curaIrfan::operator-(from, p0);
-			const curaIrfan::PointIrfan to_from = check4;
+			
+			curaIrfan::PointIrfan direction = curaIrfan::operator-(p1, p0);
+			const curaIrfan::PointIrfan to_from = curaIrfan::operator-(from, p0);
 			const coord_tIrfan projected_x = curaIrfan::dot(to_from, direction);
 
 			const coord_tIrfan x_p0 = 0;
@@ -123,11 +122,33 @@
 			}
 			else
 			{
-				curaIrfan::PointIrfan check1 = curaIrfan::operator+(p0 , projected_x);
-				curaIrfan::PointIrfan check2 = curaIrfan::operator*(curaIrfan::vSize(direction), direction);
-				curaIrfan::PointIrfan check3 = curaIrfan::operator/(check1,check2);
-				curaIrfan::PointIrfan check4 = curaIrfan::operator/(check3, curaIrfan::vSize(direction));
-				curaIrfan::PointIrfan ret = check4;
+				//curaIrfan::PointIrfan check1 = curaIrfan::operator+(p0 , projected_x);
+				//curaIrfan::PointIrfan check2 = curaIrfan::operator*(curaIrfan::vSize(direction), direction);
+				//curaIrfan::PointIrfan check3 = curaIrfan::operator/(check1,check2);
+				//curaIrfan::PointIrfan check4 = curaIrfan::operator/(check3, curaIrfan::vSize(direction));
+				//curaIrfan::PointIrfan ret = check4;
+				//Point ret = p0 + projected_x / vSize(direction) * direction / vSize(direction);
+				coord_tIrfan X1 = 1;
+				coord_tIrfan Y1 = 1;
+				curaIrfan::PointIrfan direction1 = (X1,Y1);
+				
+				if (direction.X == 0 || direction.Y == 0)		   //Becasue Points are too close in LDNI contours and direction can got to 0 in X or Y direction so giving it a direction of 1 which is not a big difference at all
+				{
+					if (direction.X == 0)
+					{
+						direction = direction1.X;
+						
+					}
+
+					if (direction.Y == 0)
+					{
+						direction.Y = direction1.X;
+					}
+
+				}
+
+
+				curaIrfan::PointIrfan ret = curaIrfan::operator+(p0 , curaIrfan::operator/(curaIrfan::operator/(projected_x, curaIrfan::operator*(curaIrfan::vSize(direction) , direction)) , curaIrfan::vSize(direction)));
 				return ret;
 			}
 		}

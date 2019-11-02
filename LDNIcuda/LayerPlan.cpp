@@ -178,7 +178,7 @@ void LayerPlan::planPrime()
 {
 	forceNewPathStart();
 	constexpr float prime_blob_wipe_length = 10.0;
-	GCodePath& prime_travel = addTravel_simple(getLastPlannedPositionOrStartingPosition() + curaIrfan::PointIrfan(0, MM2INT(prime_blob_wipe_length)));
+	GCodePath& prime_travel = addTravel_simple(layer_nr, curaIrfan::operator+(getLastPlannedPositionOrStartingPosition() , curaIrfan::PointIrfan(0, MM2INT(prime_blob_wipe_length))));
 	prime_travel.retract = false;
 	prime_travel.perform_z_hop = false;
 	prime_travel.perform_prime = true;

@@ -17,6 +17,7 @@ template<typename T> class optional;
 
 class AngleDegrees;
 class Polygons;
+class SkinPart;
 class SliceDataStorage;
 class SliceMeshStorage;
 class SliceLayer;
@@ -397,5 +398,8 @@ public:
 	void processSkinPrintFeature(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, const Polygons& area, const GCodePathConfig& config, EFillMethod pattern, const AngleDegrees skin_angle, const coord_tIrfan skin_overlap, const Ratio skin_density, Polygons* perimeter_gaps_output, bool& added_something, double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT) const;
 
 	std::optional<curaIrfan::PointIrfan> getSeamAvoidingLocation(const Polygons& filling_part, int filling_angle, curaIrfan::PointIrfan last_position) const;
+
+	void processRoofing(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SkinPart& skin_part, Polygons& concentric_perimeter_gaps, bool& added_something) const;
+
 };
 #endif

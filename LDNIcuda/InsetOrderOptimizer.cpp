@@ -473,12 +473,14 @@ bool InsetOrderOptimizer::processInsetsWithOptimizedOrdering()
 	if (travel_compensate_overlapping_walls_0_enabled)
 	{
 		wall_0_polys = part.insets[0];
+		printf("the size of wall_o us %d \n", part.insets[0].size());
 		wall_overlapper_0 = new WallOverlapComputation(wall_0_polys, mesh_config.inset0_config.getLineWidth());
 	}
 	printf("InsetOrderOptimizer::processInsetsWithOptimizedOrdering() @ line 476 \n");
 	Polygons wall_x_polys;
 	bool travel_compensate_overlapping_walls_x_enabled = true;
-	if (travel_compensate_overlapping_walls_x_enabled)
+
+	 if (travel_compensate_overlapping_walls_x_enabled)
 	{
 		for (unsigned int inset_level = 1; inset_level < num_insets; ++inset_level)
 		{
@@ -486,8 +488,12 @@ bool InsetOrderOptimizer::processInsetsWithOptimizedOrdering()
 			wall_x_polys.add(part.insets[inset_level]);
 		}
 		// use a slightly reduced line width so that compensation only occurs between insets at the same level (and not between insets in adjacent levels)
-		wall_overlapper_x = new WallOverlapComputation(wall_x_polys, mesh_config.insetX_config.getLineWidth() - 1);
-	}
+		printf("InsetOrderOptimizer::processInsetsWithOptimizedOrdering() @ line 490 \n");
+		coord_tIrfan check =  mesh_config.insetX_config.getLineWidth()-1;
+		printf("InsetOrderOptimizer::processInsetsWithOptimizedOrdering() @ line 492 and %d \n", wall_x_polys.size());
+		wall_overlapper_x = new WallOverlapComputation(wall_x_polys, check);
+		printf("InsetOrderOptimizer::processInsetsWithOptimizedOrdering() @ line 492 \n");
+	}	  
 	printf("InsetOrderOptimizer::processInsetsWithOptimizedOrdering() @ line 488 \n");
 	// create a vector of vectors containing all the inset polys
 	inset_polys.clear();

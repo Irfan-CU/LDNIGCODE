@@ -668,12 +668,13 @@ void FffGcodeWriter::addPrimeTower(const SliceDataStorage& storage, LayerPlan& g
 
 void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, LayerPlan& gcode_layer) const
 {
-	printf("inside addMeshPartToGCode for the layer %d and the part is %d  \n ", gcode_layer.getLayerNr());
+	printf("inside addMeshPartToGCode for the layer %d and the part is  \n ", gcode_layer.getLayerNr());
 
 
 	bool added_something = false;		
 
 	added_something = added_something | processInfill(storage, gcode_layer, extruder_nr,mesh_config, part);
+	printf("the part inset sare %d %d %d \n", part.insets[0].size(), part.insets[1].size(), part.insets[2].size());
 	added_something = added_something | processInsets(storage, gcode_layer, extruder_nr, mesh_config, part);
 	//processOutlineGaps(storage, gcode_layer, extruder_nr, mesh_config, part, added_something);
 	
@@ -1092,19 +1093,38 @@ bool FffGcodeWriter::processSkinPart(const SliceDataStorage& storage, LayerPlan&
 	return added_something;
 }
 
+void FffGcodeWriter::processSkinInsets(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SkinPart& skin_part, bool& added_something) const
+{
+	const size_t skin_extruder_nr = -1;
+	// add skin walls aka skin perimeters
+	if (extruder_nr == skin_extruder_nr)
+	{
+		for (const Polygons& skin_perimeter : skin_part.insets)
+		{
+			if (skin_perimeter.size() > 0)
+			{
+				added_something = true;
+				setExtruder_addPrime(storage, gcode_layer, extruder_nr);
+				gcode_layer.setIsInside(true); // going to print stuff inside print object
+				gcode_layer.addWalls(skin_perimeter,mesh_config.skin_config, mesh_config.bridge_skin_config, nullptr); // add polygons to gcode in inward order
+			}
+		}
+	}
+}
+
+
 void FffGcodeWriter::processRoofing(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SkinPart& skin_part, Polygons& concentric_perimeter_gaps, bool& added_something) const
 {
-	const size_t roofing_extruder_nr = mesh.settings.get<ExtruderTrain&>("roofing_extruder_nr").extruder_nr;
+	const size_t roofing_extruder_nr = -1;
 	if (extruder_nr != roofing_extruder_nr)
 	{
 		return;
 	}
+	bool fill_perimeter_gaps = true;
+	bool magic_spiralize = false;
+	fill_perimeter_gaps = fill_perimeter_gaps	&& !magic_spiralize;
 
-	const bool fill_perimeter_gaps =
-		mesh.settings.get<FillPerimeterGapMode>("fill_perimeter_gaps") != FillPerimeterGapMode::NOWHERE
-		&& !Application::getInstance().current_slice->scene.current_mesh_group->settings.get<bool>("magic_spiralize");
-
-	const EFillMethod pattern = mesh.settings.get<EFillMethod>("roofing_pattern");
+	const EFillMethod pattern = EFillMethod::LINES;// mesh.settings.get<EFillMethod>("roofing_pattern");
 
 	AngleDegrees roofing_angle = 45;
 	if (mesh.roofing_angles.size() > 0)
@@ -1113,7 +1133,7 @@ void FffGcodeWriter::processRoofing(const SliceDataStorage& storage, LayerPlan& 
 	}
 
 	const Ratio skin_density = 1.0;
-	const coord_t skin_overlap = 0; // skinfill already expanded over the roofing areas; don't overlap with perimeters
+	const coord_tIrfan skin_overlap = 0; // skinfill already expanded over the roofing areas; don't overlap with perimeters
 	Polygons* perimeter_gaps_output = (fill_perimeter_gaps) ? &concentric_perimeter_gaps : nullptr;
 	processSkinPrintFeature(storage, gcode_layer, mesh, extruder_nr, skin_part.roofing_fill, mesh_config.roofing_config, pattern, roofing_angle, skin_overlap, skin_density, perimeter_gaps_output, added_something);
 }
@@ -1142,7 +1162,7 @@ void FffGcodeWriter::processTopBottom(const SliceDataStorage& storage, LayerPlan
 	bool skin_alternate_rotation = false;
 	size_t top_layers = 0;
 	size_t bottom_layers = 4;
-	const bool skin_alternate_rotation = skin_alternate_rotation && (top_layers >= 4 || bottom_layers >= 4);
+	skin_alternate_rotation = skin_alternate_rotation && (top_layers >= 4 || bottom_layers >= 4);
 	if (mesh.skin_angles.size() > 0)
 	{
 		skin_angle = mesh.skin_angles.at(layer_nr % mesh.skin_angles.size());
@@ -1160,9 +1180,8 @@ void FffGcodeWriter::processTopBottom(const SliceDataStorage& storage, LayerPlan
 	const coord_tIrfan more_skin_overlap = std::max(skin_overlap, (coord_tIrfan)(mesh_config.insetX_config.getLineWidth() / 2)); // force a minimum amount of skin_overlap
 	const bool bridge_settings_enabled = false;// mesh.settings.get<bool>("bridge_settings_enabled");
 	bool bridge_enable_more_layers = true;
-	const bool bridge_enable_more_layers = bridge_settings_enabled && bridge_enable_more_layers;
+	bridge_enable_more_layers = bridge_settings_enabled && bridge_enable_more_layers;
 	const Ratio support_threshold = bridge_settings_enabled ? Ratio(50/100) : 0.0_r;
-	const size_t bottom_layers =5;
 	bool support_tree_enable = true;
 	bool support_enable = false;
 

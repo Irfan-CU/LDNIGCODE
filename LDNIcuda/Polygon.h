@@ -640,9 +640,9 @@ public:
 		Polygons& thiss = *this;
 		for (size_t p = 0; p < size(); p++)
 		{
-			printf("Before simplify in simplification the pointcount is %d \n", thiss.pointCount());
+			//printf("Before simplify in simplification the pointcount is %d \n", thiss.pointCount());
 			thiss[p].simplify(smallest_line_segment_squared, allowed_error_distance_squared);
-			printf("After clear in simplification the pointcount is %d \n",thiss.pointCount());
+			//printf("After clear in simplification the pointcount is %d \n",thiss.pointCount());
 			if (thiss[p].size() < 3)
 			{
 				remove(p);
