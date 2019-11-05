@@ -72,6 +72,7 @@
 		 * \return An adjacency graph with for each point one or more edges.
 		 */
 		AdjacencyGraph_t prim(std::unordered_set<curaIrfan::PointIrfan> vertices) const;
+		
 	};
 
 

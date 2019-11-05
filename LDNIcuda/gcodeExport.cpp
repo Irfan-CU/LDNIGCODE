@@ -15,7 +15,7 @@
 
 GCodeExport::GCodeExport()
 	: output_stream(&std::cout)
-	, currentPosition(0, 0, MM2INT(20))
+	, currentPosition(0, 0, MM2INT(0))
 	, layer_nr(0)
 	, relative_extrusion(false)
 {
@@ -428,6 +428,23 @@ curaIrfan::PointIrfan GCodeExport::getPositionXY() const
 }
 
 
+void GCodeExport::writeZhopEnd(double speed/*= 0*/)
+{
+	if (is_z_hopped)
+	{
+		if (speed == 0)
+		{
+			//const ExtruderTrain& extruder = Application::getInstance().current_slice->scene.extruders[current_extruder];
+			speed = 10.0;
+		}
+		is_z_hopped = 0;
+		currentPosition.z = current_layer_z;
+		currentSpeed = speed;
+		*output_stream << "G1 F" << speed * 60 << " Z" << MMtoStream{ current_layer_z } << new_line;
+		assert(speed > 0.0 && "Z hop speed should be positive.");
+	}
+}
+
 curaIrfan::PointIrfan GCodeExport::getGcodePos(const coord_tIrfan x, const coord_tIrfan y, const int extruder_train) const
 {
 	
@@ -439,7 +456,7 @@ void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, cons
 
 	if (currentSpeed != speed)
 	{
-		*output_stream << " F" << speed * 60;
+		*output_stream << " F" << PrecisionedDouble{ 1, speed * 60 };
 		currentSpeed = speed;
 	}
 	
@@ -477,6 +494,7 @@ void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, cons
 }
 void GCodeExport::writeExtrusion(const curaIrfan::PointIrfan& p, coord_tIrfan layer_thickness, const double& speed, double extrusion_mm3_per_mm, PrintFeatureType feature, bool update_extrusion_offset)
 {
+	
 	writeExtrusion(Point3(p.X, p.Y, current_layer_z), speed, extrusion_mm3_per_mm, feature, layer_thickness, update_extrusion_offset);
 }
 void GCodeExport::writeExtrusion(const Point3& p, const double& speed, double extrusion_mm3_per_mm, const PrintFeatureType& feature, coord_tIrfan layer_thickness, bool update_extrusion_offset)
@@ -521,9 +539,9 @@ void GCodeExport::writePrimeTrain(const double& travel_speed, coord_tIrfan layer
 		// ideally the prime position would be respected whether we do a blob or not,
 		// but the frontend currently doesn't support a value function of an extruder setting depending on an fdmprinter setting,
 		// which is needed to automatically ignore the prime position for the printer when blob is disabled
-		coord_tIrfan extruder_prime_pos_x = MM2INT (0.00000);
-		coord_tIrfan extruder_prime_pos_y = MM2INT (0.00000);
-		coord_tIrfan extruder_prime_pos_z = MM2INT (0.00000);
+		coord_tIrfan extruder_prime_pos_x = MM2INT (9);
+		coord_tIrfan extruder_prime_pos_y = MM2INT (6);
+		coord_tIrfan extruder_prime_pos_z = MM2INT (2);
 
 		//extruder_settings.get<coord_t>("extruder_prime_pos_x");
 		Point3 prime_pos(extruder_prime_pos_x, extruder_prime_pos_y, extruder_prime_pos_z);
@@ -537,19 +555,22 @@ void GCodeExport::writePrimeTrain(const double& travel_speed, coord_tIrfan layer
 }
 void GCodeExport::writeTravel(const Point3& p, const double& speed, coord_tIrfan layer_thicnkess)
 {
+	//printf("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||current layer z is %f \n", INT2MM(p.z));
 	writeTravel(p.x, p.y, p.z + is_z_hopped, speed, layer_thicnkess);
 }
 void GCodeExport::writeTravel(const curaIrfan::PointIrfan& p, const double& speed, coord_tIrfan layer_thicnkess)
 {
 	writeTravel(Point3(p.X, p.Y, current_layer_z), speed, layer_thicnkess);
 }
-void GCodeExport::writeTravel(const coord_tIrfan& x, const coord_tIrfan& y, const coord_tIrfan& z, const double& speed, coord_tIrfan layer_thicnkess)
+void GCodeExport::writeTravel(const coord_tIrfan& x, const coord_tIrfan& y, const coord_tIrfan& z1, const double& speed, coord_tIrfan layer_thicnkess)
 {
-	if (currentPosition.x == x && currentPosition.y == y && currentPosition.z == z)
+	
+	if (currentPosition.x == x && currentPosition.y == y && currentPosition.z == z1)
 	{
 		return;
 
 	}
+	
 #ifdef ASSERT_INSANE_OUTPUT
 	assert(speed < 400 && speed > 1); // normal F values occurring in UM2 gcode (this code should not be compiled for release)
 	assert(currentPosition != no_point3);
@@ -558,10 +579,9 @@ void GCodeExport::writeTravel(const coord_tIrfan& x, const coord_tIrfan& y, cons
 #endif //ASSERT_INSANE_OUTPUT
 
 	const PrintFeatureType travel_move_type = extruder_attr[current_extruder].retraction_e_amount_current ? PrintFeatureType::MoveRetraction : PrintFeatureType::MoveCombing;
-	const int display_width = extruder_attr[current_extruder].retraction_e_amount_current ? MM2INT(0.2) : MM2INT(0.1);
-	const double layer_height = INT2MM(layer_thicnkess);// Application::getInstance().current_slice->scene.current_mesh_group->settings.get<double>("layer_height");
 	*output_stream << "G0";
-	writeFXYZE(speed, x, y, z, current_e_value, travel_move_type);
+	
+	writeFXYZE(speed, x, y, z1, current_e_value, travel_move_type);
 	//printf("done with fxfyfz \n");
 
 }

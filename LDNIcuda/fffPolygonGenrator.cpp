@@ -25,7 +25,7 @@
 #include "Slicer.h"
 #include "Support.h"
 
-
+#include "TreeSupporth.h"
 #include "WallComputation.h"
 #include "Progress.h"
 #include "ProgressEstimator.h"
@@ -94,10 +94,10 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 	
 	printf("Print Layer count: %i\n", storage.print_layer_count);
 
-	//AreaSupport::generateOverhangAreas(storage);
-	//AreaSupport::generateSupportAreas(storage);
-	//TreeSupport tree_support_generator(storage);
-	//tree_support_generator.generateSupportAreas(storage);
+	AreaSupport::generateOverhangAreas(storage);
+	AreaSupport::generateSupportAreas(storage);
+	TreeSupport tree_support_generator(storage);
+	tree_support_generator.generateSupportAreas(storage);
 	
 	if (!isEmptyLayer(storage, 0))
 	{

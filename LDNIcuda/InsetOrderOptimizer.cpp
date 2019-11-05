@@ -463,8 +463,8 @@ bool InsetOrderOptimizer::processInsetsWithOptimizedOrdering()
 {
 	added_something = false;
 	const unsigned int num_insets = part.insets.size();
-	printf("insets sizes are %d \n", part.insets.size());
-	printf("InsetOrderOptimizer::processInsetsWithOptimizedOrdering() @ line 465 \n");
+	//printf("insets sizes are %d \n", part.insets.size());
+	//printf("InsetOrderOptimizer::processInsetsWithOptimizedOrdering() @ line 465 \n");
 	// if overlap compensation is enabled, gather all the level 0 and/or level X walls together
 	// and initialise the respective overlap computers
 	// NOTE: this code assumes that the overlap computers do not alter the order or number of the polys!

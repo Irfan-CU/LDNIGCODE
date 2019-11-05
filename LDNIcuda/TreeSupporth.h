@@ -5,19 +5,22 @@
 #ifndef TREESUPPORT_H
 #define TREESUPPORT_H
 
-
 #include <forward_list>
 #include <unordered_set>
+#include <unordered_map>
 
+#include "IntpointIrfan.h"
+#include "Polygon.h"
 
 
 class LayerIndex;
-
-//#include "IntpointIrfan.h"
-
-//class Polygons;
-//class Polygon;
+	/*!
+	 * \brief Lazily generates tree guidance volumes.
+	 *
+	 * \warning This class is not currently thread-safe and should not be accessed in OpenMP blocks
+	 */
 	class ModelVolumes
+    
 	{
 	public:
 		ModelVolumes() = default;
@@ -86,7 +89,7 @@ class LayerIndex;
 		/*!
 		 * \brief Convenience typedef for the keys to the caches
 		 */
-		using RadiusLayerPair = std::pair<coord_tIrfan, LayerIndex>;
+		using RadiusLayerPair = std::pair<coord_tIrfan, int>;
 
 		/*!
 		 * \brief Round \p radius upwards to a multiple of radius_sample_resolution_
@@ -138,7 +141,7 @@ class LayerIndex;
 		coord_tIrfan xy_distance_;
 
 		/*!
-		 * \brief The maximum distance that the centrepoint of a tree branch may
+		 * \brief The maximum distance that the centrecuraIrfan::PointIrfan of a tree branch may
 		 * move in consequtive layers
 		 */
 		coord_tIrfan max_move_;
@@ -166,8 +169,6 @@ class LayerIndex;
 		 * (ie there is no difference in behaviour for the user betweeen
 		 * calculating the values each time vs caching the results).
 		 */
-
-		
 		mutable std::unordered_map<RadiusLayerPair, Polygons> collision_cache_;
 		mutable std::unordered_map<RadiusLayerPair, Polygons> avoidance_cache_;
 		mutable std::unordered_map<RadiusLayerPair, Polygons> internal_model_cache_;
@@ -252,7 +253,7 @@ class LayerIndex;
 			/*!
 			 * \brief The number of support roof layers below this one.
 			 *
-			 * When a contact point is created, it is determined whether the mesh
+			 * When a contact curaIrfan::PointIrfan is created, it is determined whether the mesh
 			 * needs to be supported with support roof or not, since that is a
 			 * per-mesh setting. This is stored in this variable in order to track
 			 * how far we need to extend that support roof downwards.
@@ -325,19 +326,19 @@ class LayerIndex;
 		 * dropped down. The nodes are dropped to lower layers inside the same
 		 * vector of layers.
 		 */
-		void dropNodes(std::vector<std::unordered_set<Node*>>& contact_nodes);
+		void dropNodes(std::vector<std::unordered_set<Node*>>& contact_nodes, SliceDataStorage& storage);
 
 		/*!
-		 * \brief Creates points where support contacts the model.
+		 * \brief Creates curaIrfan::PointIrfans where support contacts the model.
 		 *
-		 * A set of points is created for each layer.
+		 * A set of curaIrfan::PointIrfans is created for each layer.
 		 * \param mesh The mesh to get the overhang areas to support of.
-		 * \param contact_nodes[out] A vector of mappings from contact points to
+		 * \param contact_nodes[out] A vector of mappings from contact curaIrfan::PointIrfans to
 		 * their tree nodes.
 		 * \param collision_areas For every layer, the areas where a generated
-		 * contact point would immediately collide with the model due to the X/Y
+		 * contact curaIrfan::PointIrfan would immediately collide with the model due to the X/Y
 		 * distance.
-		 * \return For each layer, a list of points where the tree should connect
+		 * \return For each layer, a list of curaIrfan::PointIrfans where the tree should connect
 		 * with the model.
 		 */
 		void generateContactPoints(const SliceMeshStorage& mesh, std::vector<std::unordered_set<Node*>>& contact_nodes);
@@ -356,7 +357,7 @@ namespace std
 {
 	template<> struct hash<TreeSupport::Node>
 	{
-		size_t operator()(TreeSupport::Node& node) const
+		size_t operator()(const TreeSupport::Node& node) const
 		{
 			return hash<curaIrfan::PointIrfan>()(node.position);
 		}
@@ -364,4 +365,3 @@ namespace std
 }
 
 #endif /* TREESUPPORT_H */
-

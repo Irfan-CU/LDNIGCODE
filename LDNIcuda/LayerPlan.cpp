@@ -257,6 +257,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 		gcode.writeBedTemperatureCommand(60, wait);
 	}
 
+	
 	gcode.setZ(z);
 	
 	const GCodePathConfig* last_extrusion_config= nullptr; // used to check whether we need to insert a TYPE comment in the gcode.
@@ -368,7 +369,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 			{
 				gcode.writeJerk(path.config->getJerk());
 			}
-
+			/*
 			if (path.retract)
 			{
 				gcode.writeRetraction(retraction_config);
@@ -382,7 +383,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 					gcode.writeZhopEnd();
 				}
 			}
-
+			 */
 			if (!path.isTravelPath() && last_extrusion_config != path.config)
 			{
 				gcode.writeTypeComment(path.config->type);
@@ -426,6 +427,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 					gcode.writeTravel(current_position, 10, layer_thicnkess);
 
 					// Prevent the final travel(s) from resetting to the 'previous' layer height.
+					
 					gcode.setZ(final_travel_z);
 				}
 				for (unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
@@ -434,7 +436,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 				}
 				continue;
 			}
-			
+
 			bool spiralize = false;
 					
 			if (!spiralize) // normal (extrusion) move (with coasting
@@ -453,7 +455,8 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 					for (unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
 					{
 						//communication->sendLineTo(path.config->type, path.points[point_idx], path.getLineWidthForLayerView(), path.config->getLayerThickness(), speed);
-						gcode.writeExtrusion(path.points[point_idx], layer_thicnkess, speed, path.getExtrusionMM3perMM(), path.config->type, update_extrusion_offset);
+						gcode.writeExtrusion(path.points[point_idx], layer_thicnkess, speed, path.getExtrusionMM3perMM(), path.config->type, update_extrusion_offset);	   
+						
 					}
 				}
 				
@@ -493,22 +496,7 @@ void GCodeExport::writeZhopStart(const coord_tIrfan hop_height, double speed/*= 
 	}
 }
 
-void GCodeExport::writeZhopEnd(double speed/*= 0*/)
-{
-	if (is_z_hopped)
-	{
-		if (speed == 0)
-		{
-			//const ExtruderTrain& extruder = Application::getInstance().current_slice->scene.extruders[current_extruder];
-			speed = 10.0;
-		}
-		is_z_hopped = 0;
-		currentPosition.z = current_layer_z;
-		currentSpeed = speed;
-		*output_stream << "G1 F" << speed * 60 << " Z" << new_line; //MMtoStream{ current_layer_z } << new_line;
-		assert(speed > 0.0 && "Z hop speed should be positive.");
-	}
-}
+
 
 void GCodeExport::writeTypeComment(const PrintFeatureType& type)
 {

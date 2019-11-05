@@ -6,13 +6,12 @@
 #include <iterator>
 #include <algorithm>
 
-
-MinimumSpanningTree::MinimumSpanningTree(std::unordered_set<curaIrfan::PointIrfan> vertices) : adjacency_graph(prim(vertices))
+	MinimumSpanningTree::MinimumSpanningTree(std::unordered_set<curaIrfan::PointIrfan> vertices) : adjacency_graph(prim(vertices))
 	{
 		//Just copy over the fields.
 	}
 
-auto MinimumSpanningTree::prim(std::unordered_set<curaIrfan::PointIrfan> vertices) const -> AdjacencyGraph_t
+	auto MinimumSpanningTree::prim(std::unordered_set<curaIrfan::PointIrfan> vertices) const -> AdjacencyGraph_t
 	{
 		AdjacencyGraph_t result;
 		if (vertices.empty())
@@ -38,7 +37,7 @@ auto MinimumSpanningTree::prim(std::unordered_set<curaIrfan::PointIrfan> vertice
 		for (size_t vertex_index = 1; vertex_index < vertices_list.size(); vertex_index++)
 		{
 			const auto& vert = vertices_list[vertex_index];
-			smallest_distance[&vert] = curaIrfan::vSize2(curaIrfan::operator-(vert, vertices_list[0]));
+			smallest_distance[&vert] = curaIrfan::vSize2(curaIrfan::operator-(vert , vertices_list[0]));
 			smallest_distance_to[&vert] = &vertices_list[0];
 		}
 
@@ -120,6 +119,5 @@ auto MinimumSpanningTree::prim(std::unordered_set<curaIrfan::PointIrfan> vertice
 			[](const MapValue& node) { return node.first; });
 		return result;
 	}
-	
 
 

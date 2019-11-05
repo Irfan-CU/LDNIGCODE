@@ -194,6 +194,12 @@
     <ClCompile Include="bridge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TreeSupport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MinimumSpanningTree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LDNIcpuOperation.h">
@@ -461,6 +467,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AngleRadiansh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeSupporth.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

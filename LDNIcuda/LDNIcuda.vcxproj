@@ -206,6 +206,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MergerInfillLines.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MinimumSpanningTree.cpp" />
     <ClCompile Include="multivolumes.cpp" />
     <ClCompile Include="NozzelTempInsert.cpp" />
     <ClCompile Include="PathConfigStorage.cpp" />
@@ -232,6 +233,7 @@
     <ClCompile Include="SVG.cpp" />
     <ClCompile Include="timeEstimate.cpp" />
     <ClCompile Include="timematerialestimate.cpp" />
+    <ClCompile Include="TreeSupport.cpp" />
     <ClCompile Include="WallComputation.cpp" />
     <ClCompile Include="WallOverlap.cpp" />
   </ItemGroup>
@@ -320,6 +322,7 @@
     <ClInclude Include="timeEstimate.h" />
     <ClInclude Include="TimeKeeper.h" />
     <ClInclude Include="timeMaterialEstimate.h" />
+    <ClInclude Include="TreeSupporth.h" />
     <ClInclude Include="UnionFind.h" />
     <ClInclude Include="WallComputation.h" />
     <ClInclude Include="WallOverlap.h" />

@@ -73,11 +73,11 @@ bool SliceMeshStorage::getExtruderIsUsed(const size_t extruder_nr) const
 
 bool SliceMeshStorage::getExtruderIsUsed(const size_t extruder_nr, const int& layer_nr) const
 {
+	printf("isndie the get extruders is used \n");
 	SliceDataStorage* storage;
-
 	const SliceLayer& layer = storage->Layers[layer_nr];
-
-	if (extruder_nr ==-1 )
+	int skin_outline_count = 1;
+	if (extruder_nr ==-1 || skin_outline_count > 0 )
 	{
 		for (const SliceLayerPart& part : layer.parts)
 		{

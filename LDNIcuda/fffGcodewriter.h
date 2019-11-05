@@ -237,7 +237,7 @@ public:
 	void processSkirtBrim(const SliceDataStorage& storage,  LayerPlan& gcodeLayer, unsigned int extruder_nr) const;
 	bool processIroning(const SliceLayer& part, LayerPlan& gcode_layer) const;
 	bool processInsets(const SliceDataStorage& storage, LayerPlan& gcodeLayer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config,const SliceLayerPart& part) const;
-	//void processOutlineGaps(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, bool& added_something) const;
+	void processOutlineGaps(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, bool& added_something) const;
 	void addPrimeTower(const SliceDataStorage& storage, LayerPlan& gcodeLayer, int prev_extruder) const;
 	void setExtruder_addPrime(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr) const;
 	/*!
@@ -338,7 +338,7 @@ public:
 	 * \param part The part for which to create gcode.
 	 * \return Whether this function added anything to the layer plan.
 	 */
-	bool processInfill(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const;
+	bool processInfill(const SliceDataStorage& storage, const SliceMeshStorage& mesh, LayerPlan& gcode_layer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const;
 
 	/*!
 	 * \brief Add thicker (multiple layers) sparse infill for a given part in a
@@ -352,7 +352,7 @@ public:
 	 * \param part The part for which to create gcode.
 	 * \return Whether this function added anything to the layer plan.
 	 */
-	bool processMultiLayerInfill(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const;
+	bool processMultiLayerInfill(const SliceDataStorage& storage, const SliceMeshStorage& mesh,LayerPlan& gcode_layer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const;
 
 	/*!
 	 * \brief Add normal sparse infill for a given part in a layer.

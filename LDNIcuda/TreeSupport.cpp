@@ -4,7 +4,7 @@
 //#include <unordered_map>
 #include "MinimumSpanningTree.h"
 #include "SliceDataStorage.h"
-#include "TreeSupport.h"
+#include "TreeSupporth.h"
 #include "Progress.h"
 #include "ENUMSettings.h"
 #include "LayerIndex.h"
@@ -63,7 +63,7 @@
 		}
 
 		//Drop nodes to lower layers.
-		dropNodes(contact_nodes);
+		dropNodes(contact_nodes,storage);
 
 		//Generate support areas.
 		drawCircles(storage, contact_nodes);
@@ -84,7 +84,7 @@
 	void TreeSupport::drawCircles(SliceDataStorage& storage, const std::vector<std::unordered_set<Node*>>& contact_nodes)
 	{
 		//const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
-		const coord_tIrfan branch_radius = MM2INT(2);// mesh_group_settings.get<coord_tIrfan>("support_tree_branch_diameter") / 2;
+		const coord_tIrfan branch_radius = MM2INT(2.0/2);// mesh_group_settings.get<coord_tIrfan>("support_tree_branch_diameter") / 2;
 		const size_t wall_count = 1;// mesh_group_settings.get<size_t>("support_tree_wall_count");
 		Polygon branch_circle; //Pre-generate a circle with correct diameter so that we don't have to recompute those (co)sines every time.
 		for (unsigned int i = 0; i < CIRCLE_RESOLUTION; i++)
@@ -94,7 +94,7 @@
 		}
 		const coord_tIrfan circle_side_length = 2 * branch_radius * sin(M_PI / CIRCLE_RESOLUTION); //Side length of a regular polygon.
 		const coord_tIrfan z_distance_bottom = MM2INT(0.2);// mesh_group_settings.get<coord_tIrfan>("support_bottom_distance");
-		const coord_tIrfan layer_height = MM2INT(0.01 * 15);// mesh_group_settings.get<coord_tIrfan>("layer_height");
+		const coord_tIrfan layer_height = storage.layer_thickness;// MM2INT(0.01 * 15);// mesh_group_settings.get<coord_tIrfan>("layer_height");
 		const size_t z_distance_bottom_layers = round_up_divide(z_distance_bottom, layer_height);
 		const size_t tip_layers = branch_radius / layer_height; //The number of layers to be shrinking the circle to create a tip. This produces a 45 degree angle.
 		const double diameter_angle_scale_factor = sin(0.0874) * layer_height / branch_radius; //Scale factor per layer to produce the desired angle.
@@ -199,17 +199,17 @@
 		}
 	}
 
-	void TreeSupport::dropNodes(std::vector<std::unordered_set<Node*>>& contact_nodes)
+	void TreeSupport::dropNodes(std::vector<std::unordered_set<Node*>>& contact_nodes, SliceDataStorage& storage)
 	{
 		//const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
 		//Use Minimum Spanning Tree to connect the points on each layer and move them while dropping them down.
-		const coord_tIrfan layer_height = MM2INT(0.01 * 15);// mesh_group_settings.get<coord_tIrfan>("layer_height");
+		const coord_tIrfan layer_height = storage.layer_thickness;// MM2INT(0.01 * 15);// mesh_group_settings.get<coord_tIrfan>("layer_height");
 		const double angle = (0.6981);// mesh_group_settings.get<double>("support_tree_angle");
 		const coord_tIrfan maximum_move_distance = angle < 90 ? static_cast<coord_tIrfan>(tan(angle) * layer_height) : std::numeric_limits<coord_tIrfan>::max();
-		const coord_tIrfan branch_radius = MM2INT(2.0);// mesh_group_settings.get<coord_tIrfan>("support_tree_branch_diameter") / 2;
+		const coord_tIrfan branch_radius = MM2INT(2.0/2);// mesh_group_settings.get<coord_tIrfan>("support_tree_branch_diameter") / 2;
 		const size_t tip_layers = branch_radius / layer_height; //The number of layers to be shrinking the circle to create a tip. This produces a 45 degree angle.
 		const double diameter_angle_scale_factor = sin(0.0872) * layer_height / branch_radius; //Scale factor per layer to produce the desired angle.
-		const coord_tIrfan radius_sample_resolution = MM2INT(0.4);// mesh_group_settings.get<coord_tIrfan>("support_tree_collision_resolution");
+		const coord_tIrfan radius_sample_resolution = MM2INT(0.175);// mesh_group_settings.get<coord_tIrfan>("support_tree_collision_resolution");
 		const bool support_rests_on_model = false; // mesh_group_settings.get<ESupportType>("support_type") == ESupportType::EVERYWHERE;
 
 		std::unordered_set<Node*> to_free_node_set;

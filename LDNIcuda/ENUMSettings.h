@@ -74,7 +74,10 @@ enum class EPlatformAdhesion
 	NONE
 };
 
-
-
+enum class FillPerimeterGapMode
+{
+	NOWHERE,
+	EVERYWHERE
+};
 
 #endif
