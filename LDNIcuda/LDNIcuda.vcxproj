@@ -179,6 +179,7 @@
     <ClCompile Include="..\libs\clipper\clipper.cpp" />
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="AABB3D.cpp" />
+    <ClCompile Include="Application.cpp" />
     <ClCompile Include="bridge.cpp" />
     <ClCompile Include="clipper.cpp" />
     <ClCompile Include="Combcpp.cpp" />
@@ -186,6 +187,7 @@
     <ClCompile Include="ExtruderTrain.cpp" />
     <ClCompile Include="fffGcodeWriter.cpp" />
     <ClCompile Include="fffPolygonGenrator.cpp" />
+    <ClCompile Include="FffProcessor.cpp" />
     <ClCompile Include="FlowTempGraph.cpp" />
     <ClCompile Include="gcodeExport.cpp" />
     <ClCompile Include="GcodePath.cpp" />
@@ -206,6 +208,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MergerInfillLines.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshGroup.cpp" />
     <ClCompile Include="MinimumSpanningTree.cpp" />
     <ClCompile Include="multivolumes.cpp" />
     <ClCompile Include="NozzelTempInsert.cpp" />
@@ -224,8 +227,11 @@
     <ClCompile Include="ProgressStageEstimator.cpp" />
     <ClCompile Include="ProximityPointLink.cpp" />
     <ClCompile Include="raft.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="Settings.cpp" />
     <ClCompile Include="SkinInfillAreaComputation.cpp" />
     <ClCompile Include="SkirtBrim.cpp" />
+    <ClCompile Include="Slice.cpp" />
     <ClCompile Include="SliceDataStorage.cpp" />
     <ClCompile Include="Slicer.cpp" />
     <ClCompile Include="Support.cpp" />
@@ -244,6 +250,7 @@
     <ClInclude Include="algorithm.h" />
     <ClInclude Include="AngleDegrees.h" />
     <ClInclude Include="AngleRadiansh.h" />
+    <ClInclude Include="Application.h" />
     <ClInclude Include="Bridge.h" />
     <ClInclude Include="Comb.h" />
     <ClInclude Include="CombPathh.h" />
@@ -254,6 +261,7 @@
     <ClInclude Include="FanSpeedLayerTime.h" />
     <ClInclude Include="fffGcodewriter.h" />
     <ClInclude Include="fffPolygonGenrator.h" />
+    <ClInclude Include="FffProcessor.h" />
     <ClInclude Include="floatpoint.h" />
     <ClInclude Include="Flow_Temprature graph.h" />
     <ClInclude Include="GcodeExport.h" />
@@ -273,7 +281,9 @@
     <ClInclude Include="math.h" />
     <ClInclude Include="MergeInfillLines.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshGroup.h" />
     <ClInclude Include="multivolumes.h" />
+    <ClInclude Include="NoCopy.h" />
     <ClInclude Include="NozzelTempInsert.h" />
     <ClInclude Include="PathConfigStorage.h" />
     <ClInclude Include="Polygon.h" />
@@ -304,8 +314,11 @@
     <ClInclude Include="Ratio.h" />
     <ClInclude Include="RetractionConfig.h" />
     <ClInclude Include="scan_common.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="Settings.h" />
     <ClInclude Include="SkinInfillAreaComputation.h" />
     <ClInclude Include="SkirtBrim.h" />
+    <ClInclude Include="Slice.h" />
     <ClInclude Include="SliceDataStorage.h" />
     <ClInclude Include="Slicer.h" />
     <ClInclude Include="SpaceFillType.h" />
@@ -324,6 +337,7 @@
     <ClInclude Include="timeMaterialEstimate.h" />
     <ClInclude Include="TreeSupporth.h" />
     <ClInclude Include="UnionFind.h" />
+    <ClInclude Include="Velocity.h" />
     <ClInclude Include="WallComputation.h" />
     <ClInclude Include="WallOverlap.h" />
     <ClInclude Include="WipeScriptConfig.h" />
@@ -342,6 +356,9 @@
     <CudaCompile Include="LDNIcudaOffsettingByHashing.cu" />
     <CudaCompile Include="LDNIcudaOperation.cu" />
     <CudaCompile Include="LDNIcudaSolid.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="KEYS.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

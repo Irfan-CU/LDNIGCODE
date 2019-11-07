@@ -8,9 +8,23 @@
 	class ExtruderTrain
 	{
 	public:
-		
-		ExtruderTrain(const size_t extruder_nr);
-		
+		/*
+		* \brief Creates a new extruder. This extruder will have no settings but
+		* inherits everything from the global settings.
+		*/
+		ExtruderTrain(const size_t extruder_nr, Settings* parent_settings);
+
+		/*
+		 * \brief The settings that this extruder overwrites.
+		 */
+		Settings settings;
+
+		/*
+		 * \brief The position of this extruder.
+		 *
+		 * This may be used by g-code commands such as T to indicate to which
+		 * tool we must switch.
+		 */
 		const size_t extruder_nr;
 	};
 
