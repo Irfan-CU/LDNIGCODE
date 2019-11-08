@@ -414,6 +414,7 @@ public:
 	{
 		paths.emplace_back(std::move(*other_poly));
 	}
+
 	void add(const Polygons& other)
 	{
 		std::copy(other.paths.begin(), other.paths.end(), std::back_inserter(paths));
@@ -427,8 +428,6 @@ public:
 	}
 
 	
-
-
 	template<typename... Args>
 	void emplace_back(Args... args)
 	{

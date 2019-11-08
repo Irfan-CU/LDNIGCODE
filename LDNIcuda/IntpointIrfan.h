@@ -14,7 +14,7 @@ Integer points are used to avoid floating point rounding errors, and because Cli
 #include <clipper.hpp>
 #include <cmath>
 #include <functional> // for hash function object
-#include <iostream> // auto-serialization / auto-toString()
+//#include <iostream> // auto-serialization / auto-toString()
 #include <limits>
 #include <stdint.h>
 

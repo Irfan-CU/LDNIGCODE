@@ -33,6 +33,7 @@
 
 	void Settings::add(const std::string& key, const std::string value)
 	{
+		printf("into add string function to get %s and the value is %s \n", key.c_str(), value.c_str());
 		if (settings.find(key) != settings.end()) //Already exists.
 		{
 			settings[key] = value;
@@ -46,10 +47,13 @@
 	template<> std::string Settings::get<std::string>(const std::string& key) const
 	{
 		//If this settings base has a setting value for it, look that up.
+		std::string mystring;
+		printf("into get string function to get %s \n", key.c_str());
 		if (settings.find(key) != settings.end())
 		{
 			return settings.at(key);
 		}
+		/*
 
 		const std::unordered_map<std::string, ExtruderTrain*>& limit_to_extruder = Application::getInstance().current_slice->scene.limit_to_extruder;
 		if (limit_to_extruder.find(key) != limit_to_extruder.end())
@@ -61,9 +65,20 @@
 		{
 			return parent->get<std::string>(key);
 		}
-
+*/		else if (settings.find(key) == settings.end())
+		{
+			printf("Couldn't find the value please Specify the value for %s \n", key.c_str());
+			std::cin >> mystring;
+			const_cast <Settings *> (this)->add(key, mystring);
+			return settings.at(key);
+		}
+        else
+		{
 		printf("Trying to retrieve setting with no value given: '%s'\n", key.c_str());
 		std::exit(2);
+		}
+
+		
 	}
 
 	template<> double Settings::get<double>(const std::string& key) const
@@ -73,6 +88,7 @@
 
 	template<> size_t Settings::get<size_t>(const std::string& key) const
 	{
+		printf("into get size_t function to get %s \n", key.c_str());
 		return std::stoul(get<std::string>(key).c_str());
 	}
 
@@ -609,5 +625,6 @@
 			std::exit(2);
 		}
 	}
+
 //namespace cura
 

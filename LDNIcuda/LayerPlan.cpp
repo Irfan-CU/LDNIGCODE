@@ -996,6 +996,7 @@ void LayerPlan::addWall(ConstPolygonRef wall, int start_idx, const GCodePathConf
 
 void LayerPlan::addWalls(const Polygons& walls,const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, WallOverlapComputation* wall_overlap_computation, const ZSeamConfig& z_seam_config, coord_tIrfan wall_0_wipe_dist, float flow_ratio, bool always_retract)
 {
+	printf("the walls size is %d \for the layer number %d \n", walls.size(), layer_nr);
 	PathOrderOptimizer orderOptimizer(getLastPlannedPositionOrStartingPosition(), z_seam_config);
 	for (unsigned int poly_idx = 0; poly_idx < walls.size(); poly_idx++)
 	{
@@ -1206,10 +1207,10 @@ void LayerPlan::optimizePaths(const curaIrfan::PointIrfan& starting_position)
 	for (ExtruderPlan& extr_plan : extruder_plans)
 	{
 		//Merge paths whose endpoints are very close together into one line.
-		printf("extruder_plans has the paths of size %d \n", extruder_plans[0].paths.size());
+		//printf("extruder_plans has the paths of size %d \n", extruder_plans[0].paths.size());
 		//create the gcodepath config setup for this function
-		//	MergeInfillLines merger(extr_plan);
-		//merger.mergeInfillLines(extr_plan.paths, starting_position);
+		MergeInfillLines merger(extr_plan);
+		merger.mergeInfillLines(extr_plan.paths, starting_position);
 		//printf("succesffullyad  optimized the paths \n");
 	}
 }

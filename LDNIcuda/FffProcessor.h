@@ -59,6 +59,8 @@
 			return gcode_writer.setTargetFile(filename);
 		}
 
+		
+
 		/*!
 		 * Set the target to write gcode to: an output stream.
 		 *
@@ -66,10 +68,7 @@
 		 *
 		 * \param stream The stream to write gcode to.
 		 */
-		void setTargetStream(std::ostream* stream)
-		{
-			return gcode_writer.setTargetStream(stream);
-		}
+		
 
 		/*!
 		 * Get the total extruded volume for a specific extruder in mm^3
@@ -89,18 +88,7 @@
 		 *
 		 * \return total print time in seconds for each feature
 		 */
-		std::vector<Duration> getTotalPrintTimePerFeature()
-		{
-			return gcode_writer.getTotalPrintTimePerFeature();
-		}
-
-		/*!
-		 * Add the end gcode and set all temperatures to zero.
-		 */
-		void finalize()
-		{
-			gcode_writer.finalize();
-		}
+		
 	};
 
 //namespace cura

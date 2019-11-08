@@ -563,9 +563,9 @@
 		layer_skip_count = gradual_infill_step_layer_count / n_skip_steps_per_gradual_step;
 		const size_t max_infill_steps = 0;// mesh.settings.get<size_t>("gradual_infill_steps");
 
-		const int min_layer = 0;//mesh.settings.get<size_t>("bottom_layers");
+		const int min_layer = 4;//mesh.settings.get<size_t>("bottom_layers");
 		const int max_layer = storage.Layers.size()-1-0;// mesh.layers.size() - 1 - mesh.settings.get<size_t>("top_layers");
-		printf("the layer number is %d and the ART IS %d and the infill areas is %d \n");
+		
 		for (int layer_idx = 0; layer_idx < static_cast<int>(storage.Layers.size()); layer_idx++)
 		{ // loop also over layers which don't contain infill cause of bottom_ and top_layer to initialize their infill_area_per_combine_per_density
 			SliceLayer& layer = storage.Layers[layer_idx];
@@ -573,9 +573,9 @@
 			for (SliceLayerPart& part : layer.parts)
 			{
 				assert(part.infill_area_per_combine_per_density.size() == 0 && "infill_area_per_combine_per_density is supposed to be uninitialized");
-				printf("\nThe layer.parts size is in skin %d and the layer is %d \n", layer.parts.size(),layer_idx);
+				
 				const Polygons& infill_area = part.getOwnInfillArea();
-				printf("The infill area point count in gcode is %d \n ", infill_area.pointCount());
+			
 
 				if (infill_area.size() == 0 || layer_idx < min_layer || layer_idx > max_layer)
 				{ // initialize infill_area_per_combine_per_density empty

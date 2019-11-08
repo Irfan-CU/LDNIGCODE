@@ -7,6 +7,7 @@
 
 
 #include <cstddef> //For size_t.
+#include "Slice.h"
 
 	
 	class Slice;
@@ -40,7 +41,7 @@
 
 		static Application& getInstance();
 
-		void run(const size_t argc, char** argv);
+		void run(const size_t argc, GLKObList& meshlist, ContourMesh& c_mesh, SliceDataStorage& storage, int total_layers, std::vector<int>& meshin_layer, double rotBoundingBox[]);	   //const size_t argc is the number pf the meshes need to be sliced
 
 	protected:
 
@@ -48,7 +49,14 @@
 
 	private:
 		
-		
+		size_t argc;
+
+		/*
+		 * \brief An array of C strings containing the arguments that the
+		 * application was called with.
+		 */
+		char** argv;
+
 		Application();
 
 		~Application();

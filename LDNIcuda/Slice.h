@@ -4,7 +4,8 @@
 
 #ifndef SLICE_H
 #define SLICE_H
-
+#include "PMBody.h"
+#include "SliceDataStorage.h"
 #include "Scene.h" //To store the scene to slice.
 
 
@@ -28,7 +29,7 @@ public:
 	 * The g-code output is sent through the currently active communication
 	 * channel.
 	 */
-	void compute();
+	void compute(GLKObList& meshlist, ContourMesh& c_mesh, std::vector<int>& meshin_layer, int total_layers, double rotBoundingBox[]);
 
 	/*
 	 * \brief Empty out the slice instance, restoring it as if it were a new

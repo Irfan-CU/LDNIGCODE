@@ -5,11 +5,12 @@
 //class VSAMesh;
 //class VSAEdge;
 //class ContourMesh;
+class MeshGroup;
 class ProgressStageEstimator;
 class SliceDataStorage;
 class SliceMeshStorage;
 class LDNIcudaOperation;
-//
+class TimeKeeper;
 //class QuadTrglMesh;
 
 
@@ -34,7 +35,7 @@ public:
 	 * \param timeKeeper Object which keeps track of timings of each stage.
 	 * \param storage Output parameter: where the outlines are stored. See SliceLayerPart::outline.
 	 */
-	//bool generateAreas(SliceDataStorage& storage, MeshGroup* object, TimeKeeper& timeKeeper);
+	bool generateAreas(SliceDataStorage& storage, MeshGroup* object, TimeKeeper& timeKeeper, GLKObList& meshlist, ContourMesh& c_mesh,std::vector<int>& meshin_layer, int total_layers, double rotBoundingBox[]);
 
 
 	/*!
@@ -59,7 +60,7 @@ public:
 	 *
 	 * \return Whether the process succeeded (always true).
 	 */
-	bool sliceModel(GLKObList& meshlist,ContourMesh& c_mesh, SliceDataStorage& storage,int total_layers, std::vector<int>& meshin_layer, double rotBoundingBox[]); // slices the model
+	bool sliceModel(GLKObList& meshlist,ContourMesh& c_mesh, SliceDataStorage& storage, int total_layers, std::vector<int>& meshin_layer, double rotBoundingBox[]); // slices the model
 
 	/*!
 	 * Processes the outline information as stored in the \p storage: generates inset perimeter polygons, support area polygons, etc.

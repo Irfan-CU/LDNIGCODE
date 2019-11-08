@@ -11,9 +11,10 @@ Slice::Slice(const size_t num_mesh_groups)
 		: scene(num_mesh_groups)
 	{}
 
-	void Slice::compute()
+	void Slice::compute(GLKObList& meshlist, ContourMesh& c_mesh, std::vector<int>& meshin_layer, int total_layers, double rotBoundingBox[])
 	{
-		logWarning("%s", scene.getAllSettingsString().c_str());
+		//printf("Warning %s", scene.getAllSettingsString().c_str());
+		
 		for (std::vector<MeshGroup>::iterator mesh_group = scene.mesh_groups.begin(); mesh_group != scene.mesh_groups.end(); mesh_group++)
 		{
 			scene.current_mesh_group = mesh_group;
@@ -21,8 +22,12 @@ Slice::Slice(const size_t num_mesh_groups)
 			{
 				extruder.settings.setParent(&scene.current_mesh_group->settings);
 			}
-			scene.processMeshGroup(*mesh_group);
+			
+			scene.processMeshGroup(*mesh_group,meshlist,c_mesh,  meshin_layer, total_layers, rotBoundingBox);
 		}
+
+
+
 	}
 
 	void Slice::reset()

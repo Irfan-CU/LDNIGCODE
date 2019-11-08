@@ -31,9 +31,6 @@
 
 #include <vector>
 
-
-
-
 #include "../GLKLib/GLK.h"
 #include "../GLKLib/GLKObList.h"
 #include "../GLKLib/GLKHeap.h"
@@ -43,7 +40,7 @@
 //#include "gettime.h"
 
 
-class TimeKeeper;
+
 
 class VSAEdge;
 //----SGM code by KaChun----//

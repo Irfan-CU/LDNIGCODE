@@ -21,14 +21,14 @@ class Mesh
 		//std::vector<MeshVertex> vertices;//!< list of all vertices in the mesh
 		//std::vector<MeshFace> faces; //!< list of all faces in the mesh
 		Settings settings;
-		std::string mesh_name;
+		std::string mesh_name = "mesh1";
 
 		Mesh(Settings& parent);
 		Mesh();
 
-		void addFace(Point3& v0, Point3& v1, Point3& v2); //!< add a face to the mesh without settings it's connected_faces.
+		//void addFace(Point3& v0, Point3& v1, Point3& v2); //!< add a face to the mesh without settings it's connected_faces.
 		void clear(); //!< clears all data
-		void finish(); //!< complete the model : set the connected_face_index fields of the faces.
+		//void finish(); //!< complete the model : set the connected_face_index fields of the faces.
 
 		Point3 min() const; //!< min (in x,y and z) vertex of the bounding box
 		Point3 max() const; //!< max (in x,y and z) vertex of the bounding box
@@ -36,7 +36,7 @@ class Mesh
 		void expandXY(int64_t offset); //!< Register applied horizontal expansion in the AABB
 
 
-		std::string mesh_name="mesh1";
+		
 		//Mesh();
 	
 		

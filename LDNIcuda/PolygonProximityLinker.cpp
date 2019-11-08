@@ -15,7 +15,7 @@
 		, proximity_distance_2(proximity_distance * proximity_distance)
 		, line_grid(proximity_distance, polygons.pointCount(), 3.0f)
 	{
-		printf("inside the polygonproximitylinker \n");
+		//printf("inside the polygonproximitylinker \n");
 		// heuristic reserve a good amount of elements
 		proximity_point_links.reserve(polygons.pointCount()); // When the whole model consists of thin walls, there will generally be a link for every point, plus some endings minus some points which map to eachother
 

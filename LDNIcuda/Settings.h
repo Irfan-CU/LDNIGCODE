@@ -34,7 +34,7 @@
 		/*
 		 * \brief Properly initialises the Settings instance.
 		 */
-		Settings();
+		//Settings();
 
 		/*!
 		 * \brief Adds a new setting.
@@ -115,6 +115,10 @@
 		 * \return The setting's value.
 		 */
 		std::string getWithoutLimiting(const std::string& key) const;
+
+
+		void readExtruderSettingsMessage();
+		void readGlobalSettingsMessage();
 	};
  //namespace cura
 

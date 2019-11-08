@@ -44,18 +44,10 @@
 #include <thrust/copy.h>
 #include <thrust/sort.h>
 
-#include "SliceDataStorage.h"
+#include "Application.h"
 #include "Slicer.h"
 #include "fffPolygonGenrator.h"
 #include "fffGcodewriter.h"
-
-
-
-
-
-
-
-
 
 PMBody::PMBody(void)
 {
@@ -1872,6 +1864,8 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	}
 	
 	printf("Yeah I am here on line 1873 of the code\n");
+	
+	Application *application;
 	unsigned int mesh_idx, edge_index = 0;
 	VSAMesh *mesh1;
 	VSAEdge  *edge;
@@ -1900,6 +1894,9 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	new_parts.clear();
 	storage.Layers.resize(iRes[1]);
 	printf("Yeah I am here on line 1873 of the code\n");
+	//application->run(total_meshes, VSAMeshList, c_mesh, storage, iRes[1], meshin_layer, rotBoundingBox);
+
+	
 	bool slice_model= polygongenrator.sliceModel(VSAMeshList, c_mesh, storage,iRes[1], meshin_layer, rotBoundingBox);
 	if (slice_model)
 	{
@@ -2058,7 +2055,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	
 	*/
 
-	printf("Finished build-up.\n");
+printf("Finished build-up.\n");
 	free(patchStack);
 	free(patchID);
 

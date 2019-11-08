@@ -255,21 +255,21 @@ MergeInfillLines::MergeInfillLines(ExtruderPlan& plan)
 		size_t second_path_index = 1;
 		bool has_first_path = true;// paths.empty() ? false : !paths[0].config->isTravelPath();  // in case the first path is not an extrusion path.
 		coord_tIrfan error_area = 0;
-		printf("*****the path size inside optimize paths is %d \n", paths.size());
+		//printf("*****the path size inside optimize paths is %d \n", paths.size());
 		for (; second_path_index < paths.size(); second_path_index++)
 		{
-			printf("****inside the for loop inside optimize paths is %d \n", paths.size());
+			//printf("****inside the for loop inside optimize paths is %d \n", paths.size());
 			GCodePath& first_path = paths[first_path_index];
 			GCodePath& second_path = paths[second_path_index];
-			printf("*****taking the positions first and second \n");
+			//printf("*****taking the positions first and second \n");
 			curaIrfan::PointIrfan second_path_start = paths[second_path_index - 1].points.back();
-			printf("*****@265 \n");
+			//printf("*****@265 \n");
 			if (second_path.isTravelPath())
 			{
 				has_first_path = false;
 				continue; //Skip travel paths, we're looking for the first non-travel path.
 			}
-			printf("*****@271 \n");
+			//printf("*****@271 \n");
 			// FIXME: This is difficult to fix, need to put extra effort into it.
 			// CURA-5776:  This works in some cases but it is not exactly correct, because what this will avoid merging
 			// lines are kind like in parallel but with a travel move in between, which is a case mergeLinesSideBySide()
@@ -291,7 +291,7 @@ MergeInfillLines::MergeInfillLines(ExtruderPlan& plan)
 				has_first_path = true;
 				continue;
 			}
-			printf("*****@293 \n");
+			//printf("*****@293 \n");
 			bool allow_try_merge = true;
 			// see if we meet criteria to merge. should be: travel - path1 not travel - (...) - travel - path2 not travel - travel
 			// we're checking the travels here

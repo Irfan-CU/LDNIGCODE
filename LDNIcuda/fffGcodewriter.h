@@ -79,9 +79,8 @@ public:
 	 */
 	bool setTargetFile(const char* filename)
 	{
-		printf("the program is at line 80 of the fffgcodewriter.h \n");
+		
 		output_file.open(filename);
-		printf("the program is at line 82 of the fffgcodewriter.h \n");
 		if (output_file.is_open())
 		{
 			gcode.setOutputStream(&output_file);
@@ -120,7 +119,7 @@ public:
 	  * \param[in] storage The data storage from which to get the polygons to print and the areas to fill.
 	  * \param timeKeeper The stop watch to see how long it takes for each of the stages in the slicing process.
 	  */
-	void writeGCode(SliceDataStorage& storage, bool start);
+	void writeGCode(SliceDataStorage& storage, bool start = true);
 
 	/*!
 	 * \brief Set the FffGcodeWriter::fan_speed_layer_time_settings by

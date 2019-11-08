@@ -5,6 +5,8 @@
 #ifndef EXTRUDER_TRAIN_H
 #define EXTRUDER_TRAIN_H
 
+#include "Settings.h"
+
 	class ExtruderTrain
 	{
 	public:
@@ -12,7 +14,7 @@
 		* \brief Creates a new extruder. This extruder will have no settings but
 		* inherits everything from the global settings.
 		*/
-		ExtruderTrain(const size_t extruder_nr, Settings* parent_settings);
+		ExtruderTrain(const size_t extruder_nr);
 
 		/*
 		 * \brief The settings that this extruder overwrites.

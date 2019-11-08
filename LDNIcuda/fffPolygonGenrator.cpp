@@ -14,7 +14,7 @@
 #include "fffPolygonGenrator.h"
 #include "Infill.h"
 #include "layerPart.h"
-
+#include "MeshGroup.h"
 #include "multivolumes.h" 
 #include "PrintFeature.h"
 #include "raft.h"
@@ -36,13 +36,11 @@
 #include "math.h"
 
 
-
 void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 {
 	// compute layer count and remove first empty layers
 	// there is no separate progress stage for removeEmptyFisrtLayer (TODO)
-	TimeKeeper time_keeper;
-	time_keeper.restart();
+	
 	unsigned int slice_layer_count = 0;
 	for (SliceLayer& layer : storage.Layers)
 	{
@@ -57,7 +55,7 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 	}
 
 	ProgressStageEstimator inset_skin_progress_estimate(mesh_timings);
-	Progress::messageProgressStage(Progress::Stage::INSET_SKIN, &time_keeper);
+	//Progress::messageProgressStage(Progress::Stage::INSET_SKIN, &time_keeper);
 
 	std::vector<size_t> mesh_order;
 	{ // compute mesh order
@@ -174,12 +172,12 @@ void FffPolygonGenerator::computePrintHeightStatistics(SliceDataStorage& storage
 bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, SliceDataStorage& storage, int total_layers, std::vector<int>& meshin_layer, double rotBoundingBox[]) // slices the model
 {
 	
-	storage.model_min.x = MM2INT(rotBoundingBox[0] * 60);
-	storage.model_min.y = MM2INT(rotBoundingBox[4] * 60);
-	storage.model_min.z = MM2INT(rotBoundingBox[2] * 60);
-	storage.model_max.x = MM2INT(rotBoundingBox[1] * 60);
-	storage.model_max.y = MM2INT(rotBoundingBox[5] * 60);
-	storage.model_max.z = MM2INT(rotBoundingBox[3] * 60);
+	storage.model_min.x = MM2INT(rotBoundingBox[0] * 30);
+	storage.model_min.y = MM2INT(rotBoundingBox[4] * 30);
+	storage.model_min.z = MM2INT(rotBoundingBox[2] * 30);
+	storage.model_max.x = MM2INT(rotBoundingBox[1] * 30);
+	storage.model_max.y = MM2INT(rotBoundingBox[5] * 30);
+	storage.model_max.z = MM2INT(rotBoundingBox[3] * 30);
 
 	storage.model_size = storage.model_max - storage.model_min;
 

@@ -8,6 +8,7 @@
 
 #include "Progress.h"
 #include "logoutput.h"
+#include "PMBody.h"
 
 
 	Scene::Scene(const size_t num_mesh_groups)
@@ -58,7 +59,7 @@
 		return output.str();
 	}
 
-	void Scene::processMeshGroup(MeshGroup& mesh_group)
+	void Scene::processMeshGroup(MeshGroup& mesh_group, GLKObList& meshlist, ContourMesh& c_mesh, std::vector<int>& meshin_layer, int total_layers, double rotBoundingBox[])
 	{
 		FffProcessor* fff_processor = FffProcessor::getInstance();
 		fff_processor->time_keeper.restart();
@@ -68,6 +69,7 @@
 		bool empty = true;
 		for (Mesh& mesh : mesh_group.meshes)
 		{
+			printf("Mesh under processing is \n");
 			if (!mesh.settings.get<bool>("infill_mesh") && !mesh.settings.get<bool>("anti_overhang_mesh"))
 			{
 				empty = false;
@@ -77,23 +79,19 @@
 		if (empty)
 		{
 			Progress::messageProgress(Progress::Stage::FINISH, 1, 1); // 100% on this meshgroup
-			log("Total time elapsed %5.2fs.\n", time_keeper_total.restart());
+			printf("Total time elapsed %5.2fs.\n", time_keeper_total.restart());
 			return;
 		}
-        SliceDataStorage storage;
+		SliceDataStorage storage;
 
-			if (!fff_processor->polygon_generator.generateAreas(storage, &mesh_group, fff_processor->time_keeper))
-			{
-				return;
-			}
+		if (!fff_processor->polygon_generator.generateAreas(storage, &mesh_group, fff_processor->time_keeper, meshlist, c_mesh, meshin_layer, total_layers, rotBoundingBox))
+		{
+			return;
+		}
 
-			Progress::messageProgressStage(Progress::Stage::EXPORT, &fff_processor->time_keeper);
-			fff_processor->gcode_writer.writeGCode(storage, fff_processor->time_keeper);
 		
-
-		Progress::messageProgress(Progress::Stage::FINISH, 1, 1); // 100% on this meshgroup
-		
-		log("Total time elapsed %5.2fs.\n", time_keeper_total.restart());
+		fff_processor->gcode_writer.writeGCode(storage);
+       
 	}
 
 //namespace cura

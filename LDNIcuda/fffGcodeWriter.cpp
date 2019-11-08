@@ -48,7 +48,7 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 	setConfigWipe(storage);
 	
 	coord_tIrfan layer_thickness = storage.getlayer_thickness();
-	printf("the layer thickness is %d \n", layer_thickness);
+	
 	
 	if (start)
 	{
@@ -587,7 +587,7 @@ void FffGcodeWriter::addMeshLayerToGCode(const SliceDataStorage& storage, const 
 	{
 		//printf("the code is at the line 355 \n %d",part_idx);
 		const SliceLayerPart& part = layer.parts[part_idx];
-		printf("the extruder number is %d \n", extruder_nr);
+	
 		addMeshPartToGCode(storage, mesh, extruder_nr, mesh_config, part, gcode_layer);//part n layer being added to the GCode
 	}
 	processIroning(layer,  gcode_layer);
@@ -679,7 +679,7 @@ void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage& storage, const S
 	coord_tIrfan layer_thickness = storage.Layers[0].thickness;
 	bool  magic_spiralize = false;
 
-	int bottom_layers = 5;
+	int bottom_layers = 4;
 
 	if (added_something && (!magic_spiralize) || gcode_layer.getLayerNr() < bottom_layers)
 	{
@@ -924,8 +924,8 @@ bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& g
 	size_t wall_line_count = 3;
 	if (wall_line_count > 0)
 	{
-		bool spiralize = false;
-		if (!spiralize && gcode_layer.getLayerNr() > 0)
+		
+		if (gcode_layer.getLayerNr() > 0)
 		{
 			
 			Polygons outlines_below;
@@ -942,7 +942,7 @@ bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& g
 				
 			}
 
-			const coord_tIrfan layer_height = mesh_config.inset0_config.getLayerThickness();
+			const coord_tIrfan layer_height = storage.layer_thickness;
 
 			// if support is enabled, add the support outlines also so we don't generate bridges over support
 
@@ -998,16 +998,17 @@ bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& g
 			// clear to disable overhang detection
 			gcode_layer.setOverhangMask(Polygons());
 		}
-		printf("@line848\n");
+		
 		// Only spiralize the first part in the mesh, any other parts will be printed using the normal, non-spiralize codepath.
 		// This sounds weird but actually does the right thing when you have a model that has multiple parts at the bottom that merge into
 		// one part higher up. Once all the parts have merged, layers above that level will be spiralized
+		/*
 		if (InsetOrderOptimizer::optimizingInsetsIsWorthwhile(part))
 		{
 			InsetOrderOptimizer ioo(*this, storage, gcode_layer, extruder_nr, mesh_config, part, gcode_layer.getLayerNr());
 			return ioo.processInsetsWithOptimizedOrdering();
 		}
-		else
+*/		//else
 		{
 			bool outer_inset_first = false;
 			outer_inset_first = outer_inset_first || (gcode_layer.getLayerNr() == 0);

@@ -212,10 +212,10 @@
 					int edge_id = edge1->GetIndexNo();// .GetIndexNo();
 					segment.segmentidx = edge_id;
 					
-					const coord_tIrfan xx_int = MM2INT(xx * 60);
-					const coord_tIrfan aa_int = MM2INT(aa * 60);
-					const coord_tIrfan zz_int = MM2INT(zz * 60);
-					const coord_tIrfan cc_int = MM2INT(cc * 60);
+					const coord_tIrfan xx_int = MM2INT(xx * 30);
+					const coord_tIrfan aa_int = MM2INT(aa * 30);
+					const coord_tIrfan zz_int = MM2INT(zz * 30);
+					const coord_tIrfan cc_int = MM2INT(cc * 30);
 
 					curaIrfan::PointIrfan st(xx_int, zz_int);
 					curaIrfan::PointIrfan ed(aa_int, cc_int);
