@@ -24,20 +24,21 @@ The most Important Part in this code for genrating LDNI FDM Toolpaths is.
 
 1-The coordinates are offset as righnow the code is working on relative coordinates wrt BBox of the part. This need to be changed to abs coordinates of the 3D Printer.
 
-# Solved Issues:
+# Solved:
 
 1- Solved the accelration issues.   
 2- Solved the extrusion values which were scaled by 10000 by introducing the Ratio class which reduced the line width factory by 100 and now the extrusion values are just like any other Gcode Path obtained.   
 3- Solved the negative (-) Extrusion values related to Gcode Path.   
-4- Solved the Repeating reset command of extrusion which was also related to the scaled vales of the exxtrusion.     
+4- Solved the Repeating reset command of extrusion which was also related to the scaled vales of the exxtrusion.   
+5- Working on changing the coordinates and reading research for FGM in LDNI.    
+6- Amf reading is done in LDNI.
+7- AMG material reading is done in LDNI.
 
-# Progress:
-
-1- Solved the issues (2-4) mentioned in above lines.   
+# Update
+1- So Normals values are changed in RGB of the texture and so getting the desired values on the sample points.
 
 # Current Work
-
-1- Working on changing the coordinates and reading research for FGM in LDNI.    
+1- Working on developing of the algorithim to read the material info from the AMF and than to texture and than samples on ray.
 
       
       
