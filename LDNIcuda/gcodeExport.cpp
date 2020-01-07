@@ -463,7 +463,7 @@ void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, cons
 	curaIrfan::PointIrfan gcode_pos = getGcodePos(x, y, current_extruder);
 	total_bounding_box.include(Point3(gcode_pos.X, gcode_pos.Y, z));
 	
-	*output_stream << " X" << MMtoStream{ gcode_pos.X } << " Y" << MMtoStream{ gcode_pos.Y };
+	*output_stream << " X" << MMtoStream{ gcode_pos.X + 100000}  << " Y" << MMtoStream{ gcode_pos.Y + 100000};
 	
 	if (z != currentPosition.z)
 	{

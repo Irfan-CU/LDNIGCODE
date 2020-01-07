@@ -539,6 +539,7 @@ void LDNIcudaOperation::LDNISLAContouring_Generation(LDNIcudaSolid* solid, Conto
 
 void LDNIcudaOperation::LDNIFDMContouring_Generation(LDNIcudaSolid* solid, ContourMesh *c_mesh, float nSampleWidth)
 {
+	
 	float thickness = 0.01;
 	float distortRatio = 1.0;
 	double distortError = distortRatio * nSampleWidth*nSampleWidth;

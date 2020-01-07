@@ -81,6 +81,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <SourcePath>C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\VC\VCTargets\BuildCustomizations</SourcePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -89,8 +95,9 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\vld-master\vld-master\src;C:\Users\Naureen Mustafa\source\repos\CuraEngine2\libs\clipper;D:\Irfan Mustafa\MSinConcordia\DR.Kwok\LDNI\LDNI Source\LDNI Source\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\vld-master\vld-master\src;C:\Users\Naureen Mustafa\source\repos\CuraEngine2\libs\clipper;D:\Irfan Mustafa\MSinConcordia\DR.Kwok\LDNI\LDNI Source\LDNI Source\common;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\LDNIcuda;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\LDNIcuda\boost_1_67_0\boost;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ShowIncludes>true</ShowIncludes>
+      <AdditionalUsingDirectories>C:\dev\boost_1_67_0;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>glew32D.lib;cUtil32D.lib;cudart.lib;libcpmtD.lib;libcpmtd.lib;glew32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -98,7 +105,7 @@
       <IgnoreSpecificDefaultLibraries>LIBCMT.lib; LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>D:\Irfan Mustafa\MSinConcordia\DR.Kwok\LDNI\LDNI Source\LDNI Source\LDNIcuda;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\GLKLib\x64\Release;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x64;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\Irfan Mustafa\MSinConcordia\DR.Kwok\LDNI\LDNI Source\LDNI Source\LDNIcuda;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\GLKLib\x64\Release;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x64;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\LDNIcuda\boost_1_67_0\boost\move\detail;C:\dev\boost_1_67_0\libs</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -109,26 +116,27 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\vld-master\vld-master\src;C:\Users\Naureen Mustafa\source\repos\CuraEngine2\libs\clipper;D:\Irfan Mustafa\MSinConcordia\DR.Kwok\LDNI\LDNI Source\LDNI Source\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\vld-master\vld-master\src;C:\Users\Naureen Mustafa\source\repos\CuraEngine2\libs\clipper;D:\Irfan Mustafa\MSinConcordia\DR.Kwok\LDNI\LDNI Source\LDNI Source\common;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\LDNIcuda;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\LDNIcuda\boost_1_67_0\boost;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ShowIncludes>true</ShowIncludes>
+      <AdditionalUsingDirectories>C:\dev\boost_1_67_0;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>glew32.lib;glut32.lib;cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>LIBCMT.lib; LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Irfan Mustafa\MSinConcordia\DR.Kwok\LDNI\LDNI Source\LDNI Source\LDNIcuda;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\GLKLib\x64\Release;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x64;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\Irfan Mustafa\MSinConcordia\DR.Kwok\LDNI\LDNI Source\LDNI Source\LDNIcuda;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\GLKLib\x64\Release;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x64;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\LDNIcuda\boost_1_67_0\boost\move\detail;C:\dev\boost_1_67_0\libs</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\vld-master\vld-master\src;C:\Program Files (x86)\Windows Kits\10\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\vld-master\vld-master\src;C:\Program Files (x86)\Windows Kits\10\Include;C:\dev\boost_1_67_0;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\LDNIcuda;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <OpenMPSupport>true</OpenMPSupport>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>None</DebugInformationFormat>
-      <AdditionalUsingDirectories>C:\Program Files (x86)\Windows Kits\10\Include</AdditionalUsingDirectories>
+      <AdditionalUsingDirectories>C:\Program Files (x86)\Windows Kits\10\Include;C:\dev\boost_1_67_0</AdditionalUsingDirectories>
       <ShowIncludes>true</ShowIncludes>
     </ClCompile>
     <Link>
@@ -139,7 +147,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\GLKLib\x64\Release;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\GLKLib\x64\Release;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64;C:\dev\boost_1_67_0\libs;C:\dev\boost_1_67_0\stage\lib</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
     <CudaCompile>
@@ -148,12 +156,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\vld-master\vld-master\src;C:\Program Files (x86)\Windows Kits\10\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\vld-master\vld-master\src;C:\Program Files (x86)\Windows Kits\10\Include;C:\dev\boost_1_67_0;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\LDNIcuda;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <OpenMPSupport>true</OpenMPSupport>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>None</DebugInformationFormat>
-      <AdditionalUsingDirectories>C:\Program Files (x86)\Windows Kits\10\Include</AdditionalUsingDirectories>
+      <AdditionalUsingDirectories>C:\Program Files (x86)\Windows Kits\10\Include;C:\dev\boost_1_67_0</AdditionalUsingDirectories>
       <ShowIncludes>true</ShowIncludes>
       <BrowseInformation>true</BrowseInformation>
     </ClCompile>
@@ -164,7 +172,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalLibraryDirectories>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\GLKLib\x64\Release;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x64;D:\Irfan Mustafa\MSinConcordia\Research\DR.Kwok\Irfan LDNI code - Copy\Irfan_LDNI\GLKLib\x64\Release;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\lib\x64;C:\dev\boost_1_67_0\libs;C:\dev\boost_1_67_0\stage\lib</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
     <CudaCompile>
@@ -179,9 +187,10 @@
     <ClCompile Include="..\libs\clipper\clipper.cpp" />
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="AABB3D.cpp" />
+    <ClCompile Include="amf.cpp" />
     <ClCompile Include="bridge.cpp" />
-    <ClCompile Include="clipper.cpp" />
     <ClCompile Include="Combcpp.cpp" />
+    <ClCompile Include="Connect.c" />
     <ClCompile Include="Date.cpp" />
     <ClCompile Include="ExtruderTrain.cpp" />
     <ClCompile Include="fffGcodeWriter.cpp" />
@@ -208,13 +217,16 @@
     <ClCompile Include="MergerInfillLines.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MinimumSpanningTree.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="multivolumes.cpp" />
+    <ClCompile Include="normals.c" />
     <ClCompile Include="NozzelTempInsert.cpp" />
     <ClCompile Include="PathConfigStorage.cpp" />
     <ClCompile Include="PathOrderOptimizer.cpp" />
     <ClCompile Include="PMBody.cpp" />
     <ClCompile Include="Point3.cpp" />
     <ClCompile Include="Point3Irfan.cpp" />
+    <ClCompile Include="PointSlic3r.cpp" />
     <ClCompile Include="Polygon.cpp" />
     <ClCompile Include="PolygonPoint.cpp" />
     <ClCompile Include="PolygonProximityLinker.cpp" />
@@ -225,24 +237,42 @@
     <ClCompile Include="ProgressStageEstimator.cpp" />
     <ClCompile Include="ProximityPointLink.cpp" />
     <ClCompile Include="raft.cpp" />
+    <ClCompile Include="Shared.c" />
     <ClCompile Include="SkinInfillAreaComputation.cpp" />
     <ClCompile Include="SkirtBrim.cpp" />
     <ClCompile Include="SliceDataStorage.cpp" />
     <ClCompile Include="Slicer.cpp" />
+    <ClCompile Include="STLinit.cpp" />
     <ClCompile Include="Support.cpp" />
     <ClCompile Include="SupportInfillPartcpp.cpp" />
     <ClCompile Include="SVG.cpp" />
     <ClCompile Include="timeEstimate.cpp" />
     <ClCompile Include="timematerialestimate.cpp" />
+    <ClCompile Include="TransformationMatrix.cpp" />
     <ClCompile Include="TreeSupport.cpp" />
+    <ClCompile Include="TrinagleMesh.cpp" />
+    <ClCompile Include="util.c" />
     <ClCompile Include="WallComputation.cpp" />
     <ClCompile Include="WallOverlap.cpp" />
+    <ClCompile Include="XMLParse.C" />
+    <ClCompile Include="xmlrole.c" />
+    <ClCompile Include="xmltok.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\libs\clipper\clipper.hpp" />
     <ClInclude Include="AABB.h" />
     <ClInclude Include="AABB3D.h" />
     <ClInclude Include="algorithm.h" />
+    <ClInclude Include="ascii.h" />
+    <ClInclude Include="asciitab.h" />
+    <ClInclude Include="BoundingBox.hpp" />
+    <ClInclude Include="Expat.h" />
+    <ClInclude Include="expatexternal.h" />
+    <ClInclude Include="expat_config.h" />
+    <ClInclude Include="expat_external.h" />
+    <ClInclude Include="iasciitab.h" />
+    <ClInclude Include="Internal.h" />
+    <ClInclude Include="IO.h" />
     <ClInclude Include="AngleDegrees.h" />
     <ClInclude Include="AngleRadiansh.h" />
     <ClInclude Include="Bridge.h" />
@@ -263,6 +293,7 @@
     <ClInclude Include="gettime.h" />
     <ClInclude Include="Infill.h" />
     <ClInclude Include="InsetOrderOptimizer.h" />
+    <ClInclude Include="latin1tab.h" />
     <ClInclude Include="LayerIndex.h" />
     <ClInclude Include="layerPart.h" />
     <ClInclude Include="LinearAlgebra2D.h" />
@@ -273,14 +304,19 @@
     <ClInclude Include="math.h" />
     <ClInclude Include="MergeInfillLines.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Model.hpp" />
     <ClInclude Include="multivolumes.h" />
+    <ClInclude Include="nameTab.h" />
     <ClInclude Include="NoCopy.h" />
     <ClInclude Include="NozzelTempInsert.h" />
     <ClInclude Include="PathConfigStorage.h" />
+    <ClInclude Include="Point.hpp" />
     <ClInclude Include="Polygon.h" />
+    <ClInclude Include="Polygon.hpp" />
     <ClInclude Include="PolygonPoint.h" />
     <ClInclude Include="PolygonProximityLinker.h" />
     <ClInclude Include="Polygonutils.h" />
+    <ClInclude Include="portable_endian.h" />
     <ClInclude Include="Preheat.h" />
     <ClInclude Include="IntpointIrfan.h" />
     <ClInclude Include="LayerBufferPlan.h" />
@@ -315,6 +351,7 @@
     <ClInclude Include="SparseLineGrid.h" />
     <ClInclude Include="SparsePointGrid.h" />
     <ClInclude Include="SparsePointGridInclusive.h" />
+    <ClInclude Include="Stl.h" />
     <ClInclude Include="String.h" />
     <ClInclude Include="SupportInfillPart.h" />
     <ClInclude Include="SupportInfillParth.h" />
@@ -324,12 +361,18 @@
     <ClInclude Include="timeEstimate.h" />
     <ClInclude Include="TimeKeeper.h" />
     <ClInclude Include="timeMaterialEstimate.h" />
+    <ClInclude Include="TransformationMatrix.hpp" />
     <ClInclude Include="TreeSupporth.h" />
+    <ClInclude Include="TriangalMesh.hpp" />
     <ClInclude Include="UnionFind.h" />
+    <ClInclude Include="utf8tab.h" />
     <ClInclude Include="Velocity.h" />
     <ClInclude Include="WallComputation.h" />
     <ClInclude Include="WallOverlap.h" />
     <ClInclude Include="WipeScriptConfig.h" />
+    <ClInclude Include="xmlrole.h" />
+    <ClInclude Include="XMLTOK.h" />
+    <ClInclude Include="xmltok_impl.h" />
     <ClInclude Include="ZigZagConnector.h" />
   </ItemGroup>
   <ItemGroup>
@@ -348,6 +391,10 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="KEYS.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="xmltok_impl.inc" />
+    <None Include="xmltok_ns.inc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

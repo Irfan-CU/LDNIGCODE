@@ -29,22 +29,28 @@
 uniform samplerRect vertexTexture;
 uniform int sizeNx;
 uniform vec3 Cent;
+uniform int mat;
+
+
 
 void main( void )
 {
-	int ix,iy;
+	int ix,iy;					
 	
-	iy=gl_Vertex.x/sizeNx;		ix=gl_Vertex.x-iy*sizeNx;
+	iy=gl_Vertex.x/sizeNx; ix=gl_Vertex.x-iy*sizeNx;
 	gl_Position.xyz = texture2DRect(vertexTexture,vec2(ix,iy)).rgb-Cent;
 	gl_Position.w = 1.0;
+	mat = 0.89;
 	
 	iy=gl_Vertex.y/sizeNx;		ix=gl_Vertex.y-iy*sizeNx;
 	gl_FrontColor.xyz = texture2DRect(vertexTexture,vec2(ix,iy)).rgb-Cent;
 	gl_FrontColor.w = 1.0;
 	
+
 	iy=gl_Vertex.z/sizeNx;		ix=gl_Vertex.z-iy*sizeNx;
 	gl_BackColor.xyz = texture2DRect(vertexTexture,vec2(ix,iy)).rgb-Cent;
 	gl_BackColor.w = 1.0;
+	
 	
 	gl_PointSize=gl_Vertex.w;
 }

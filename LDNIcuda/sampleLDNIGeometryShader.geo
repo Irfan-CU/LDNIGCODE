@@ -25,10 +25,13 @@
  *   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
  *   OF SUCH DAMAGE.
  */
-
+ /*
+ preliminary formula for material distribution (gl_BackColorIn[0].x)+ (gl_PositionIn[0].x) + (gl_FrontColorIn[0].x)
+ */
 
 #version 120 
 #extension GL_EXT_geometry_shader4: enable
+
 
 varying out vec4 color;
 
@@ -36,15 +39,15 @@ vec4 CalPlaneEq(vec3 P0, vec3 P1, vec3 P2)
 {
 	vec4 result;
 	
-	result.x = P0.y * ( P1.z - P2.z ) + P1.y * ( P2.z - P0.z ) + P2.y * ( P0.z - P1.z );
-	result.y = P0.z * ( P1.x - P2.x ) + P1.z * ( P2.x - P0.x ) + P2.z * ( P0.x - P1.x );
+	result.x = (gl_BackColorIn[0].x)+ (gl_PositionIn[0].x) + (gl_FrontColorIn[0].x);
+	result.y = (gl_BackColorIn[0].x)+ (0.5*gl_PositionIn[0].x) + (gl_FrontColorIn[0].x);
 	result.z = P0.x * ( P1.y - P2.y ) + P1.x * ( P2.y - P0.y ) + P2.x * ( P0.y - P1.y );
-	result.w = - P0.x * ( P1.y * P2.z - P2.y * P1.z ) - P1.x * ( P2.y * P0.z - P0.y * P2.z ) - P2.x * ( P0.y * P1.z - P1.y * P0.z );
+	result.w = (gl_BackColorIn[0].z)+ (gl_PositionIn[0].z) + (gl_FrontColorIn[0].z);
 
 	float  tt = length(result.xyz);
 	if (tt < 0.00000001) return vec4(0.0,0.0,0.0,0.0);
 
-	result = result/tt;
+	result = result/tt;   /*simply dijing the by nomal the concept of the normal vectors thats it*/
 
 	return result;
 }
@@ -63,4 +66,5 @@ void main( void )
 		EmitVertex();	
 		EndPrimitive();
 	}
+	/* finally color vector moves to fragment data */
 }

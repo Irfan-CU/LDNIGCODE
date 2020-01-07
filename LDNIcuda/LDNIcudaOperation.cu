@@ -1070,7 +1070,7 @@ void LDNIcudaOperation::_compBoundingCube(QuadTrglMesh *meshA, QuadTrglMesh *mes
 	
 }
 
-bool LDNIcudaOperation:: BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &solid, float boundingBox[], int res)
+bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &solid, float boundingBox[], int res)
 {
 	const bool bCube=true; // declatration of varialbles
 	
@@ -1114,8 +1114,8 @@ bool LDNIcudaOperation:: BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &
 	if (glewInit() != GLEW_OK) {printf("glewInit failed. Exiting...\n");	return false;}
 	if (glewIsSupported("GL_VERSION_2_0")) {printf("\nReady for OpenGL 2.0\n");} else {printf("OpenGL 2.0 not supported\n"); return false;}
 	//-----------------------------------------------------------------------------------------
-	int dispListIndex;		GLhandleARB g_programObj, g_vertexShader, g_GeometryShader, g_FragShader;
-	GLenum InPrimType=GL_POINTS, OutPrimType=GL_TRIANGLES;		int OutVertexNum=3;
+	int dispListIndex;		GLhandleARB g_programObj, g_vertexShader, g_GeometryShader, g_FragShader;		   // integers 
+	GLenum InPrimType=GL_POINTS, OutPrimType=GL_TRIANGLES;		int OutVertexNum=3;				  // using different bits in a single byte to save memory
 	GLuint vertexTexture;	
 	const char *VshaderString[1],*GshaderString[1],*FshaderString[1];
 	GLint bCompiled = 0, bLinked = 0;
@@ -1127,7 +1127,7 @@ bool LDNIcudaOperation:: BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &
 	g_vertexShader = glCreateShaderObjectARB( GL_VERTEX_SHADER_ARB );
 	unsigned char *ShaderAssembly = _readShaderFile( fileadd );
 	VshaderString[0] = (char*)ShaderAssembly;
-	glShaderSourceARB( g_vertexShader, 1, VshaderString, NULL );
+	glShaderSourceARB( g_vertexShader, 1, VshaderString, NULL );	// replacing the VshaderString into g_vertexShader array of string to shader g_vertexShader 
 	glCompileShaderARB( g_vertexShader);
 	delete ShaderAssembly;
 	glGetObjectParameterivARB( g_vertexShader, GL_OBJECT_COMPILE_STATUS_ARB, &bCompiled );
@@ -1138,7 +1138,7 @@ bool LDNIcudaOperation:: BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &
 	//-----------------------------------------------------------------------------
 	memset(fileadd,0,256*sizeof(char));	
 	strcat(fileadd,"sampleLDNIGeometryShader.geo");
-	g_GeometryShader = glCreateShaderObjectARB( GL_GEOMETRY_SHADER_EXT );
+	g_GeometryShader = glCreateShaderObjectARB( GL_GEOMETRY_SHADER_EXT );		   // create a shader and returns an integer to reference the shader
 	ShaderAssembly = _readShaderFile( fileadd );
 	GshaderString[0] = (char*)ShaderAssembly;
 	glShaderSourceARB( g_GeometryShader, 1, GshaderString, NULL );
@@ -1201,7 +1201,8 @@ bool LDNIcudaOperation:: BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &
 	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,GL_TEXTURE_WRAP_S,GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,GL_TEXTURE_WRAP_T,GL_CLAMP);
-	glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB32F_ARB, xF, yF, 0, GL_RGB, GL_FLOAT, verTex);
+	glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB32F_ARB, xF, yF, 0, GL_RGB, GL_FLOAT, verTex);	   // vertex is the data Specifies a pointer to the image data in memory.	 node positions in rgb
+
 	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
 	free(verTex);
 	if (glGetError()!=GL_NO_ERROR) printf("Error: GL_TEXTURE_RECTANGLE_ARB texture binding!\n\n");
@@ -1214,10 +1215,11 @@ bool LDNIcudaOperation:: BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &
 	int faceNum=mesh->GetFaceNumber();
 	dispListIndex = glGenLists(1);
 	glNewList(dispListIndex, GL_COMPILE);
-	glBegin(GL_POINTS); /// Each set of 3 vertices form a triangle
+	glBegin(GL_POINTS); // Each set of 3 vertices form a triangle	   so this is vertex parameter here which makes vertes srtream for the vertex shaders in GL+Points  
 	for(i=0;i<faceNum;i++) { 
 		mesh->GetFaceNodes(i+1,ver[0],ver[1],ver[2],ver[3]);
-		glVertex3i(ver[0]-1,ver[1]-1,ver[2]-1);
+		glVertex3i(ver[0]-1,ver[1]-1,ver[2]-1);						 //starts vertex shader here and takes each vertex as a GL_Point
+		
 		if (mesh->IsQuadFace(i+1)) {glVertex3i(ver[0]-1,ver[2]-1,ver[3]-1);}	// one more triangle
 	}
 	glEnd();
@@ -1226,10 +1228,12 @@ bool LDNIcudaOperation:: BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &
 	//-----------------------------------------------------------------------------------------
 	//	Step 4:  using program objects and the texture
 	GLint id0,id1;	float centerPos[3];
+	
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_RECTANGLE_ARB,vertexTexture);
+	glBindTexture(GL_TEXTURE_RECTANGLE_ARB,vertexTexture);		 //takes the texture here 
 	glUseProgramObjectARB(g_programObj);
 	id0 = glGetUniformLocationARB(g_programObj,"sizeNx");
+	printf("the ido is %d \n", id0);
 	glUniform1iARB(id0,xF);
 	centerPos[0]=(boundingBox[0]+boundingBox[1])*0.5f;
 	centerPos[1]=(boundingBox[2]+boundingBox[3])*0.5f;
@@ -1279,8 +1283,8 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 	tempTime=clock();
 	//------------------------------------------------------------------------
 	//	Preparation
-	int nRes=solid->GetResolution();		gWidth=solid->GetSampleWidth();
-	float width=gWidth*(float)nRes;
+	int nRes=solid->GetResolution();		gWidth=solid->GetSampleWidth();		 //0.01
+	float width=gWidth*(float)nRes;	 //1024*0.01
 	solid->GetOrigin(origin[0],origin[1],origin[2]);
 	int arrsize=nRes*nRes;
 
@@ -1317,19 +1321,19 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, nRes, nRes, 0, GL_RGBA, GL_FLOAT, 0);
-	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, tex, 0);
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, tex, 0);	   //	attache the 2D texture to this FBO
 	if (glGetError()!=GL_NO_ERROR) printf("Error: attaching texture to framebuffer generation!\n");
 	cudaGraphicsResource *sampleTex_resource;
-	CUDA_SAFE_CALL( cudaGraphicsGLRegisterImage(&sampleTex_resource, tex, GL_TEXTURE_2D, cudaGraphicsMapFlagsReadOnly) );
+	CUDA_SAFE_CALL( cudaGraphicsGLRegisterImage(&sampleTex_resource, tex, GL_TEXTURE_2D, cudaGraphicsMapFlagsReadOnly) );	     //regitsers the texture imgage tex to cuda for only reading
 	//------------------------------------------------------------------------
 	GLuint depth_and_stencil_rb;
 	glGenRenderbuffersEXT(1, &depth_and_stencil_rb);
 	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depth_and_stencil_rb);
 	glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_STENCIL_EXT, nRes, nRes);
-	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depth_and_stencil_rb);
+	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depth_and_stencil_rb);		 //atrtach the depth buffer
 	if (glGetError()!=GL_NO_ERROR) printf("Error: attaching renderbuffer of depth-buffer to framebuffer generation!\n");
 	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depth_and_stencil_rb);
-	if (glGetError()!=GL_NO_ERROR) printf("Error: attaching renderbuffer of stencil-buffer to framebuffer generation!\n");
+	if (glGetError()!=GL_NO_ERROR) printf("Error: attaching renderbuffer of stencil-buffer to framebuffer generation!\n");		  // attach the redner buffer here to this FBO
 	//------------------------------------------------------------------------
 	GLuint indexPBO;
 	glGenBuffers(1,&indexPBO);	//	generation of PBO for index array readback
@@ -1377,6 +1381,7 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 			case 0:{glRotatef(-90,0,1,0);	glRotatef(-90,1,0,0); }break;
 			case 1:{glRotatef(90,0,1,0);	glRotatef(90,0,0,1);  }break;
 		}
+		printf("Calling the list\n");
 		glCallList(displayListIndex);	glFlush();
 		//--------------------------------------------------------------------------------------------------------
 		//	reading stencil buffer into the device memory of CUDA
@@ -1392,6 +1397,7 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 		unsigned char *devStencilBufferPtr;
 		unsigned int *devResArrayPtr;
 		unsigned int *devIndexArrayPtr=solid->GetIndexArrayPtr(nAxis);
+		
 		CUDA_SAFE_CALL( cudaGLMapBufferObject( (void **)&devStencilBufferPtr, indexPBO) );
 		CUDA_SAFE_CALL( cudaMalloc( (void**)&devResArrayPtr, BLOCKS_PER_GRID*sizeof(unsigned int) ) );
 		//--------------------------------------------------------------------------------------------------------
@@ -1404,7 +1410,6 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 		resArrayPtr=(unsigned int *)malloc(BLOCKS_PER_GRID*sizeof(unsigned int));
 		CUDA_SAFE_CALL( cudaMemcpy( resArrayPtr, devResArrayPtr, BLOCKS_PER_GRID*sizeof(unsigned int), cudaMemcpyDeviceToHost ) );
 		n_max=0;
-		for(i=0;i<BLOCKS_PER_GRID;i++) n_max = MAX(n_max,resArrayPtr[i]);
 		cudaFree(devResArrayPtr);		free(resArrayPtr);
 		//--------------------------------------------------------------------------------------------------------
 		//	read back the number of samples -- "sampleNum"
@@ -1435,7 +1440,7 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 		//---------------------------------------------------------------------------------------
 		//	Rendering step 3: decomposing the Layered Depth Images (LDIs) and record its corresponding normals
 		solid->MallocSampleMemory(nAxis,sampleNum);	
-		float* devNxArrayPtr=solid->GetSampleNxArrayPtr(nAxis);
+		float* devNxArrayPtr=solid->GetSampleNxArrayPtr(nAxis);	// taking the address to the first for the array here 
 		float* devNyArrayPtr=solid->GetSampleNyArrayPtr(nAxis);
 		float* devDepthArrayPtr=solid->GetSampleDepthArrayPtr(nAxis);
 		tempTime=clock();
@@ -1521,12 +1526,12 @@ unsigned char* LDNIcudaOperation::_readShaderFile( const char *fileName )
     FILE *file = fopen( fileName, "r" );
 
     if ( file == NULL ) {
-       	printf("Cannot open shader file!");
+       	printf("Cannot open shader file %s! \n", fileName);
 		return 0;
     }
 	struct _stat fileStats;
     if ( _stat( fileName, &fileStats ) != 0 ) {
-        printf("Cannot get file stats for shader file!");
+        printf("Cannot get file stats for shader file %s! \n", fileName);
         return 0;
     }
     unsigned char *buffer = new unsigned char[fileStats.st_size];
@@ -2535,28 +2540,32 @@ __global__ void krLDNISampling_SortSamples(float *devNxArrayPtr, float *devNyArr
 	}
 }
 
-__global__ void krLDNISampling_CopySamples(float *devNxArrayPtr, 
-										   float *devNyArrayPtr, float *devDepthArrayPtr, 
-										   int n, int arrsize, float width, float sampleWidth, int res, 
-										   unsigned int *devIndexArrayPtr)
+__global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
+	float *devNyArrayPtr, float *devDepthArrayPtr,
+	int n, int arrsize, float width, float sampleWidth, int res,
+	unsigned int *devIndexArrayPtr)
 {
-	int index=threadIdx.x+blockIdx.x*blockDim.x;
+	int index = threadIdx.x + blockIdx.x*blockDim.x;
 	int arrindex, num, ix, iy;
 	float4 rgb;		float temp;
-
-	while(index<arrsize) {
-		num=devIndexArrayPtr[index+1]-devIndexArrayPtr[index];
-		if (num>=n) {
+	//printf("the index is %d %d \n", blockDim.x, gridDim.x);
+	while (index < arrsize) {
+		num = devIndexArrayPtr[index + 1] - devIndexArrayPtr[index];		// tells how many samples are present on a ray which is in wXw grid
+		if (num>=n)
+		{
 			arrindex=(int)(devIndexArrayPtr[index])+n-1;
-
+		
 			ix=index%res;	iy=(index/res);
 			rgb = tex2D(tex2DFloat4In, ix, iy);
-
+			
 			temp=fabs(rgb.z)*width-sampleWidth*0.5f;
-				
+			
 			devNxArrayPtr[arrindex]=rgb.x;		// x-component of normal	
 			devNyArrayPtr[arrindex]=rgb.y;		// y-component of normal
 			if (rgb.z<0) devDepthArrayPtr[arrindex]=-temp; else devDepthArrayPtr[arrindex]=temp;
+			printf("The new chnaged normals are index are %f %f %f\n", rgb.x, rgb.y, rgb.w);
+			
+
 		}
 		index += blockDim.x * gridDim.x;
 	}
