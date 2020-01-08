@@ -1111,27 +1111,28 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	
 	//---------------------------------------------------------------------------------
 	//	For using OpenGL Shading Language to implement the sampling procedure
-	if (glewInit() != GLEW_OK) {printf("glewInit failed. Exiting...\n");	return false;}
-	if (glewIsSupported("GL_VERSION_2_0")) {printf("\nReady for OpenGL 2.0\n");} else {printf("OpenGL 2.0 not supported\n"); return false;}
+	if (glewInit() != GLEW_OK) { printf("glewInit failed. Exiting...\n");	return false; }
+	if (glewIsSupported("GL_VERSION_2_0")) { printf("\nReady for OpenGL 2.0\n"); }
+	else { printf("OpenGL 2.0 not supported\n"); return false; }
 	//-----------------------------------------------------------------------------------------
-	int dispListIndex;		GLhandleARB g_programObj, g_vertexShader, g_GeometryShader, g_FragShader;		   // integers 
-	GLenum InPrimType=GL_POINTS, OutPrimType=GL_TRIANGLES;		int OutVertexNum=3;				  // using different bits in a single byte to save memory
-	GLuint vertexTexture;	
-	const char *VshaderString[1],*GshaderString[1],*FshaderString[1];
+	int dispListIndex;		GLhandleARB g_programObj, g_vertexShader, g_GeometryShader, g_FragShader;
+	GLenum InPrimType = GL_POINTS, OutPrimType = GL_TRIANGLES;		int OutVertexNum = 3;
+	GLuint vertexTexture;
+	const char *VshaderString[1], *GshaderString[1], *FshaderString[1];
 	GLint bCompiled = 0, bLinked = 0;
-	char str[4096] = "";		int xF,yF;
+	char str[4096] = "";		int xF, yF;
 	//-----------------------------------------------------------------------------------------
 	//	Step 1: Setup the shaders 
-	memset(fileadd,0,256*sizeof(char));	
-	strcat(fileadd,"sampleLDNIVertexShader.vert");
-	g_vertexShader = glCreateShaderObjectARB( GL_VERTEX_SHADER_ARB );
-	unsigned char *ShaderAssembly = _readShaderFile( fileadd );
+	memset(fileadd, 0, 256 * sizeof(char));
+	strcat(fileadd, "sampleLDNIVertexShader.vert");
+	g_vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+	unsigned char *ShaderAssembly = _readShaderFile(fileadd);
 	VshaderString[0] = (char*)ShaderAssembly;
-	glShaderSourceARB( g_vertexShader, 1, VshaderString, NULL );	// replacing the VshaderString into g_vertexShader array of string to shader g_vertexShader 
-	glCompileShaderARB( g_vertexShader);
+	glShaderSourceARB(g_vertexShader, 1, VshaderString, NULL);
+	glCompileShaderARB(g_vertexShader);
 	delete ShaderAssembly;
-	glGetObjectParameterivARB( g_vertexShader, GL_OBJECT_COMPILE_STATUS_ARB, &bCompiled );
-	if (bCompiled  == false) {
+	glGetObjectParameterivARB(g_vertexShader, GL_OBJECT_COMPILE_STATUS_ARB, &bCompiled);
+	if (bCompiled == false) {
 		glGetInfoLogARB(g_vertexShader, sizeof(str), NULL, str);
 		printf("Warning: Vertex Shader Compile Error\n\n");	return false;
 	}
@@ -1186,10 +1187,12 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	long texBindingTime=clock();
 	glGetError();	// for clean-up the error generated before
 	nodeNum=mesh->GetNodeNumber();	_texCalProduct(nodeNum,xF,yF);
+	printf("nodeNum is %d \n", nodeNum);
 	int temp;
 	for(temp=1;temp<xF;temp *= 2) {}
 	xF = temp;	//if (xF<64) xF=64;
 	yF = (int)(nodeNum/xF)+1; if (yF<64) yF=64;
+	
 	printf("Texture Size: xF=%d yF=%d\n",xF,yF);
 	float* verTex=(float*)malloc(xF*yF*3*sizeof(float));
 	memset(verTex,0,xF*yF*3*sizeof(float));
@@ -1212,18 +1215,18 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	//-----------------------------------------------------------------------------------------
 	//	Step 3:  building GL-list for activating the geometry shader
 	unsigned int ver[4];
-	int faceNum=mesh->GetFaceNumber();
+	int faceNum = mesh->GetFaceNumber();
 	dispListIndex = glGenLists(1);
 	glNewList(dispListIndex, GL_COMPILE);
-	glBegin(GL_POINTS); // Each set of 3 vertices form a triangle	   so this is vertex parameter here which makes vertes srtream for the vertex shaders in GL+Points  
-	for(i=0;i<faceNum;i++) { 
-		mesh->GetFaceNodes(i+1,ver[0],ver[1],ver[2],ver[3]);
-		glVertex3i(ver[0]-1,ver[1]-1,ver[2]-1);						 //starts vertex shader here and takes each vertex as a GL_Point
-		
-		if (mesh->IsQuadFace(i+1)) {glVertex3i(ver[0]-1,ver[2]-1,ver[3]-1);}	// one more triangle
+	glBegin(GL_POINTS);
+	for (i = 0; i < faceNum; i++) {
+		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
+		glVertex3i(ver[0] - 1, ver[1] - 1, ver[2] - 1);
+		if (mesh->IsQuadFace(i + 1)) { glVertex3i(ver[0] - 1, ver[2] - 1, ver[3] - 1); }	// one more triangle
 	}
 	glEnd();
 	glEndList();
+
 	
 	//-----------------------------------------------------------------------------------------
 	//	Step 4:  using program objects and the texture
@@ -1381,7 +1384,6 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 			case 0:{glRotatef(-90,0,1,0);	glRotatef(-90,1,0,0); }break;
 			case 1:{glRotatef(90,0,1,0);	glRotatef(90,0,0,1);  }break;
 		}
-		printf("Calling the list\n");
 		glCallList(displayListIndex);	glFlush();
 		//--------------------------------------------------------------------------------------------------------
 		//	reading stencil buffer into the device memory of CUDA
@@ -1410,6 +1412,7 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 		resArrayPtr=(unsigned int *)malloc(BLOCKS_PER_GRID*sizeof(unsigned int));
 		CUDA_SAFE_CALL( cudaMemcpy( resArrayPtr, devResArrayPtr, BLOCKS_PER_GRID*sizeof(unsigned int), cudaMemcpyDeviceToHost ) );
 		n_max=0;
+		for (i = 0; i < BLOCKS_PER_GRID; i++) n_max = MAX(n_max, resArrayPtr[i]);
 		cudaFree(devResArrayPtr);		free(resArrayPtr);
 		//--------------------------------------------------------------------------------------------------------
 		//	read back the number of samples -- "sampleNum"

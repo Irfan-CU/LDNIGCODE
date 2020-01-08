@@ -47,7 +47,7 @@ vec4 CalPlaneEq(vec3 P0, vec3 P1, vec3 P2)
 	float  tt = length(result.xyz);
 	if (tt < 0.00000001) return vec4(0.0,0.0,0.0,0.0);
 
-	result = result/tt;   /*simply dijing the by nomal the concept of the normal vectors thats it*/
+	result = result/tt;   /*simply the by nomal the concept of the normal vectors thats it*/
 
 	return result;
 }

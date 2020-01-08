@@ -33,5 +33,5 @@ void main( void )
 	if (color.z<0.0)
 		gl_FragData[0] = vec4(color.x ,color.y, -(gl_FragCoord.z), color.w);
 	else
-		gl_FragData[0] = vec4(color.x ,color.y, gl_FragCoord.z, color.w);
+		gl_FragData[0] = vec4(color.x ,color.y, gl_FragCoord.z, color.w); /*the values going to fragment shader the color here is changed for material value in RGB channels */
 }
