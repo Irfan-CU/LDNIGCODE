@@ -32,22 +32,52 @@
 #version 120 
 #extension GL_EXT_geometry_shader4: enable
 
-
+uniform vec3 Cent;
 varying out vec4 color;
+
 
 vec4 CalPlaneEq(vec3 P0, vec3 P1, vec3 P2)
 {
 	vec4 result;
+
+	result.xyz = P1.xyz+Cent;
+	P0.xyz=P0.xyz+Cent;
+	P2.xyz=P2.xyz+Cent;
+
+
+	if (result.x > P0.x || result.x>P2.x)
+	{
+	  if (result.x > P0.x) result.x = P0.x;
+	  if (result.x > P2.x) result.x = P2.x;
+	}
 	
-	result.x = (gl_BackColorIn[0].x)+ (gl_PositionIn[0].x) + (gl_FrontColorIn[0].x);
-	result.y = (gl_BackColorIn[0].x)+ (0.5*gl_PositionIn[0].x) + (gl_FrontColorIn[0].x);
+
+	if (result.y>P0.y || result.y>P2.y)
+	{
+	  if (result.y > P0.y) result.y = P0.y;
+	  if (result.y > P2.y) result.y = P2.y;
+	}
+
+	if (result.z>P0.z || result.z>P2.z)
+	{
+	  if (result.z > P0.z) result.z = P0.z;
+	  if (result.z > P2.z) result.z = P2.z;
+	}
+
+    P0.xyz=P0.xyz+Cent;
+	P2.xyz=P2.xyz+Cent;
+
+    result.w = result.z;
 	result.z = P0.x * ( P1.y - P2.y ) + P1.x * ( P2.y - P0.y ) + P2.x * ( P0.y - P1.y );
-	result.w = (gl_BackColorIn[0].z)+ (gl_PositionIn[0].z) + (gl_FrontColorIn[0].z);
+	
+	result.x = (result.x)*0.06 + 0.2;
+	result.y = (result.x)*0.06 + 0.2;
+	result.w = (result.w)*0.06 + 0.2;
 
 	float  tt = length(result.xyz);
 	if (tt < 0.00000001) return vec4(0.0,0.0,0.0,0.0);
 
-	result = result/tt;   /*simply the by nomal the concept of the normal vectors thats it*/
+	//result = result/tt;
 
 	return result;
 }

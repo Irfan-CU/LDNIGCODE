@@ -1174,7 +1174,7 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	//	Configuration setting for geometry shader
 	glProgramParameteriEXT(g_programObj, GL_GEOMETRY_INPUT_TYPE_EXT, InPrimType);
 	glProgramParameteriEXT(g_programObj, GL_GEOMETRY_OUTPUT_TYPE_EXT, OutPrimType);
-	glProgramParameteriEXT(g_programObj, GL_GEOMETRY_VERTICES_OUT_EXT, OutVertexNum); 
+	glProgramParameteriEXT(g_programObj, GL_GEOMETRY_VERTICES_OUT_EXT, OutVertexNum); 	  //call plane equation in the geomtery shder defines the plane and calculate the normal for the plane
 	glLinkProgramARB( g_programObj);
 	glGetObjectParameterivARB( g_programObj, GL_OBJECT_LINK_STATUS_ARB, &bLinked );
 	if( bLinked == false ) {
@@ -1197,6 +1197,7 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	float* verTex=(float*)malloc(xF*yF*3*sizeof(float));
 	memset(verTex,0,xF*yF*3*sizeof(float));
 	memcpy(verTex,mesh->GetNodeArrayPtr(),nodeNum*3*sizeof(float));
+
 	glEnable(GL_TEXTURE_RECTANGLE_ARB);
 	glGenTextures(1, &vertexTexture);
 	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, vertexTexture);
@@ -1204,7 +1205,11 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,GL_TEXTURE_WRAP_S,GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,GL_TEXTURE_WRAP_T,GL_CLAMP);
-	glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB32F_ARB, xF, yF, 0, GL_RGB, GL_FLOAT, verTex);	   // vertex is the data Specifies a pointer to the image data in memory.	 node positions in rgb
+
+
+	glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB32F_ARB, xF, yF, 0, GL_RGB, GL_FLOAT, verTex);	   // vertex is the data Specifies a pointer to the image data in memory to be read by shaders .	 node positions in rgb
+
+	
 
 	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
 	free(verTex);
@@ -1221,27 +1226,28 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	glBegin(GL_POINTS);
 	for (i = 0; i < faceNum; i++) {
 		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
-		glVertex3i(ver[0] - 1, ver[1] - 1, ver[2] - 1);
+		
+	   	glVertex3i(ver[0] - 1, ver[1] - 1, ver[2] - 1);
 		if (mesh->IsQuadFace(i + 1)) { glVertex3i(ver[0] - 1, ver[2] - 1, ver[3] - 1); }	// one more triangle
 	}
 	glEnd();
 	glEndList();
 
-	
 	//-----------------------------------------------------------------------------------------
 	//	Step 4:  using program objects and the texture
-	GLint id0,id1;	float centerPos[3];
+	GLint id0,id1, UVloc;	float centerPos[3];
 	
 	glActiveTexture(GL_TEXTURE0);
+	
 	glBindTexture(GL_TEXTURE_RECTANGLE_ARB,vertexTexture);		 //takes the texture here 
 	glUseProgramObjectARB(g_programObj);
-	id0 = glGetUniformLocationARB(g_programObj,"sizeNx");
-	printf("the ido is %d \n", id0);
+	id0 = glGetUniformLocationARB(g_programObj,"sizeNx");	 // sizeNX is id0=XF
+	printf("the ido is %d \n", id0); // XF is id0;
 	glUniform1iARB(id0,xF);
 	centerPos[0]=(boundingBox[0]+boundingBox[1])*0.5f;
 	centerPos[1]=(boundingBox[2]+boundingBox[3])*0.5f;
 	centerPos[2]=(boundingBox[4]+boundingBox[5])*0.5f;
-	id1 = glGetUniformLocationARB(g_programObj,"Cent");
+	id1 = glGetUniformLocationARB(g_programObj,"Cent");		  // center is the center of the bounding box;
 	glUniform3fARB(id1,centerPos[0],centerPos[1],centerPos[2]);
 	if (glGetError()!=GL_NO_ERROR) printf("Error: vertex texture binding!\n\n");
 	printf("Create shader texture\n");
@@ -2566,7 +2572,7 @@ __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
 			devNxArrayPtr[arrindex]=rgb.x;		// x-component of normal	
 			devNyArrayPtr[arrindex]=rgb.y;		// y-component of normal
 			if (rgb.z<0) devDepthArrayPtr[arrindex]=-temp; else devDepthArrayPtr[arrindex]=temp;
-			printf("The new chnaged normals are index are %f %f %f\n", rgb.x, rgb.y, rgb.w);
+			printf("The new chnaged normals are index are %lf %lf %lf\n", rgb.x, rgb.y, rgb.w);
 			
 
 		}
