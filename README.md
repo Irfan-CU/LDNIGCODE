@@ -32,9 +32,11 @@ The most Important Part in this code for generating LDNI FDM Toolpaths is.
 7- AMG material reading is done in LDNI.
 8- So Normal values are changed in RGB of the texture and so getting the desired values on the sample points.
 9- LDNI of AMF file is successfully done so any input AMF file can be processes for LDNI sampling now.
+10-Input of the Dual Mesh Input working perfectly now.
+11-Dual Mesh AMF LDNI is working as planned.
 
 # Update
-1- LDNI of AMF file is successfully done so any input AMF file can be processes for LDNI sampling now.
+1-
 
 # Current Work
 1- Working on developing of the algorithm to read the material info from the AMF and then to texture and then samples on ray.
