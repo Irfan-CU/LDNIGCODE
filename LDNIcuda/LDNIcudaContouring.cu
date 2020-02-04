@@ -84,9 +84,9 @@ extern __global__ void krFDMContouring_RotationBoundingBox(double *bndBoxX, doub
 	float *DepthArray, float3 origin, float gwidth);
 
 extern __global__ void krFDMContouring_BinarySampling(bool *gridNode, double3 rotdir, float angle, int res,
-	unsigned int *xIndexArray, float *xDepthArray,
-	unsigned int *yIndexArray, float *yDepthArray,
-	unsigned int *zIndexArray, float *zDepthArray,
+	unsigned int *xIndexArray, float *xDepthArray, float *x0materialArray, float *y0materialArray,
+	unsigned int *yIndexArray, float *yDepthArray, float *x1materialArray, float *y1materialArray,
+	unsigned int *zIndexArray, float *zDepthArray, float *x2materialArray,  float *y2materialArray,
 	float3 origin, double2 imgOrigin, float gwidth, int3 imageRes,
 	int nodeNum, float thickness, float imgWidth, int *infill_node);
 
@@ -598,7 +598,7 @@ void LDNIcudaOperation::LDNIFDMContouring_Generation(LDNIcudaSolid* solid, Conto
 
 	//----------------------------------------------------------------------------------------------
 	//	Step 2: Binary Sampling
-	LDNIFDMContouring_BinarySamlping(solid, c_mesh, rotBoundingBox, BinaryImageSize, angle, thickness, clipPlaneNm,
+	(solid, c_mesh, rotBoundingBox, BinaryImageSize, angle, thickness, clipPlaneNm,
 		nSampleWidth, gridNodes, stickStart, stickEnd, stickIndex, noinfill_node, nodecount, infillnode_xposition, infillnode_zposition,infillnode_yposition, stickID, prevStickID, stickDir);
 	
 	//printf("Do you want to print Infill G-Code \n");
@@ -2584,11 +2584,11 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, C
 	CUDA_SAFE_CALL(cudaMemset((void*)gridNodes, 0.0, imageSize[0] * imageSize[1] * imageSize[2] * sizeof(bool)));
 	CUDA_SAFE_CALL(cudaMalloc((void**)&(noinfill_node), (imageSize[1] + 1) * sizeof(unsigned int)));
 	CUDA_SAFE_CALL(cudaMemset((void*)noinfill_node, 0, (imageSize[1] + 1) * sizeof(unsigned int)));
-
+	
 	krFDMContouring_BinarySampling << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, make_double3(clipPlanNm[0], clipPlanNm[1], clipPlanNm[2])
-		, angle, nRes, solid->GetIndexArrayPtr(0), solid->GetSampleDepthArrayPtr(0),
-		solid->GetIndexArrayPtr(1), solid->GetSampleDepthArrayPtr(1),
-		solid->GetIndexArrayPtr(2), solid->GetSampleDepthArrayPtr(2),
+		, angle, nRes, solid->GetIndexArrayPtr(0), solid->GetSampleDepthArrayPtr(0), solid->GetSampleNxArrayPtr(0), solid->GetSampleNyArrayPtr(0),
+		solid->GetIndexArrayPtr(1), solid->GetSampleDepthArrayPtr(1), solid->GetSampleNxArrayPtr(1), solid->GetSampleNyArrayPtr(1),
+		solid->GetIndexArrayPtr(2), solid->GetSampleDepthArrayPtr(2), solid->GetSampleNxArrayPtr(2), solid->GetSampleNyArrayPtr(2),
 		make_float3(origin[0], origin[1], origin[2]), make_double2(rotBoundingBox[0], rotBoundingBox[4]), gwidth, make_int3(imageSize[0], imageSize[1], imageSize[2]),
 		nodenum, thickness, nSampleWidth, noinfill_node);//just tells about all the points which are inside the surface or not
 
@@ -5680,9 +5680,9 @@ __global__ void krFDMContouring_FindAllStickInAxisX(bool *gridNodes, unsigned in
 }	 
 
 __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 rotdir, float angle, int res,
-	unsigned int *xIndexArray, float *xDepthArray,
-	unsigned int *yIndexArray, float *yDepthArray,
-	unsigned int *zIndexArray, float *zDepthArray,
+	unsigned int *xIndexArray, float *xDepthArray, float *x0materialArray, float *y0materialArray,
+	unsigned int *yIndexArray, float *yDepthArray, float *x1materialArray, float *y1materialArray,
+	unsigned int *zIndexArray, float *zDepthArray, float *x2materialArray, float *y2materialArray,
 	float3 origin, double2 imgorigin, float gwidth, int3 imageRes,
 	int nodeNum, float thickness, float imgWidth,int *infill_node)
 {
@@ -5691,6 +5691,7 @@ __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 rotdir, 
 	int index = threadIdx.x + blockIdx.x*blockDim.x;  // based on the state of the vertex
 	//printf("the index is %d \n", index);
 	int num, st;
+	
 	unsigned int ix, iy, iz;
 	double xx, yy, zz;
 	double3 systemCoord, rot_p;
@@ -5710,15 +5711,17 @@ __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 rotdir, 
 		zz = imgorigin.y + imgWidth * iz;
 		yy = (iy + 1)*thickness;
 		
-
+		
 		rot_p = _rotatePointAlongVector(xx, yy, zz, systemCoord.x, systemCoord.y, systemCoord.z, rotdir.x, rotdir.y, rotdir.z, angle);
 
 		ori_p.x = origin.x - gwidth * 0.5;	ori_p.y = origin.y - gwidth * 0.5;	ori_p.z = origin.z - gwidth * 0.5;
 
-
+	    
 		gridNodes[index] = _detectInOutPoint((float)rot_p.x, (float)rot_p.y, (float)rot_p.z, xIndexArray, xDepthArray,
 			yIndexArray, yDepthArray, zIndexArray, zDepthArray,
 			ori_p, origin, gwidth, res);
+
+		
 
 		if (gridNodes[index] == true)
 		{

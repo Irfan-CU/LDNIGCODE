@@ -1112,7 +1112,7 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	//---------------------------------------------------------------------------------
 	//	For using OpenGL Shading Language to implement the sampling procedure
 	if (glewInit() != GLEW_OK) { printf("glewInit failed. Exiting...\n");	return false; }
-	if (glewIsSupported("GL_VERSION_2_0")) { printf("\nReady for OpenGL 2.0\n"); }
+	if (glewIsSupported("GL_VERSION_4_0")) { printf("\nReady for OpenGL 4.0\n"); }
 	else { printf("OpenGL 2.0 not supported\n"); return false; }
 	//-----------------------------------------------------------------------------------------
 	int dispListIndex;		GLhandleARB g_programObj, g_vertexShader, g_GeometryShader, g_FragShader;
@@ -1205,12 +1205,7 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,GL_TEXTURE_WRAP_S,GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,GL_TEXTURE_WRAP_T,GL_CLAMP);
-
-
 	glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB32F_ARB, xF, yF, 0, GL_RGB, GL_FLOAT, verTex);	   // vertex is the data Specifies a pointer to the image data in memory to be read by shaders .	 node positions in rgb
-
-	
-
 	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
 	free(verTex);
 	if (glGetError()!=GL_NO_ERROR) printf("Error: GL_TEXTURE_RECTANGLE_ARB texture binding!\n\n");
@@ -1220,36 +1215,60 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	//-----------------------------------------------------------------------------------------
 	//	Step 3:  building GL-list for activating the geometry shader
 	unsigned int ver[4];
+	float pos_node_check[3];
+	GLint UVLoc;	 
 	int faceNum = mesh->GetFaceNumber();
 	dispListIndex = glGenLists(1);
+	
 	glNewList(dispListIndex, GL_COMPILE);
-	glBegin(GL_POINTS);
+	
+	for (i = 0; i < faceNum; i++)
+	{
+		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
+		printf("the face index is %d and the nodes are the %d %d %d \n", i + 1, ver[0], ver[1], ver[2]);
+		for (int j = 0; j < 3; j++)
+		{
+				mesh->GetNodePos(ver[j], pos_node_check);
+				printf("the vertex is %d and the positions are %f %f %f \n", ver[j], pos_node_check[0], pos_node_check[1], pos_node_check[2]);
+		}
+	
+	}
+	glBegin(GL_POINTS); /// Each set of 3 vertices form a triangle
 	for (i = 0; i < faceNum; i++) {
 		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
+		//glUseProgramObjectARB(g_programObj);
+		//UVLoc = glGetUniformLocationARB(g_programObj, "auv");  doesnt work give 0.0000 values
+	    //glUniform2fARB(UVLoc, 11.1, 7.2);
+		//glColor3f(1.50, 2.50, 3.50);
+		//int ii = 0;
+		//if (i < 21000) ii = 52; 
+		//else ii = 104;
 		
-	   	glVertex3i(ver[0] - 1, ver[1] - 1, ver[2] - 1);
+	
+		
+		glVertex4i(ver[0] - 1, ver[1] - 1, ver[2] - 1, i+1);
+		
 		if (mesh->IsQuadFace(i + 1)) { glVertex3i(ver[0] - 1, ver[2] - 1, ver[3] - 1); }	// one more triangle
 	}
 	glEnd();
 	glEndList();
 
+
 	//-----------------------------------------------------------------------------------------
 	//	Step 4:  using program objects and the texture
-	GLint id0,id1, UVloc;	float centerPos[3];
-	
+	GLint id0, id1;	float centerPos[3];
 	glActiveTexture(GL_TEXTURE0);
-	
-	glBindTexture(GL_TEXTURE_RECTANGLE_ARB,vertexTexture);		 //takes the texture here 
+	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, vertexTexture);		 //takes the texture here 
 	glUseProgramObjectARB(g_programObj);
-	id0 = glGetUniformLocationARB(g_programObj,"sizeNx");	 // sizeNX is id0=XF
+    id0 = glGetUniformLocationARB(g_programObj, "sizeNx");	 // sizeNX is id0=XF
+	glUniform1iARB(id0, xF);
 	printf("the ido is %d \n", id0); // XF is id0;
-	glUniform1iARB(id0,xF);
-	centerPos[0]=(boundingBox[0]+boundingBox[1])*0.5f;
-	centerPos[1]=(boundingBox[2]+boundingBox[3])*0.5f;
-	centerPos[2]=(boundingBox[4]+boundingBox[5])*0.5f;
-	id1 = glGetUniformLocationARB(g_programObj,"Cent");		  // center is the center of the bounding box;
-	glUniform3fARB(id1,centerPos[0],centerPos[1],centerPos[2]);
-	if (glGetError()!=GL_NO_ERROR) printf("Error: vertex texture binding!\n\n");
+	centerPos[0] = (boundingBox[0] + boundingBox[1])*0.5f;
+	centerPos[1] = (boundingBox[2] + boundingBox[3])*0.5f;
+	centerPos[2] = (boundingBox[4] + boundingBox[5])*0.5f;
+	id1 = glGetUniformLocationARB(g_programObj, "Cent");		  // center is the center of the bounding box;
+	glUniform3fARB(id1, centerPos[0], centerPos[1], centerPos[2]);
+	if (glGetError() != GL_NO_ERROR) printf("Error: vertex texture binding!\n\n");
 	printf("Create shader texture\n");
 	//-----------------------------------------------------------------------------------------
 	//	Step 5:  sampling
@@ -1364,6 +1383,7 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 	for(short nAxis=0; nAxis<3; nAxis++) { 
 		//---------------------------------------------------------------------------------------
 		//	Rendering step 1: setting the viewing window
+		
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		//---------------------------------------------------------------------------------------
@@ -2572,7 +2592,7 @@ __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
 			devNxArrayPtr[arrindex]=rgb.x;		// x-component of normal	
 			devNyArrayPtr[arrindex]=rgb.y;		// y-component of normal
 			if (rgb.z<0) devDepthArrayPtr[arrindex]=-temp; else devDepthArrayPtr[arrindex]=temp;
-			printf("The new chnaged normals are index are %lf %lf %lf\n", rgb.x, rgb.y, rgb.w);
+			printf("The ray is %d and the sample number is %d and the depth is %f \n",index, arrindex, devDepthArrayPtr[arrindex]);
 			
 
 		}
@@ -2618,11 +2638,12 @@ __global__ void krLDNISampling_CopyIndexAndFindMax(unsigned char *devStencilBuff
 	unsigned int temp=0,temp2;
 	while(tid<arrsize) {
 		temp2=(unsigned int)(devStencilBufferPtr[tid]);
+		//printf("temp2 is %d \n", temp2);
 		devIndexArrayPtr[tid]=temp2;
 		temp= MAX(temp, temp2);
 		tid += blockDim.x * gridDim.x;
 	}
-
+	//printf("the sample point coordinates the id is %d and the ray is %d \n", ,temp)
 	// set the cache values
 	cache[cacheIndex]=temp;
 
@@ -2750,7 +2771,7 @@ bool LDNIcudaOperation::InstancedBRepToLDNISampling(QuadTrglMesh *mesh, LDNIcuda
 	//---------------------------------------------------------------------------------
 	//	For using OpenGL Shading Language to implement the sampling procedure
 	if (glewInit() != GLEW_OK) {printf("glewInit failed. Exiting...\n");	return false;}
-	if (glewIsSupported("GL_VERSION_2_0")) {printf("\nReady for OpenGL 2.0\n");} else {printf("OpenGL 2.0 not supported\n"); return false;}
+	if (glewIsSupported("GL_VERSION_4_5")) {printf("\nReady for OpenGL 2.0\n");} else {printf("OpenGL 2.0 not supported\n"); return false;}
 	//-----------------------------------------------------------------------------------------
 	GLhandleARB g_programObj, g_vertexShader, g_GeometryShader, g_FragShader;
 	const char *VshaderString[1],*GshaderString[1], *FshaderString[1];

@@ -25,59 +25,28 @@
  *   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
  *   OF SUCH DAMAGE.
  */
- /*
- preliminary formula for material distribution (gl_BackColorIn[0].x)+ (gl_PositionIn[0].x) + (gl_FrontColorIn[0].x)
- */
+
 
 #version 120 
 #extension GL_EXT_geometry_shader4: enable
 
-uniform vec3 Cent;
 varying out vec4 color;
-
+varying in float f_Index[];
+varying out float fIndex_tofrag;
 
 vec4 CalPlaneEq(vec3 P0, vec3 P1, vec3 P2)
 {
 	vec4 result;
-
-	result.xyz = P1.xyz+Cent;
-	P0.xyz=P0.xyz+Cent;
-	P2.xyz=P2.xyz+Cent;
-
-
-	if (result.x > P0.x || result.x>P2.x)
-	{
-	  if (result.x > P0.x) result.x = P0.x;
-	  if (result.x > P2.x) result.x = P2.x;
-	}
 	
-
-	if (result.y>P0.y || result.y>P2.y)
-	{
-	  if (result.y > P0.y) result.y = P0.y;
-	  if (result.y > P2.y) result.y = P2.y;
-	}
-
-	if (result.z>P0.z || result.z>P2.z)
-	{
-	  if (result.z > P0.z) result.z = P0.z;
-	  if (result.z > P2.z) result.z = P2.z;
-	}
-
-    P0.xyz=P0.xyz+Cent;
-	P2.xyz=P2.xyz+Cent;
-
-    result.w = result.z;
+	result.x = P0.y * ( P1.z - P2.z ) + P1.y * ( P2.z - P0.z ) + P2.y * ( P0.z - P1.z );
+	result.y = P0.z * ( P1.x - P2.x ) + P1.z * ( P2.x - P0.x ) + P2.z * ( P0.x - P1.x );
 	result.z = P0.x * ( P1.y - P2.y ) + P1.x * ( P2.y - P0.y ) + P2.x * ( P0.y - P1.y );
-	
-	result.x = (result.x)*0.06 + 0.2;
-	result.y = (result.x)*0.06 + 0.2;
-	result.w = (result.w)*0.06 + 0.2;
+	result.w = - P0.x * ( P1.y * P2.z - P2.y * P1.z ) - P1.x * ( P2.y * P0.z - P0.y * P2.z ) - P2.x * ( P0.y * P1.z - P1.y * P0.z );
 
 	float  tt = length(result.xyz);
 	if (tt < 0.00000001) return vec4(0.0,0.0,0.0,0.0);
 
-	//result = result/tt;
+	result = result/tt;
 
 	return result;
 }
@@ -85,6 +54,8 @@ vec4 CalPlaneEq(vec3 P0, vec3 P1, vec3 P2)
 void main( void )
 {
 	color = CalPlaneEq(gl_BackColorIn[0].xyz, gl_PositionIn[0].xyz, gl_FrontColorIn[0].xyz);
+	
+	fIndex_tofrag=f_Index[0];  //Sending values to the frag_shader.
 	
 //	if ((color.x != 0.0)  || (color.y != 0.0) || (color.z != 0.0)) 
 	{ 
@@ -96,5 +67,4 @@ void main( void )
 		EmitVertex();	
 		EndPrimitive();
 	}
-	/* finally color vector moves to fragment data */
 }

@@ -797,6 +797,7 @@ void QuadTrglMesh::CompBoundingBox(float boundingBox[])
 		if (pos[2]<boundingBox[4]) boundingBox[4]=pos[2];
 		if (pos[2]>boundingBox[5]) boundingBox[5]=pos[2];
 	}
+	printf("The bbox size in x is %f in y %f and z %f \n", (boundingBox[1] - boundingBox[0]), (boundingBox[3] - boundingBox[2]), (boundingBox[5] - boundingBox[4]));
 }
 
 void QuadTrglMesh::CompNormal(int faceIndex/*starting from 1*/, float nv[])
@@ -1247,38 +1248,28 @@ bool QuadTrglMesh::InputAMFFile(char *filename)
 		printf("The number of the facets are %d \n",);
 	*/
 	//amf_nodedata.reserve(amfnodeindex.size());
-	int n = 0;int face_index = 1; float Pos[3]; int node[4];
-	printf("The size is %d \n",amfnodeindex.size());
+	int n = 1;int face_index = 1; float Pos[3]; int node[4];
+	//printf("The size is %d \n",amfnodeindex.size());
 	
 	int total_nodes = amfnodeamfpos.size();
 	int total_face = amfnodeindex.size() / 3;
-	printf("the positions of the node are %d %d \n", total_nodes, total_face);
+	//printf("the positions of the node are %d %d \n", total_nodes, total_face);
 	MallocMemory(total_nodes, (total_face));
-
+	
 	for (int i = 0; i < amfnodeamfpos.size(); i += 3)
 	{
 
 		Pos[0] = amfnodeamfpos.at(i);
 		Pos[1] = amfnodeamfpos.at(i + 1);
 		Pos[2] = amfnodeamfpos.at(i + 2);  
-		node[0] = amfnodeindex.at(n);
-		SetNodePos(node[0], Pos);
-		printf("Set the node %d for the %f %f %f \n", node[0], Pos[0], Pos[1], Pos[2]);
+		//node[0] = amfnodeindex.at(n);
+		SetNodePos(n, Pos);
+		SetFaceNodes(n, i+1, i + 2, i + 3, 0);
+		//printf("Set the face %d with indices %d, %d %d \n", n, i + 1, i + 2, i + 3 );
+		//printf("Set the node %d for the %f %f %f \n", n, Pos[0], Pos[1], Pos[2]);
 		n++;
 	}
-	n = 0;
-	for (int i = 0; i < (amfnodeindex.size()/3); i++) {
-	
-		
-		node[0] = amfnodeindex.at(n);
-		node[1] = amfnodeindex.at(n+1);
-		node[2] = amfnodeindex.at(n+2);
-		node[3] = 0;
-		SetFaceNodes(face_index, node[0], node[1], node[2], node[3]);
-		face_index++;
-		n+=3;
-		
-	}
+
 	
 	return true;
 }
