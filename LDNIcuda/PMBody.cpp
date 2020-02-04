@@ -44,10 +44,15 @@
 #include <thrust/copy.h>
 #include <thrust/sort.h>
 
+
 #include "Application.h"
 #include "Slicer.h"
 #include "fffPolygonGenrator.h"
 #include "fffGcodewriter.h"
+#include "Model.hpp"
+#include  "IO.h"
+
+
 
 PMBody::PMBody(void)
 {
@@ -643,29 +648,98 @@ void QuadTrglMesh::MallocMemory(int nodeNum, int faceNum)
 {
 	ClearAll();
 
-	m_nodeNum=nodeNum;	
-	if (nodeNum>0) m_nodeTable=(float*)malloc(m_nodeNum*3*sizeof(float));
+	m_nodeNum = nodeNum;
+	if (nodeNum > 0)   m_nodeTable = (float*)malloc(m_nodeNum * 3 * sizeof(float));
+	m_faceNum = faceNum;
+	if (faceNum > 0) m_faceTable = (unsigned int*)malloc(m_faceNum * 4 * sizeof(unsigned int));
+}
+
+void QuadTrglMesh::SetNodeNum(int nodeindex)
+
+{
+	   m_nodeNum = nodeindex;
+	   printf("Inside the nodeNUm the value is %d \n", m_nodeNum);
+}
+int QuadTrglMesh::GetNodeNum()
+
+{
+		QuadTrglMesh * mesh;
+		return mesh->m_nodeNum;
+}
+
+void QuadTrglMesh::amfMallocMemory(int &nodeNum, int &faceNum)
+{
+	ClearAll();
 	
-	m_faceNum=faceNum;	
-	if (faceNum>0) m_faceTable=(unsigned int*)malloc(m_faceNum*4*sizeof(unsigned int));
+	m_nodeNum = nodeNum;
+	printf("inside the amf alloc memory and the m_nodeNum is %d\n", m_nodeNum);
+	if (nodeNum > 0)
+	{
+		m_nodeTable = (float*)malloc(m_nodeNum * 3 * sizeof(float));
+	}
+    m_faceNum = faceNum;
+	if (faceNum > 0)
+	{
+		m_faceTable = (unsigned int*)malloc(m_faceNum * 4 * sizeof(unsigned int));
+
+	}
+	//printf("Done with allocation of the memeory and the facenum is  and the nide num is %d %d \n", m_nodeNum, m_faceNum);
 }
 
 void QuadTrglMesh::SetNodePos(int index/*starting from 1*/, float pos[])
 {
+	
+
 	m_nodeTable[(index-1)*3]=pos[0];
+	
 	m_nodeTable[(index-1)*3+1]=pos[1];
+	
 	m_nodeTable[(index-1)*3+2]=pos[2];
+	
+	
+
+}
+
+void QuadTrglMesh::amfSetNodePos(int index/*starting from 1*/, float pos[])
+{
+	
+	m_amfnodeTable[(index - 1) * 3] = pos[0];
+	m_amfnodeTable[(index - 1) * 3 + 1] = pos[1];
+	m_amfnodeTable[(index - 1) * 3 + 2] = pos[2];
+	
+
 }
 
 void QuadTrglMesh::SetFaceNodes(int index/*starting from 1*/, 
 								unsigned int verIndex1, unsigned int verIndex2, 
 								unsigned int verIndex3, unsigned int verIndex4)
 {
-	m_faceTable[(index-1)*4]=verIndex1;
-	m_faceTable[(index-1)*4+1]=verIndex2;
-	m_faceTable[(index-1)*4+2]=verIndex3;
-	m_faceTable[(index-1)*4+3]=verIndex4;
 	
+	m_faceTable[(index-1)*4]=verIndex1;
+	
+	m_faceTable[(index-1)*4+1]=verIndex2;
+	
+	m_faceTable[(index-1)*4+2]=verIndex3;
+	
+	m_faceTable[(index-1)*4+3]=verIndex4;
+
+	
+
+}
+void QuadTrglMesh::amfSetFaceNodes(int index/*starting from 1*/,
+	unsigned int verIndex1, unsigned int verIndex2,
+	unsigned int verIndex3, unsigned int verIndex4)
+{
+	
+	m_amffaceTable[(index - 1) * 4] = verIndex1;
+	
+	m_amffaceTable[(index - 1) * 4 + 1] = verIndex2;
+
+	m_amffaceTable[(index - 1) * 4 + 2] = verIndex3;
+	
+	m_amffaceTable[(index - 1) * 4 + 3] = verIndex4;
+	
+
 }
 
 int QuadTrglMesh::GetFaceNumber()
@@ -723,6 +797,7 @@ void QuadTrglMesh::CompBoundingBox(float boundingBox[])
 		if (pos[2]<boundingBox[4]) boundingBox[4]=pos[2];
 		if (pos[2]>boundingBox[5]) boundingBox[5]=pos[2];
 	}
+	printf("The bbox size in x is %f in y %f and z %f \n", (boundingBox[1] - boundingBox[0]), (boundingBox[3] - boundingBox[2]), (boundingBox[5] - boundingBox[4]));
 }
 
 void QuadTrglMesh::CompNormal(int faceIndex/*starting from 1*/, float nv[])
@@ -1148,12 +1223,54 @@ bool QuadTrglMesh::InputOBJFile(char *filename)
 	printf("Node number: %d\n",m_nodeNum);
 	//printf("The mac pos is : %f\n", pos_chk);
 
+	return true;
+}
+
+
+bool QuadTrglMesh::InputAMFFile(char *filename)
+{
 	
+	Model &model = model.read_from_file(filename);
+	
+	printf("-----------------------------------------------------\n");
 
+	/*
+	stl_file *file;
+	
+	stl_facet *stlfacet;
+	
+	for (int i = 0; i < amfnodeindex.size(); i++)
+	{
+		printf("Node is  %d\n", amfnodeindex.at(i));
+		stlfacet. = amfnodeindex.at(i);
+	}
 
+		printf("The number of the facets are %d \n",);
+	*/
+	//amf_nodedata.reserve(amfnodeindex.size());
+	int n = 1;int face_index = 1; float Pos[3]; int node[4];
+	//printf("The size is %d \n",amfnodeindex.size());
+	
+	int total_nodes = amfnodeamfpos.size();
+	int total_face = amfnodeindex.size() / 3;
+	//printf("the positions of the node are %d %d \n", total_nodes, total_face);
+	MallocMemory(total_nodes, (total_face));
+	
+	for (int i = 0; i < amfnodeamfpos.size(); i += 3)
+	{
 
+		Pos[0] = amfnodeamfpos.at(i);
+		Pos[1] = amfnodeamfpos.at(i + 1);
+		Pos[2] = amfnodeamfpos.at(i + 2);  
+		//node[0] = amfnodeindex.at(n);
+		SetNodePos(n, Pos);
+		SetFaceNodes(n, i+1, i + 2, i + 3, 0);
+		//printf("Set the face %d with indices %d, %d %d \n", n, i + 1, i + 2, i + 3 );
+		//printf("Set the node %d for the %f %f %f \n", n, Pos[0], Pos[1], Pos[2]);
+		n++;
+	}
 
-
+	
 	return true;
 }
 
@@ -1863,8 +1980,8 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 		//calculating angels between different sticks 
 	}
 	
-	printf("Yeah I am here on line 1873 of the code\n");
-	
+   printf("Yeah I am here on line 1873 of the code\n");
+	/*
 	Application *application;
 	unsigned int mesh_idx, edge_index = 0;
 	VSAMesh *mesh1;
@@ -1877,13 +1994,13 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	GLKPOSITION Pos_1;
 	GLKPOSITION Pos_2;
 	
-	Polygon poly;
-	Polygons polygons;
+	//Polygon poly;
+    //Polygons polygons;
 	SliceDataStorage storage;
 	SliceLayerPart layerpart;
 	Mesh* mesh;
 	SlicerSegment segment;
-	Polygons genrated_result_lines;
+	//Polygons genrated_result_lines;
 	FffPolygonGenerator polygongenrator;
 
 	int count1 = VSAMeshList.GetCount();
@@ -1893,7 +2010,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	storage.Layers.clear();
 	new_parts.clear();
 	storage.Layers.resize(iRes[1]);
-	printf("Yeah I am here on line 1873 of the code\n");
+	printf("The layers are iRes[1]= %d \n",iRes[1]);
 	//application->run(total_meshes, VSAMeshList, c_mesh, storage, iRes[1], meshin_layer, rotBoundingBox);
 
 	
@@ -1908,7 +2025,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 
 
 	printf("Yes Sliced Perfectly and slices2Polygons ready for Gcode \n");
-	const char* filename = "cura";
+	const char* filename = "cura_after";
 	bool file_open = gcode.setTargetFile(filename);
 	bool start = true;
 	gcode.writeGCode(storage, start);

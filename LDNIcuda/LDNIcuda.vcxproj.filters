@@ -18,6 +18,12 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{e5bbc4cb-fb2e-4411-a203-8ce314dd71a8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Slic3r">
+      <UniqueIdentifier>{6db1a832-2bf1-4088-955c-8825dab20cf9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Slic3r">
+      <UniqueIdentifier>{1bbfc7e5-7044-4b4f-a351-90e42cd0c693}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\libs\clipper\clipper.cpp">
@@ -125,9 +131,6 @@
     <ClCompile Include="LDNIcpuSolid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="clipper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Combcpp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -202,6 +205,45 @@
     </ClCompile>
     <ClCompile Include="FffProcessor.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="amf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Source Files\Slic3r</Filter>
+    </ClCompile>
+    <ClCompile Include="TrinagleMesh.cpp">
+      <Filter>Source Files\Slic3r</Filter>
+    </ClCompile>
+    <ClCompile Include="util.c">
+      <Filter>Source Files\Slic3r</Filter>
+    </ClCompile>
+    <ClCompile Include="TransformationMatrix.cpp">
+      <Filter>Source Files\Slic3r</Filter>
+    </ClCompile>
+    <ClCompile Include="PointSlic3r.cpp">
+      <Filter>Source Files\Slic3r</Filter>
+    </ClCompile>
+    <ClCompile Include="STLinit.cpp">
+      <Filter>Source Files\Slic3r</Filter>
+    </ClCompile>
+    <ClCompile Include="Connect.c">
+      <Filter>Source Files\Slic3r</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared.c">
+      <Filter>Source Files\Slic3r</Filter>
+    </ClCompile>
+    <ClCompile Include="XMLParse.C">
+      <Filter>Source Files\Slic3r</Filter>
+    </ClCompile>
+    <ClCompile Include="normals.c">
+      <Filter>Source Files\Slic3r</Filter>
+    </ClCompile>
+    <ClCompile Include="xmlrole.c">
+      <Filter>Source Files\Slic3r</Filter>
+    </ClCompile>
+    <ClCompile Include="xmltok.c">
+      <Filter>Source Files\Slic3r</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -481,6 +523,75 @@
     <ClInclude Include="NoCopy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="IO.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="Expat.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="expat_external.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.hpp">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="TriangalMesh.hpp">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="Stl.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="Point.hpp">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="TransformationMatrix.hpp">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="portable_endian.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="expatexternal.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="XMLTOK.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="Internal.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="ascii.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="expat_config.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="xmlrole.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="nameTab.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="xmltok_impl.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="asciitab.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="utf8tab.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="iasciitab.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="latin1tab.h">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="BoundingBox.hpp">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
+    <ClInclude Include="Polygon.hpp">
+      <Filter>Header Files\Slic3r</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="LDNIcudaContouring.cu">
@@ -506,5 +617,13 @@
     <Text Include="KEYS.txt">
       <Filter>Source Files</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="xmltok_impl.inc">
+      <Filter>Header Files\Slic3r</Filter>
+    </None>
+    <None Include="xmltok_ns.inc">
+      <Filter>Header Files\Slic3r</Filter>
+    </None>
   </ItemGroup>
 </Project>

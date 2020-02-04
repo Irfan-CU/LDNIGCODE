@@ -299,6 +299,7 @@ void LDNIcudaSolid::BuildSampleBasedIndexArray(short nAxis, unsigned int* &sampl
 
 void LDNIcudaSolid::BuildVBOforRendering(GLuint &m_vboPosition, GLuint &m_vboNormal, int &m_vertexNum, bool &m_cudaRegistered)
 {
+	
 	m_vertexNum = this->GetSampleNumber();
 
 	glGenBuffersARB(1, &m_vboPosition);					// Get A Valid Name
@@ -339,6 +340,7 @@ __global__ void krLDNIcudaSolid_fillSampleArray(float ox, float oy, float oz, fl
 	unsigned int *indexArray, float *dev_sampleNxArray, float *dev_sampleNyArray, float *dev_sampleDepthArray,
 	int stIndex, float *devPositionPtr, float *devNormalPtr)
 {
+	
 	int tid = threadIdx.x + blockIdx.x*blockDim.x;
 	int i, ii, jj, index, arrsize = res * res;
 	float depth, origin[3], nx, ny, nz;

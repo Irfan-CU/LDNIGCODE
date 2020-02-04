@@ -37,12 +37,15 @@
 #include "../GLKLib/GLKGeometry.h"
 #include "../GLKLib/GLKMatrixLib.h"
 
+
+
 //#include "gettime.h"
 
 
 
 
 class VSAEdge;
+class amfface;
 //----SGM code by KaChun----//
 class ContourMesh;
 //----SGM code by KaChun----//
@@ -152,19 +155,35 @@ private:
 	unsigned int index;
 };
 
-class QuadTrglMesh : public GLKObject
+class amfface
 {
 public:
+	amfface(void);
+	virtual ~amfface(void);
+	int nodeid;
+	float x, y, z;
+
+};
+
+class QuadTrglMesh : public GLKObject 
+{
+	
+	friend class amfface;
+public:
+	
 	QuadTrglMesh(void);
 	virtual ~QuadTrglMesh(void);
 
 	void ClearAll();
 	
-	void MallocMemory(int nodeNum, int 
-		
-		um);
+	void MallocMemory(int nodeNum, int faceNum);
+	void amfMallocMemory(int &nodeNum, int &faceNum);
 	void SetNodePos(int nodeIndex/*starting from 1*/, float pos[]); 
 	void SetFaceNodes(int faceIndex/*starting from 1*/, unsigned int verIndex1, unsigned int verIndex2, unsigned int verIndex3, unsigned int verIndex4);
+	void amfSetNodePos(int index/*starting from 1*/, float pos[]);
+	void amfSetFaceNodes(int faceIndex/*starting from 1*/, unsigned int verIndex1, unsigned int verIndex2, unsigned int verIndex3, unsigned int verIndex4);
+	void SetNodeNum(int nodetotal);
+	int GetNodeNum();
 
 	int GetFaceNumber();
 	int GetNodeNumber();
@@ -180,9 +199,9 @@ public:
 	bool InputOBJFile(char *filename);
 	bool OutputOBJFile(char *filename);
 	
+	bool InputAMFFile(char *filename);
 	
-
-	bool InputSTLFile(char *filename);
+    bool InputSTLFile(char *filename);
 
 	bool InputMEBFile(char *filename);	// the binary file of QUAD/TRGL mesh object
 	bool OutputMEBFile(char *filename);	// the binary file of QUAD/TRGL mesh object
@@ -192,27 +211,40 @@ public:
 
 	float* GetNodeArrayPtr() {return m_nodeTable;};
 
+	std::vector<amfface>amf_nodedata;
+	
+
 	void SetMeshId(short i) {meshID = i;};
 	short GetMeshId() {return meshID;};
 	void SetMeshUpdateStatus(bool status) { bUpdate = status;};
 	bool GetMeshUpdateStatus() {return bUpdate;};
 
+	std::vector<float> amffacenode_array;
 	void FlipModel(bool nDir_X, bool nDir_Y, bool nDir_Z);
 	void Transformation(float dx, float dy, float dz);
 	void Scaling(float sx, float sy, float sz);
 	void ShiftToOrigin();
 	void ShiftToPosSystem();
+	
+	float *m_amfnodeTable; // was private intially
+	unsigned int *m_amffaceTable;
 
 	void calcFaceNormals();
 	
 private:
+	
+	//float *m_nodeTable;	
 	int m_nodeNum, m_faceNum;
-	float *m_nodeTable;	
+	float *m_nodeTable;
+	unsigned int *m_faceTable;
 	short meshID;
 	bool bUpdate;
-	unsigned int *m_faceTable;	//	Note that: the index starts from '1'
-								//		when '0' is shown in the face table, it means that the vertex is not defined
+	
+	//	Note that: the index starts from '1'
+							//		when '0' is shown in the face table, it means that the vertex is not defined
 };
+
+
 
 class VSAHeapNode : public GLKHeapNode
 {

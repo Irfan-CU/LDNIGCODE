@@ -55,12 +55,6 @@
 #include "LDNIcudaOperation.h"
 
 
-
-
-
-
-
-
 #define _MENU_QUIT						10001
 #define _MENU_FILE_OPEN					10002
 #define _MENU_FILE_SAVE					10003
@@ -762,7 +756,40 @@ void menuFuncFileOpen()
 		_pGLK.AddDisplayObj(_pDataBoard.m_polyMeshBody,true);
 		printf("Refresh time (ms): %ld\n",clock()-time); time=clock();
 	}
+	else if (_stricmp(exstr, "amf") == 0) //amf file 
+	{
+	if (!(_pDataBoard.m_polyMeshBody))
+		_pDataBoard.m_polyMeshBody = new PMBody;
+	else
+		_pGLK.DelDisplayObj2(_pDataBoard.m_polyMeshBody);
 
+	 long time=clock();	QuadTrglMesh *mesh=new QuadTrglMesh;
+		if (mesh->InputAMFFile(filename)) 
+	  {
+		  _pDataBoard.m_polyMeshBody->GetMeshList().AddTail(mesh);																												 
+		  _pDataBoard.m_polyMeshBody->computeRange();
+		  mesh->SetMeshId(_pDataBoard.m_polyMeshBody->GetMeshList().GetCount());
+		  printf("AMF File Import Time (ms): %ld\n", clock() - time);
+	  }
+		time = clock();
+		if (_pGLK.GetShading())
+		{
+			_pDataBoard.m_polyMeshBody->BuildGLList(true);
+			printf("_pGLK.GetShading() is true\n");
+		}
+		if (_pGLK.GetMesh())
+		{
+			_pDataBoard.m_polyMeshBody->BuildGLList(false);
+			printf("_p_pGLK.GetMesh() is true\n");
+		}
+		printf("--------------------------------------------\n");
+		_pGLK.AddDisplayObj(_pDataBoard.m_polyMeshBody, true);
+		printf("Build GL List Time (ms): %ld\n", clock() - time); time = clock();
+		//mesh->calcFaceNormals();
+	}
+
+
+    
 }
 
 void menuFuncMeshBndBoxComp()

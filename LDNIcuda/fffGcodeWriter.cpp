@@ -679,7 +679,7 @@ void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage& storage, const S
 	coord_tIrfan layer_thickness = storage.Layers[0].thickness;
 	bool  magic_spiralize = false;
 
-	int bottom_layers = 4;
+	int bottom_layers = 5;
 
 	if (added_something && (!magic_spiralize) || gcode_layer.getLayerNr() < bottom_layers)
 	{
@@ -832,7 +832,7 @@ bool FffGcodeWriter::processMultiLayerInfill(const SliceDataStorage& storage, co
 
 bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer, const size_t extruder_nr, const SliceLayerPart& part) const
 {
-	const coord_tIrfan infill_line_distance = MM2INT(6.3);
+	const coord_tIrfan infill_line_distance = MM2INT(4.6);
 	if (infill_line_distance == 0 || part.infill_area_per_combine_per_density[0].size() == 0)
 	{
 		printf("@@error in single layer infill for the layer %d \n", gcode_layer.getLayerNr());
@@ -942,7 +942,7 @@ bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& g
 				
 			}
 
-			const coord_tIrfan layer_height = storage.layer_thickness;
+			const coord_tIrfan layer_height = mesh_config.inset0_config.getLayerThickness();
 
 			// if support is enabled, add the support outlines also so we don't generate bridges over support
 
