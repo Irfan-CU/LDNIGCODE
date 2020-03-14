@@ -446,7 +446,7 @@ void LDNIcudaOperation::LDNIFDMContouring_GenerationwithSupporting(LDNIcudaSolid
 
 	//----------------------------------------------------------------------------------------------
 	//	Step 2: Binary Sampling
-///	LDNIFDMContouring_BinarySamlping(solid, c_mesh, rotBoundingBox, BinaryImageSize, angle, thickness, clipPlaneNm,
+//	LDNIFDMContouring_BinarySamlping(solid, c_mesh, rotBoundingBox, BinaryImageSize, angle, thickness, clipPlaneNm,
 	//	nSampleWidth, gridNodes, stickStart, stickEnd, stickIndex, stickID, prevStickID, stickDir);
 
 
