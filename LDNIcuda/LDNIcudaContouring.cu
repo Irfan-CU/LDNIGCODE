@@ -84,9 +84,9 @@ extern __global__ void krFDMContouring_RotationBoundingBox(double *bndBoxX, doub
 	float *DepthArray, float3 origin, float gwidth);
 
 extern __global__ void krFDMContouring_BinarySampling(bool *gridNode, double3 rotdir, float angle, int res,
-	unsigned int *xIndexArray, float *xDepthArray, float *x0materialArray, float *y0materialArray,
-	unsigned int *yIndexArray, float *yDepthArray, float *x1materialArray, float *y1materialArray,
-	unsigned int *zIndexArray, float *zDepthArray, float *x2materialArray,  float *y2materialArray,
+	unsigned int *xIndexArray, float *xDepthArray, float* NxarrayPtr,
+	unsigned int *yIndexArray, float *yDepthArray, float* NyarrayPtr,
+	unsigned int *zIndexArray, float *zDepthArray, float* NzarrayPtr,
 	float3 origin, double2 imgOrigin, float gwidth, int3 imageRes,
 	int nodeNum, float thickness, float imgWidth, int *infill_node);
 
@@ -221,10 +221,10 @@ extern __device__ double3 _rotatePointAlongVector(double px, double py, double p
 	double x2, double y2, double z2,
 	double angle);
 
-extern __device__ bool _detectInOutPoint(float px, float py, float pz,
-	unsigned int* xIndex, float* xDepth,
-	unsigned int* yIndex, float* yDepth,
-	unsigned int* zIndex, float* zDepth,
+extern __device__ bool _detectInOutPoint(int index, float px, float py, float pz,
+	unsigned int* xIndex, float* xDepth, float* NxarrayPtr,
+	unsigned int* yIndex, float* yDepth, float* NyarrayPtr,
+	unsigned int* zIndex, float* zDepth, float* NzarrayPtr,
 	float3 ori_p, float3 origin, float gwidth, int res);
 
 extern __device__ bool _calTwoLineSegmentsIntersection(float2 vMinus1, float2 v_a,
@@ -598,7 +598,7 @@ void LDNIcudaOperation::LDNIFDMContouring_Generation(LDNIcudaSolid* solid, Conto
 
 	//----------------------------------------------------------------------------------------------
 	//	Step 2: Binary Sampling
-	(solid, c_mesh, rotBoundingBox, BinaryImageSize, angle, thickness, clipPlaneNm,
+	LDNIFDMContouring_BinarySamlping(solid, c_mesh, rotBoundingBox, BinaryImageSize, angle, thickness, clipPlaneNm,
 		nSampleWidth, gridNodes, stickStart, stickEnd, stickIndex, noinfill_node, nodecount, infillnode_xposition, infillnode_zposition,infillnode_yposition, stickID, prevStickID, stickDir);
 	
 	//printf("Do you want to print Infill G-Code \n");
@@ -2586,9 +2586,9 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, C
 	CUDA_SAFE_CALL(cudaMemset((void*)noinfill_node, 0, (imageSize[1] + 1) * sizeof(unsigned int)));
 	
 	krFDMContouring_BinarySampling << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, make_double3(clipPlanNm[0], clipPlanNm[1], clipPlanNm[2])
-		, angle, nRes, solid->GetIndexArrayPtr(0), solid->GetSampleDepthArrayPtr(0), solid->GetSampleNxArrayPtr(0), solid->GetSampleNyArrayPtr(0),
-		solid->GetIndexArrayPtr(1), solid->GetSampleDepthArrayPtr(1), solid->GetSampleNxArrayPtr(1), solid->GetSampleNyArrayPtr(1),
-		solid->GetIndexArrayPtr(2), solid->GetSampleDepthArrayPtr(2), solid->GetSampleNxArrayPtr(2), solid->GetSampleNyArrayPtr(2),
+		, angle, nRes, solid->GetIndexArrayPtr(0), solid->GetSampleDepthArrayPtr(0), solid->GetSampleNxArrayPtr(0),
+		solid->GetIndexArrayPtr(1), solid->GetSampleDepthArrayPtr(1), solid->GetSampleNxArrayPtr(1),
+		solid->GetIndexArrayPtr(2), solid->GetSampleDepthArrayPtr(2), solid->GetSampleNxArrayPtr(2),
 		make_float3(origin[0], origin[1], origin[2]), make_double2(rotBoundingBox[0], rotBoundingBox[4]), gwidth, make_int3(imageSize[0], imageSize[1], imageSize[2]),
 		nodenum, thickness, nSampleWidth, noinfill_node);//just tells about all the points which are inside the surface or not
 
@@ -5679,18 +5679,23 @@ __global__ void krFDMContouring_FindAllStickInAxisX(bool *gridNodes, unsigned in
 	}
 }	 
 
+
 __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 rotdir, float angle, int res,
-	unsigned int *xIndexArray, float *xDepthArray, float *x0materialArray, float *y0materialArray,
-	unsigned int *yIndexArray, float *yDepthArray, float *x1materialArray, float *y1materialArray,
-	unsigned int *zIndexArray, float *zDepthArray, float *x2materialArray, float *y2materialArray,
+	unsigned int *xIndexArray, float *xDepthArray, float* NxarrayPtr,
+	unsigned int *yIndexArray, float *yDepthArray, float* NyarrayPtr,
+	unsigned int *zIndexArray, float *zDepthArray, float* NzarrayPtr,
 	float3 origin, double2 imgorigin, float gwidth, int3 imageRes,
 	int nodeNum, float thickness, float imgWidth,int *infill_node)
 {
+	// xIndexArray = dev_indexArray[nAxis];
+	//arrindex = (int)(devIndexArrayPtr[index]) + n - 1;
+	//devNxArrayPtr[arrindex]=rgb.w;	
+
 	//FILE *fp;
 	//fopen("Infill.txt", "w");
 	int index = threadIdx.x + blockIdx.x*blockDim.x;  // based on the state of the vertex
 	//printf("the index is %d \n", index);
-	int num, st;
+	unsigned int num, st;
 	
 	unsigned int ix, iy, iz;
 	double xx, yy, zz;
@@ -5701,9 +5706,10 @@ __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 rotdir, 
    // nodenum is the number of the
 	systemCoord.x = 0.0;	systemCoord.y = 0.0;	systemCoord.z = 0.0;
 	
-
+		
 	while (index < nodeNum) 
 	{
+		
 		ix = index % imageRes.x;	iy = (index / imageRes.x) % imageRes.y;
 		iz = index / (imageRes.x*imageRes.y);
 
@@ -5715,21 +5721,13 @@ __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 rotdir, 
 		rot_p = _rotatePointAlongVector(xx, yy, zz, systemCoord.x, systemCoord.y, systemCoord.z, rotdir.x, rotdir.y, rotdir.z, angle);
 
 		ori_p.x = origin.x - gwidth * 0.5;	ori_p.y = origin.y - gwidth * 0.5;	ori_p.z = origin.z - gwidth * 0.5;
-
+		
 	    
-		gridNodes[index] = _detectInOutPoint((float)rot_p.x, (float)rot_p.y, (float)rot_p.z, xIndexArray, xDepthArray,
-			yIndexArray, yDepthArray, zIndexArray, zDepthArray,
+		gridNodes[index] = _detectInOutPoint(index, (float)rot_p.x, (float)rot_p.y, (float)rot_p.z, xIndexArray, xDepthArray, NxarrayPtr,
+			yIndexArray, yDepthArray, NyarrayPtr, zIndexArray, zDepthArray, NzarrayPtr,
 			ori_p, origin, gwidth, res);
 
-		
-
-		if (gridNodes[index] == true)
-		{
-			atomicAdd(&infill_node[iy], 1);
-			
-		}
-	
-		index += blockDim.x * gridDim.x;
+	   index += blockDim.x * gridDim.x;
 	}
 	
 	
@@ -6247,12 +6245,16 @@ __device__ double3 _calEquation(float2 v1, float2 v2)
 
 }
 
-__device__ bool _detectInOutPoint(float px, float py, float pz,
-	unsigned int* xIndex, float* xDepth,
-	unsigned int* yIndex, float* yDepth,
-	unsigned int* zIndex, float* zDepth,
+__device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
+	unsigned int* xIndex, float* xDepth, float* NxarrayPtr,
+	unsigned int* yIndex, float* yDepth, float* NyarrayPtr,
+	unsigned int* zIndex, float* zDepth, float* NzarrayPtr,
 	float3 ori_p, float3 origin, float gwidth, int res)
 {
+
+	// xIndexArray = dev_indexArray[nAxis];
+	//arrindex = (int)(devIndexArrayPtr[index]) + n - 1;
+	//devNxArrayPtr[arrindex]=rgb.w;	
 
 	unsigned int i, j, k;
 	unsigned int st, num, index, counter;
@@ -6267,21 +6269,28 @@ __device__ bool _detectInOutPoint(float px, float py, float pz,
 
 	counter = 0;
 	st = xIndex[k*res + j];
-	num = xIndex[k*res + j + 1] - st;
+	num = xIndex[k*res + j + 1] - st;		//st+index is arrindex
 
-
+	//printf("the material at the gridnodes %f is %d and the depth is %f \n", NxarrayPtr[st], st, yDepth[st + index]);
 	if (num > 0)
 	{
 
 		xx = px - origin.x;
 		for (index = 0; index < num; index += 2) {
-			if (xx < fabs(xDepth[st + index])) break;
-			if ((xx >= fabs(xDepth[st + index]))
-				&& (xx <= fabs(xDepth[st + index + 1]))) {
+			if (xx < fabs(xDepth[st + index]))
+			{
+				
+				break;
+
+			}
+				
+			if ((xx >= fabs(xDepth[st + index])) && (xx <= fabs(xDepth[st + index + 1]))) 
+			{
+				//printf("1st point depth %f and material %f, 2nd point depth %f material %f and the axis is x \n", xDepth[st + index], NxarrayPtr[st+index], xDepth[st + index+1], NxarrayPtr[st + index+1]);
 				counter++; break;
 			}
 		}
-		//printf("numx is %d \n", num);
+		
 	}
 
 	if (counter > 0)
@@ -6301,6 +6310,8 @@ __device__ bool _detectInOutPoint(float px, float py, float pz,
 			if (yy < fabs(yDepth[st + index])) break;
 			if ((yy >= fabs(yDepth[st + index]))
 				&& (yy <= fabs(yDepth[st + index + 1]))) {
+				
+				//printf("1st point depth %f and material %f, 2nd point depth %f material %f axis is y \n", yDepth[st + index], NyarrayPtr[st + index], xDepth[st + index + 1], NyarrayPtr[st + index + 1]);
 				counter++; break;
 			}
 		}
@@ -6326,6 +6337,8 @@ __device__ bool _detectInOutPoint(float px, float py, float pz,
 			if (zz < fabs(zDepth[st + index])) break;
 			if ((zz >= fabs(zDepth[st + index]))
 				&& (zz <= fabs(zDepth[st + index + 1]))) {
+				
+				//printf("1st point depth %f and material %f, 2nd point depth %f material %f axis is z \n", zDepth[st + index], NzarrayPtr[st + index], zDepth[st + index + 1], NzarrayPtr[st + index + 1]);
 				counter++; break;
 			}
 		}

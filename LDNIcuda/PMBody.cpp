@@ -50,7 +50,8 @@
 #include "fffPolygonGenrator.h"
 #include "fffGcodewriter.h"
 #include "Model.hpp"
-#include  "IO.h"
+#include "IO.h"
+
 
 
 
@@ -700,15 +701,6 @@ void QuadTrglMesh::SetNodePos(int index/*starting from 1*/, float pos[])
 
 }
 
-void QuadTrglMesh::amfSetNodePos(int index/*starting from 1*/, float pos[])
-{
-	
-	m_amfnodeTable[(index - 1) * 3] = pos[0];
-	m_amfnodeTable[(index - 1) * 3 + 1] = pos[1];
-	m_amfnodeTable[(index - 1) * 3 + 2] = pos[2];
-	
-
-}
 
 void QuadTrglMesh::SetFaceNodes(int index/*starting from 1*/, 
 								unsigned int verIndex1, unsigned int verIndex2, 
@@ -726,20 +718,15 @@ void QuadTrglMesh::SetFaceNodes(int index/*starting from 1*/,
 	
 
 }
-void QuadTrglMesh::amfSetFaceNodes(int index/*starting from 1*/,
-	unsigned int verIndex1, unsigned int verIndex2,
-	unsigned int verIndex3, unsigned int verIndex4)
+
+void QuadTrglMesh::Set_Node_Material_Index(int nodeIndex, int material_index)
 {
-	
-	m_amffaceTable[(index - 1) * 4] = verIndex1;
-	
-	m_amffaceTable[(index - 1) * 4 + 1] = verIndex2;
+	m_node_material_Table[nodeIndex] = material_index;
+}
 
-	m_amffaceTable[(index - 1) * 4 + 2] = verIndex3;
-	
-	m_amffaceTable[(index - 1) * 4 + 3] = verIndex4;
-	
-
+int QuadTrglMesh::Get_Node_Material_Index(int nodeIndex)
+{
+	return m_node_material_Table[nodeIndex];
 }
 
 int QuadTrglMesh::GetFaceNumber()
@@ -1229,48 +1216,31 @@ bool QuadTrglMesh::InputOBJFile(char *filename)
 
 bool QuadTrglMesh::InputAMFFile(char *filename)
 {
+	int n = 1;
+	float Pos[3];
 	
 	Model &model = model.read_from_file(filename);
-	
-	printf("-----------------------------------------------------\n");
-
-	/*
-	stl_file *file;
-	
-	stl_facet *stlfacet;
-	
-	for (int i = 0; i < amfnodeindex.size(); i++)
-	{
-		printf("Node is  %d\n", amfnodeindex.at(i));
-		stlfacet. = amfnodeindex.at(i);
-	}
-
-		printf("The number of the facets are %d \n",);
-	*/
-	//amf_nodedata.reserve(amfnodeindex.size());
-	int n = 1;int face_index = 1; float Pos[3]; int node[4];
-	//printf("The size is %d \n",amfnodeindex.size());
-	
+    
 	int total_nodes = amfnodeamfpos.size();
 	int total_face = amfnodeindex.size() / 3;
-	//printf("the positions of the node are %d %d \n", total_nodes, total_face);
 	MallocMemory(total_nodes, (total_face));
+	face_material_names = face_material;
+    total_materials = face_material_index;
 	
 	for (int i = 0; i < amfnodeamfpos.size(); i += 3)
 	{
-
 		Pos[0] = amfnodeamfpos.at(i);
 		Pos[1] = amfnodeamfpos.at(i + 1);
 		Pos[2] = amfnodeamfpos.at(i + 2);  
-		//node[0] = amfnodeindex.at(n);
 		SetNodePos(n, Pos);
 		SetFaceNodes(n, i+1, i + 2, i + 3, 0);
-		//printf("Set the face %d with indices %d, %d %d \n", n, i + 1, i + 2, i + 3 );
-		//printf("Set the node %d for the %f %f %f \n", n, Pos[0], Pos[1], Pos[2]);
 		n++;
 	}
-
-	
+	printf("Done with the reading of the amf file \n");
+	face_material_index.clear();
+	face_material.clear();
+	amfnodeamfpos.clear();
+	amfnodeindex.clear();
 	return true;
 }
 

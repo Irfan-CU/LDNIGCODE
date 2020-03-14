@@ -766,7 +766,8 @@ void menuFuncFileOpen()
 	 long time=clock();	QuadTrglMesh *mesh=new QuadTrglMesh;
 		if (mesh->InputAMFFile(filename)) 
 	  {
-		  _pDataBoard.m_polyMeshBody->GetMeshList().AddTail(mesh);																												 
+			printf("done with mesh inside the main \n");
+			_pDataBoard.m_polyMeshBody->GetMeshList().AddTail(mesh);																												 
 		  _pDataBoard.m_polyMeshBody->computeRange();
 		  mesh->SetMeshId(_pDataBoard.m_polyMeshBody->GetMeshList().GetCount());
 		  printf("AMF File Import Time (ms): %ld\n", clock() - time);

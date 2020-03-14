@@ -38,6 +38,7 @@
 #include<driver_types.h>
 
 
+
 class LDNIcpuSolid;
 class LDNIcudaSolid;
 class QuadTrglMesh;

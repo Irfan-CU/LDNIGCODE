@@ -39,13 +39,14 @@
 
 
 
+
 //#include "gettime.h"
 
 
 
 
 class VSAEdge;
-class amfface;
+
 //----SGM code by KaChun----//
 class ContourMesh;
 //----SGM code by KaChun----//
@@ -155,20 +156,12 @@ private:
 	unsigned int index;
 };
 
-class amfface
-{
-public:
-	amfface(void);
-	virtual ~amfface(void);
-	int nodeid;
-	float x, y, z;
 
-};
 
 class QuadTrglMesh : public GLKObject 
 {
 	
-	friend class amfface;
+
 public:
 	
 	QuadTrglMesh(void);
@@ -180,18 +173,19 @@ public:
 	void amfMallocMemory(int &nodeNum, int &faceNum);
 	void SetNodePos(int nodeIndex/*starting from 1*/, float pos[]); 
 	void SetFaceNodes(int faceIndex/*starting from 1*/, unsigned int verIndex1, unsigned int verIndex2, unsigned int verIndex3, unsigned int verIndex4);
-	void amfSetNodePos(int index/*starting from 1*/, float pos[]);
-	void amfSetFaceNodes(int faceIndex/*starting from 1*/, unsigned int verIndex1, unsigned int verIndex2, unsigned int verIndex3, unsigned int verIndex4);
+	void Set_Node_Material_Index(int nodeIndex, int material_index); //Specifically for the amf file from which we import material in the LDNI mesh
 	void SetNodeNum(int nodetotal);
 	int GetNodeNum();
-
 	int GetFaceNumber();
 	int GetNodeNumber();
+	int Get_Node_Material_Index(int faceIndex);
 	bool IsQuadFace(int faceIndex/*starting from 1*/);
 	void GetFaceNodes(int faceIndex/*starting from 1*/, unsigned int &verIndex1, unsigned int &verIndex2, unsigned int &verIndex3, unsigned int &verIndex4);
 	void GetNodePos(int nodeIndex/*starting from 1*/, float pos[]);
 	float *GetNodeTablePtr() {return m_nodeTable;};
 	unsigned int *GetFaceTablePtr() {return m_faceTable;};
+	std::vector<std::string>face_material_names;
+	std::vector<std::string>total_materials;
 
 	void CompNormal(int faceIndex/*starting from 1*/, float nv[]);
 	void CompBoundingBox(float boundingBox[]);
@@ -211,7 +205,7 @@ public:
 
 	float* GetNodeArrayPtr() {return m_nodeTable;};
 
-	std::vector<amfface>amf_nodedata;
+	//std::vector<amfface>amf_nodedata;
 	
 
 	void SetMeshId(short i) {meshID = i;};
@@ -219,7 +213,7 @@ public:
 	void SetMeshUpdateStatus(bool status) { bUpdate = status;};
 	bool GetMeshUpdateStatus() {return bUpdate;};
 
-	std::vector<float> amffacenode_array;
+	//std::vector<float> amffacenode_array;
 	void FlipModel(bool nDir_X, bool nDir_Y, bool nDir_Z);
 	void Transformation(float dx, float dy, float dz);
 	void Scaling(float sx, float sy, float sz);
@@ -230,6 +224,13 @@ public:
 	unsigned int *m_amffaceTable;
 
 	void calcFaceNormals();
+
+	//int amfnodeNumamf, amffaceNumamf;
+	//std::vector<float> amfnodeamfpos;
+	//std::vector<int> amfnodeindex;
+	//std::vector<int> amfnode_materialid;
+
+
 	
 private:
 	
@@ -237,6 +238,7 @@ private:
 	int m_nodeNum, m_faceNum;
 	float *m_nodeTable;
 	unsigned int *m_faceTable;
+	unsigned int *m_node_material_Table;   //Specifically for the amf file from which we import material in the LDNI mesh
 	short meshID;
 	bool bUpdate;
 	
