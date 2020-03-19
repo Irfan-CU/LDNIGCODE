@@ -78,7 +78,7 @@ public:
 	static float LDNIFDMContouring_CompRotationBoundingBox(LDNIcudaSolid* solid, double rotBoundingBox[], double clipPlanNm[]);
 	static void LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[], 
 												float angle, float thickness, double clipPlanNm[], float nSampleWidth, bool *&gridNodes,
-												float2 *&stickStart, float2 *&stickEnd, unsigned int *&stickIndex, int *&noinfill_node, int infillnodecount, float *&infillnode_xposition, float *&infillnode_zposition, float *&infillnode_yposition, int *&stickID, int *&prevStickID,  int2 *&stickDir);
+												float2 *&stickStart, float2 *&stickEnd, unsigned int *&stickIndex, int *&noinfill_node, int infillnodecount, float *&infillnode_xposition, float *&infillnode_zposition, float *&infillnode_yposition, int *&stickID, int *&prevStickID,  int2 *&stickDir,float material_id);
 	//static void LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[],
 	//												float angle, float thickness, double clipPlanNm[], float nSampleWidth, float2 *stickStart, 
 	//												float2 *stickEnd, int *stickID);

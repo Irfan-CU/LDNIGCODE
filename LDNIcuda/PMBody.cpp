@@ -1647,8 +1647,6 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	}
 	
 
-
-
 	// -------------------------------- Grouping --------------------------------- //
 	printf("Group sticks into each contour....\n");
 	printf(" origin and gwidth %f %f %f\n", imageOrigin[0], imageOrigin[1], sampleWidth);
@@ -1949,6 +1947,10 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 		}
 		//calculating angels between different sticks 
 	}
+
+
+
+
 	
    printf("Yeah I am here on line 1873 of the code\n");
 	/*

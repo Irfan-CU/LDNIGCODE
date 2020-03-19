@@ -88,12 +88,12 @@ extern __global__ void krFDMContouring_BinarySampling(bool *gridNode, double3 ro
 	unsigned int *yIndexArray, float *yDepthArray, float* NyarrayPtr,
 	unsigned int *zIndexArray, float *zDepthArray, float* NzarrayPtr,
 	float3 origin, double2 imgOrigin, float gwidth, int3 imageRes,
-	int nodeNum, float thickness, float imgWidth, int *infill_node);
+	int nodeNum, float thickness, float imgWidth, int *infill_node, float material_id);
 
 extern __global__ void krFDMinfill_positions (bool *gridNode, double3 rotdir, float angle, double2 imgOrigin, int3 imageRes, int nodeNum, float thickness, float imgWidth, int *infill_node, 
 	unsigned int *infillcounter, float *infillnode_xposition, float *infillnode_zposition, float *infillnode_yposition);
 
-extern __global__ void krFDMContouring_CountAllStick(bool *gridNodes, int3 imageRes, int cellNum, unsigned int* count);
+extern __global__ void krFDMContouring_CountAllStick(bool *gridNodes, int3 imageRes, int cellNum, unsigned int* count, float material_id);
 
 
 
@@ -225,7 +225,7 @@ extern __device__ bool _detectInOutPoint(int index, float px, float py, float pz
 	unsigned int* xIndex, float* xDepth, float* NxarrayPtr,
 	unsigned int* yIndex, float* yDepth, float* NyarrayPtr,
 	unsigned int* zIndex, float* zDepth, float* NzarrayPtr,
-	float3 ori_p, float3 origin, float gwidth, int res);
+	float3 ori_p, float3 origin, float gwidth, int res, float material_id);
 
 extern __device__ bool _calTwoLineSegmentsIntersection(float2 vMinus1, float2 v_a,
 	float2 v_b, float2 vPlus1, double pt[]);
@@ -598,20 +598,12 @@ void LDNIcudaOperation::LDNIFDMContouring_Generation(LDNIcudaSolid* solid, Conto
 
 	//----------------------------------------------------------------------------------------------
 	//	Step 2: Binary Sampling
-	LDNIFDMContouring_BinarySamlping(solid, c_mesh, rotBoundingBox, BinaryImageSize, angle, thickness, clipPlaneNm,
-		nSampleWidth, gridNodes, stickStart, stickEnd, stickIndex, noinfill_node, nodecount, infillnode_xposition, infillnode_zposition,infillnode_yposition, stickID, prevStickID, stickDir);
-	
-	//printf("Do you want to print Infill G-Code \n");
-	//scanf("%s", infill);
-	//printf("Specify the layer thickness \n");
-	//scanf("%f",  layer->layer_thickness);
-	//if (infill == 'Y' || infill == 'y')
-	//{
-		//printf("Proceeding with the infill code \n");
-		//LDNIFDMContouring_Infill(BinaryImageSize);
-		
-	//}
-	
+	for (int i = 0; i < 3; i++)
+	{
+		float material_id = 2.000000000;
+		LDNIFDMContouring_BinarySamlping(solid, c_mesh, rotBoundingBox, BinaryImageSize, angle, thickness, clipPlaneNm,
+			nSampleWidth, gridNodes, stickStart, stickEnd, stickIndex, noinfill_node, nodecount, infillnode_xposition, infillnode_zposition, infillnode_yposition, stickID, prevStickID, stickDir, material_id);
+	}
 	
 	cudaFree(stickIndex);
 	cudaFree(gridNodes);
@@ -2463,8 +2455,8 @@ void LDNIcudaOperation::LDNIFDMContouring_SupportFindAllStick(LDNIcudaSolid* sol
 	CUDA_SAFE_CALL(cudaMemset((void*)stickIndex, 0, (imageSize[1] + 1) * sizeof(unsigned int)));
 
 
-	krFDMContouring_CountAllStick << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (suptNodes, make_int3(imageSize[0] - 1, imageSize[1], imageSize[2] - 1),
-		(imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1), stickIndex);
+	//FDMContouring_CountAllStick << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (suptNodes, make_int3(imageSize[0] - 1, imageSize[1], imageSize[2] - 1),
+	//imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1), stickIndex, );
 
 
 	thrust::device_ptr<unsigned int> dev_ptr(stickIndex); //	Wrap raw pointers with dev_ptr
@@ -2571,7 +2563,7 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, C
 	int imageSize[], float angle, float thickness, double clipPlanNm[],
 	float nSampleWidth, bool *&gridNodes, float2 *&stickStart,
 	float2 *&stickEnd, unsigned int *&stickIndex, int *&noinfill_node, int infillnodecount, float *&infillnode_xposition, float *&infillnode_zposition, float *&infillnode_yposition,
-	int *&stickID, int *&prevStickID, int2 *&stickDir)
+	int *&stickID, int *&prevStickID, int2 *&stickDir, float material_id)
 {
 	//bool *gridNodes;
 	int nRes = solid->GetResolution();
@@ -2590,7 +2582,7 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, C
 		solid->GetIndexArrayPtr(1), solid->GetSampleDepthArrayPtr(1), solid->GetSampleNxArrayPtr(1),
 		solid->GetIndexArrayPtr(2), solid->GetSampleDepthArrayPtr(2), solid->GetSampleNxArrayPtr(2),
 		make_float3(origin[0], origin[1], origin[2]), make_double2(rotBoundingBox[0], rotBoundingBox[4]), gwidth, make_int3(imageSize[0], imageSize[1], imageSize[2]),
-		nodenum, thickness, nSampleWidth, noinfill_node);//just tells about all the points which are inside the surface or not
+		nodenum, thickness, nSampleWidth, noinfill_node, material_id);//just tells about all the points which are inside the surface or not
 
 	/*
 	thrust::device_ptr<int> dev_ptr(noinfill_node); //	Wrap raw pointers with dev_ptr
@@ -2624,7 +2616,7 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, C
 	CUDA_SAFE_CALL(cudaMemset((void*)stickIndex, 0, (imageSize[1] + 1) * sizeof(unsigned int)));
 
 	krFDMContouring_CountAllStick << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, make_int3(imageSize[0] - 1, imageSize[1], imageSize[2] - 1),
-		(imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1), stickIndex);
+		(imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1), stickIndex, material_id);
 
 	
 	// Sum up and get the total number of stick
@@ -2700,11 +2692,7 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, C
 	//free(cpuStickEnd);
 	free(cpuStickIndex);
 	//free(cpuCount);
-
-	cudaFree(stickCounter);
-
-
-
+ 	cudaFree(stickCounter);
 
 }
 
@@ -5381,7 +5369,7 @@ __global__ void krFDMContouring_BuildHashTableForZ(bool *gridNodes, int3 imageRe
 }
 
 
-__global__ void krFDMContouring_CountAllStick(bool *gridNodes, int3 imageRes, int cellNum, unsigned int* count)
+__global__ void krFDMContouring_CountAllStick(bool *gridNodes, int3 imageRes, int cellNum, unsigned int* count, float material_id)
 {
 	int index = threadIdx.x+blockIdx.x*blockDim.x;
 	unsigned int ix, iy, iz, realx = imageRes.x + 1;
@@ -5685,7 +5673,7 @@ __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 rotdir, 
 	unsigned int *yIndexArray, float *yDepthArray, float* NyarrayPtr,
 	unsigned int *zIndexArray, float *zDepthArray, float* NzarrayPtr,
 	float3 origin, double2 imgorigin, float gwidth, int3 imageRes,
-	int nodeNum, float thickness, float imgWidth,int *infill_node)
+	int nodeNum, float thickness, float imgWidth,int *infill_node, float material_id)
 {
 	// xIndexArray = dev_indexArray[nAxis];
 	//arrindex = (int)(devIndexArrayPtr[index]) + n - 1;
@@ -5725,7 +5713,7 @@ __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 rotdir, 
 	    
 		gridNodes[index] = _detectInOutPoint(index, (float)rot_p.x, (float)rot_p.y, (float)rot_p.z, xIndexArray, xDepthArray, NxarrayPtr,
 			yIndexArray, yDepthArray, NyarrayPtr, zIndexArray, zDepthArray, NzarrayPtr,
-			ori_p, origin, gwidth, res);
+			ori_p, origin, gwidth, res, material_id);
 
 	   index += blockDim.x * gridDim.x;
 	}
@@ -6249,7 +6237,7 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 	unsigned int* xIndex, float* xDepth, float* NxarrayPtr,
 	unsigned int* yIndex, float* yDepth, float* NyarrayPtr,
 	unsigned int* zIndex, float* zDepth, float* NzarrayPtr,
-	float3 ori_p, float3 origin, float gwidth, int res)
+	float3 ori_p, float3 origin, float gwidth, int res, float material_id)
 {
 
 	// xIndexArray = dev_indexArray[nAxis];
@@ -6270,27 +6258,35 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 	counter = 0;
 	st = xIndex[k*res + j];
 	num = xIndex[k*res + j + 1] - st;		//st+index is arrindex
-
+	//printf("material id is %f at the index %d \n", material_id, index1);
 	//printf("the material at the gridnodes %f is %d and the depth is %f \n", NxarrayPtr[st], st, yDepth[st + index]);
 	if (num > 0)
 	{
 
 		xx = px - origin.x;
-		for (index = 0; index < num; index += 2) {
+		for (index = 0; index < num; index += 2)
+		{
 			if (xx < fabs(xDepth[st + index]))
 			{
-				
+
 				break;
 
 			}
-				
-			if ((xx >= fabs(xDepth[st + index])) && (xx <= fabs(xDepth[st + index + 1]))) 
+
+			if ((xx >= fabs(xDepth[st + index])) && (xx <= fabs(xDepth[st + index + 1])))
 			{
-				//printf("1st point depth %f and material %f, 2nd point depth %f material %f and the axis is x \n", xDepth[st + index], NxarrayPtr[st+index], xDepth[st + index+1], NxarrayPtr[st + index+1]);
-				counter++; break;
+				//printf("%f  %f  %f  %f x \n", xDepth[st + index], NxarrayPtr[st+index], xDepth[st + index+1], NxarrayPtr[st + index+1]);
+				// printf("the difference is %f x \n", ((NxarrayPtr[st + index]) - NxarrayPtr[st + index + 1]));
+				//if ((((NxarrayPtr[st + index]) == 2.000000000) && ((NxarrayPtr[st + index + 1]) == 2.000000000)))
+				{
+					counter++; break;  
+				}
+
+
+
 			}
 		}
-		
+
 	}
 
 	if (counter > 0)
@@ -6306,22 +6302,27 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 	{
 
 		yy = py - origin.y;
-		for (index = 0; index < num; index += 2) {
+		for (index = 0; index < num; index += 2)
+		{
 			if (yy < fabs(yDepth[st + index])) break;
 			if ((yy >= fabs(yDepth[st + index]))
-				&& (yy <= fabs(yDepth[st + index + 1]))) {
-				
-				//printf("1st point depth %f and material %f, 2nd point depth %f material %f axis is y \n", yDepth[st + index], NyarrayPtr[st + index], xDepth[st + index + 1], NyarrayPtr[st + index + 1]);
-				counter++; break;
+				&& (yy <= fabs(yDepth[st + index + 1])))
+			{
+
+				//printf("%f   %f   %f   %f  y \n", yDepth[st + index], NyarrayPtr[st + index], xDepth[st + index + 1], NyarrayPtr[st + index + 1]);
+				//printf("the difference is %f y \n", ((NyarrayPtr[st + index]) - NyarrayPtr[st + index + 1]));
+				//if (((NyarrayPtr[st + index]) == 0.00000000000000) && ((NyarrayPtr[st + index + 1]) == 0.00000000000000))
+				//if ((((NyarrayPtr[st + index]) == 2.000000000) && ((NyarrayPtr[st + index + 1]) == 2.000000000)))
+				{
+					counter++; break;
+				}
+
 			}
 		}
 		//printf("numy is %d \n", num);
 	}
 	if (counter > 0)
 	{
-
-		//printf("the position in ya is %f \n", py);
-
 
 		return true;
 	}
@@ -6333,30 +6334,39 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 	{
 
 		zz = pz - origin.z;
-		for (index = 0; index < num; index += 2) {
+		for (index = 0; index < num; index += 2)
+		{
 			if (zz < fabs(zDepth[st + index])) break;
 			if ((zz >= fabs(zDepth[st + index]))
-				&& (zz <= fabs(zDepth[st + index + 1]))) {
-				
-				//printf("1st point depth %f and material %f, 2nd point depth %f material %f axis is z \n", zDepth[st + index], NzarrayPtr[st + index], zDepth[st + index + 1], NzarrayPtr[st + index + 1]);
-				counter++; break;
+				&& (zz <= fabs(zDepth[st + index + 1])))
+			{
+
+				//printf("%f   %f  %f   %f  z \n", zDepth[st + index], NzarrayPtr[st + index], zDepth[st + index + 1], NzarrayPtr[st + index + 1]);
+				//printf("the difference is %f z \n", (NzarrayPtr[st + index]) - NzarrayPtr[st + index + 1]);
+				//if (((NzarrayPtr[st + index]) == 0.00000000000000) && ((NzarrayPtr[st + index + 1]) == 0.00000000000000))
+				//if ((((NzarrayPtr[st + index]) == 2.000000000)) && ((NzarrayPtr[st + index + 1]) == 2.000000000))
+				{
+					counter++; break;
+				}
+
 			}
 		}
 		//printf("numz is %d \n", num);
 
 	}
 
-	
+
 	if (counter > 0)
 	{
-		
+
 		//printf("the position in ya is %f \n", pz);
-		
-		
+
+
 		return true;
 	}
-	
-	return false;	  
+
+	return false;
+
 	
 
 }
