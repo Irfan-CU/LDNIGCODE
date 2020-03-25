@@ -1948,12 +1948,8 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 		//calculating angels between different sticks 
 	}
 
-
-
-
+	printf("Yeah I am here on line 1873 of the code\n");
 	
-   printf("Yeah I am here on line 1873 of the code\n");
-	/*
 	Application *application;
 	unsigned int mesh_idx, edge_index = 0;
 	VSAMesh *mesh1;
@@ -2001,7 +1997,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	bool file_open = gcode.setTargetFile(filename);
 	bool start = true;
 	gcode.writeGCode(storage, start);
-	
+	//Open the comment till here to genrate the Gcode.
 	
 	/*
 	for (int layerno = 0; layerno < 1; layerno++)

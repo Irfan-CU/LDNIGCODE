@@ -2429,12 +2429,8 @@ void LDNIcudaOperation::LDNISLAContouring_BinarySampling(LDNIcudaSolid* solid, C
 
 	c_mesh->ArrayToImage(pt, imageSize);
 
-
-
-
 	cudaFree(gridNodes);
 	free(pt);
-
 
 }
 
@@ -6277,7 +6273,7 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 			{
 				//printf("%f  %f  %f  %f x \n", xDepth[st + index], NxarrayPtr[st+index], xDepth[st + index+1], NxarrayPtr[st + index+1]);
 				// printf("the difference is %f x \n", ((NxarrayPtr[st + index]) - NxarrayPtr[st + index + 1]));
-				//if ((((NxarrayPtr[st + index]) == 2.000000000) && ((NxarrayPtr[st + index + 1]) == 2.000000000)))
+				if ((((NxarrayPtr[st + index]) == 2.000000000) && ((NxarrayPtr[st + index + 1]) == 2.000000000)))
 				{
 					counter++; break;  
 				}
@@ -6312,7 +6308,7 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 				//printf("%f   %f   %f   %f  y \n", yDepth[st + index], NyarrayPtr[st + index], xDepth[st + index + 1], NyarrayPtr[st + index + 1]);
 				//printf("the difference is %f y \n", ((NyarrayPtr[st + index]) - NyarrayPtr[st + index + 1]));
 				//if (((NyarrayPtr[st + index]) == 0.00000000000000) && ((NyarrayPtr[st + index + 1]) == 0.00000000000000))
-				//if ((((NyarrayPtr[st + index]) == 2.000000000) && ((NyarrayPtr[st + index + 1]) == 2.000000000)))
+				if ((((NyarrayPtr[st + index]) == 2.000000000) && ((NyarrayPtr[st + index + 1]) == 2.000000000)))
 				{
 					counter++; break;
 				}
@@ -6344,7 +6340,7 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 				//printf("%f   %f  %f   %f  z \n", zDepth[st + index], NzarrayPtr[st + index], zDepth[st + index + 1], NzarrayPtr[st + index + 1]);
 				//printf("the difference is %f z \n", (NzarrayPtr[st + index]) - NzarrayPtr[st + index + 1]);
 				//if (((NzarrayPtr[st + index]) == 0.00000000000000) && ((NzarrayPtr[st + index + 1]) == 0.00000000000000))
-				//if ((((NzarrayPtr[st + index]) == 2.000000000)) && ((NzarrayPtr[st + index + 1]) == 2.000000000))
+				if ((((NzarrayPtr[st + index]) == 2.000000000)) && ((NzarrayPtr[st + index + 1]) == 2.000000000))
 				{
 					counter++; break;
 				}
