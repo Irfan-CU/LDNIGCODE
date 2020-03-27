@@ -47,7 +47,7 @@ class GLKObList;
 
 
 
-class LDNIcudaOperation
+class LDNIcudaOperation	
 {
 public:
 	LDNIcudaOperation(void) {};
@@ -78,14 +78,14 @@ public:
 	static float LDNIFDMContouring_CompRotationBoundingBox(LDNIcudaSolid* solid, double rotBoundingBox[], double clipPlanNm[]);
 	static void LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[], 
 												float angle, float thickness, double clipPlanNm[], float nSampleWidth, bool *&gridNodes,
-												float2 *&stickStart, float2 *&stickEnd, unsigned int *&stickIndex, int *&noinfill_node, int infillnodecount, float *&infillnode_xposition, float *&infillnode_zposition, float *&infillnode_yposition, int *&stickID, int *&prevStickID,  int2 *&stickDir,float material_id);
+												float2 *&stickStart, float2 *&stickEnd, unsigned int *&stickIndex, int *&noinfill_node, int infillnodecount, float *&infillnode_xposition, float *&infillnode_zposition, float *&infillnode_yposition, int *&stickID, int *&prevStickID,  int2 *&stickDir, float stickmaterial_id, int *&stickMaterial);
 	//static void LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[],
 	//												float angle, float thickness, double clipPlanNm[], float nSampleWidth, float2 *stickStart, 
 	//												float2 *stickEnd, int *stickID);
 	/*static void LDNIFDMContouring_Infill(int imageSize[]);  */
 
 	static void LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[],
-													  float nSampleWidth, float2 *stickStart, float2 *stickEnd, int *stickID, int2 *stickDir, bool bOutPutSGM = false);
+													  float nSampleWidth, float2 *stickStart, float2 *stickEnd, int *stickID, int2 *stickDir, int*stickMaterial, bool bOutPutSGM = false);
 													
 	static void LDNIFDMContouring_SupportContourGeneration(LDNIcudaSolid* solid, ContourMesh *c_mesh, bool *gridNodes, double rotBoundingBox[], double clipPlaneNm[], double thickness, double nSampleWidth, double distortRatio, int imageSize[], bool bOutPutSGM = false);
 	static void LDNIFDMContouring_BuildDistanceMap(bool *gridNodes, int layerID, int imageSize[], short2 *&disMapA, short2 *&disMapB, int disTexSize);
@@ -96,7 +96,7 @@ public:
 	
 	
 	static void LDNIFDMContouring_BuildSearchStickIndex(int *&stickID, int *prevStickId, int stickNum);
-	static void LDNIFDMContouring_Generation(LDNIcudaSolid* solid, ContourMesh *c_mesh, float nSampleWidth);
+	static void LDNIFDMContouring_Generation(LDNIcudaSolid* solid, ContourMesh *c_mesh,float nSampleWidth);
 	static void LDNIFDMContouring_GenerationwithSupporting(LDNIcudaSolid* solid, ContourMesh *c_mesh, ContourMesh *supt_mesh, float nSampleWidth);
 
 

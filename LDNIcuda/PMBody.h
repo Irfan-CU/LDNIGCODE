@@ -109,6 +109,9 @@ public:
 	VSANode * GetEndPoint() {return pEndPoint;};
 	void SetEndPoint( VSANode * _pEndPointIrfan = NULL ){pEndPoint = _pEndPointIrfan;};
 
+	void SetEdgeMaterial(int MaterialIndex) { MaterialIndexEdge = MaterialIndex;  };
+	int  GetEdgeMaterial() { return MaterialIndexEdge; };
+
 	void CalLength();
 	double GetLength() {return length; };
 
@@ -126,6 +129,7 @@ private:
 	VSANode * pStartPoint;		
 	VSANode * pEndPoint;
 	
+	int MaterialIndexEdge;
 	double length;
 	unsigned int index;
 	unsigned int prev_edge_index;
@@ -186,7 +190,7 @@ public:
 	unsigned int *GetFaceTablePtr() {return m_faceTable;};
 	std::vector<std::string>face_material_names;
 	std::vector<std::string>total_materials;
-
+	int GetMaterialVector() {return total_materials.size();};
 	void CompNormal(int faceIndex/*starting from 1*/, float nv[]);
 	void CompBoundingBox(float boundingBox[]);
 
@@ -388,11 +392,16 @@ public:
 
 	void ArrayToContour(float* st_stick, float* ed_stick, unsigned int* id_stick);
 	void ArrayToContour(float* st_stick, float* ed_stick, double imgOri[], int* stickID, float imgWidth);
+	//void ContourMaterialInfo(float* st_stick, float* ed_stick, double imgOri[], int* stickID, float imgWidth, int TotNoOfMaterials);
+
+
+
 	//void ConvertContourToVSAMesh(float* st_stick, float* ed_stick, int* stickID, int stickNum);
-	void BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[]);
+	void BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int * cpuStickMaterial);
 	void ArrayToImage(bool *nodes, int imageSize[]);
+	void WriteBMP(const char * filename, GLubyte * data, int m_SizeX, int m_SizeY);
 	void ArrayToImage(bool *outNodes, bool *InNodes, int imageSize[], int base, bool bSave, bool bDisplay);
-	void WriteBMP(const char *filename, GLubyte* data, int m_SizeX, int m_SizeY);
+	
 
 	//void PerformVSA2D(int* stickDir);
 	void PerformVSA3D();
@@ -429,6 +438,7 @@ public:
 	unsigned int *ContourNum;
 	float thickness;
 	GLKObList VSAMeshList;
+	
 	
 	//----SGM code by KaChun----//
 

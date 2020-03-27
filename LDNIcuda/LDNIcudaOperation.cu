@@ -1226,26 +1226,17 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	
 	glNewList(dispListIndex, GL_COMPILE);
 	
-	for (i = 0; i < faceNum; i++)
-	{
-		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
-		//printf("the face index is %d and the nodes are the %d %d %d \n", i + 1, ver[0], ver[1], ver[2]);
-		for (int j = 0; j < 3; j++)
-		{
-				mesh->GetNodePos(ver[j], pos_node_check);
-		}
-	
-	}
-	glBegin(GL_POINTS); /// Each set of 3 vertices form a triangle
+	glBegin(GL_POINTS); 
 	
 	for (i = 0; i < faceNum; i++) {
-		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
+		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);	 //material error here
 		std::string tmp = mesh->face_material_names[i];
-		//--Sendign material info to shaders for LDNI material sample points--//
+		
 		for (int it = 0; it < mesh->total_materials.size(); it++)
 		{
 			if (tmp.compare(mesh->total_materials[it])==0)
 			{
+				printf("the material is %d \n", it);
 				glVertex4i(ver[0] - 1, ver[1] - 1, ver[2] - 1, it);
 			}
 		}														   

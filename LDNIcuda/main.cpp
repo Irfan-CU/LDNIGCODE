@@ -765,13 +765,13 @@ void menuFuncFileOpen()
 
 	 long time=clock();	QuadTrglMesh *mesh=new QuadTrglMesh;
 		if (mesh->InputAMFFile(filename)) 
-	  {
-			printf("done with mesh inside the main \n");
-			_pDataBoard.m_polyMeshBody->GetMeshList().AddTail(mesh);																												 
+	    {
+		  printf("done with mesh inside the main \n");
+		  _pDataBoard.m_polyMeshBody->GetMeshList().AddTail(mesh);
 		  _pDataBoard.m_polyMeshBody->computeRange();
 		  mesh->SetMeshId(_pDataBoard.m_polyMeshBody->GetMeshList().GetCount());
 		  printf("AMF File Import Time (ms): %ld\n", clock() - time);
-	  }
+	    }
 		time = clock();
 		if (_pGLK.GetShading())
 		{
@@ -976,6 +976,7 @@ void menuFuncSLAContourSupportGeneration()
 	_pGLK.refresh();
 }
 
+/*
 void menuFuncFDMContourSupportGeneration()
 {
 	if (_pDataBoard.m_solidLDNIBody == NULL || _pDataBoard.m_solidLDNIBody->m_cudaSolid == NULL) {
@@ -1030,7 +1031,7 @@ void menuFuncFDMContourSupportGeneration()
 
 	_pGLK.refresh();
 }
-
+ */
 void menuFuncLDNISampling(bool bCUDA)
 {
 	if (!(_pDataBoard.m_polyMeshBody)) { printf("Solid check:None mesh found!\n"); return; }
@@ -1115,6 +1116,9 @@ void menuFuncFDMContourGeneration()
 	float samplewidth = 0.0;
 	float range = 1.0;
 	ContourMesh* cmesh = new ContourMesh();
+	
+	
+	
 	_pDataBoard.m_solidLDNIBody->CompRange();
 	cmesh->setRange(_pDataBoard.m_solidLDNIBody->GetRange());
 	range = _pDataBoard.m_solidLDNIBody->GetRange();
@@ -1127,15 +1131,16 @@ void menuFuncFDMContourGeneration()
 	LDNIcudaOperation::LDNIFDMContouring_Generation( _pDataBoard.m_solidLDNIBody->m_cudaSolid, cmesh, samplewidth);	
 	
 	
+	printf("After the LDNIFDMContouring_Generation \n");
 	
 	_pGLK.SetContourThickness(cmesh->GetThickness());
 	_pGLK.SetContourLayer(cmesh->GetResolution(1));
 	_pGLK.TransClipPlane(1,cmesh->GetThickness()*0.5);
 	_pGLK.TransClipPlane(0,cmesh->GetThickness()*0.5);
-	 _pDataBoard.m_polyMeshBody->GetMeshList().AddTail(cmesh);
+	_pDataBoard.m_polyMeshBody->GetMeshList().AddTail(cmesh);
 	 
 	_pDataBoard.m_polyMeshBody->setRange(range);
-	 _pDataBoard.m_polyMeshBody->BuildGLList(_pDataBoard.m_bLDNISampleNormalDisplay,true);
+	_pDataBoard.m_polyMeshBody->BuildGLList(_pDataBoard.m_bLDNISampleNormalDisplay,true);
 	
 	
 
@@ -1351,9 +1356,10 @@ void menuEvent(int idCommand)
 	case _MENU_CUDA_FDMCONTOUR: menuFuncFDMContourGeneration();
 		break;
 
+	/*
 	case _MENU_CUDA_FDMCONTOURSUPT: menuFuncFDMContourSupportGeneration();
 		break;
-
+	*/
 		
 		//--------------------------------------------------------------------
 	case _MENU_CUDA_SAMPLINGFROMBREP:menuFuncLDNISampling(true);
