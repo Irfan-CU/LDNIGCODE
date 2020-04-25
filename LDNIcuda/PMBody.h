@@ -174,7 +174,7 @@ public:
 	void ClearAll();
 	
 	void MallocMemory(int nodeNum, int faceNum);
-	void amfMallocMemory(int &nodeNum, int &faceNum);
+	
 	void SetNodePos(int nodeIndex/*starting from 1*/, float pos[]); 
 	void SetFaceNodes(int faceIndex/*starting from 1*/, unsigned int verIndex1, unsigned int verIndex2, unsigned int verIndex3, unsigned int verIndex4);
 	void Set_Node_Material_Index(int nodeIndex, int material_index); //Specifically for the amf file from which we import material in the LDNI mesh
@@ -188,9 +188,7 @@ public:
 	void GetNodePos(int nodeIndex/*starting from 1*/, float pos[]);
 	float *GetNodeTablePtr() {return m_nodeTable;};
 	unsigned int *GetFaceTablePtr() {return m_faceTable;};
-	std::vector<std::string>face_material_names;
-	std::vector<std::string>total_materials;
-	int GetMaterialVector() {return total_materials.size();};
+
 	void CompNormal(int faceIndex/*starting from 1*/, float nv[]);
 	void CompBoundingBox(float boundingBox[]);
 
@@ -224,21 +222,33 @@ public:
 	void ShiftToOrigin();
 	void ShiftToPosSystem();
 	
-	float *m_amfnodeTable; // was private intially
-	unsigned int *m_amffaceTable;
+
 
 	void calcFaceNormals();
 
-	//int amfnodeNumamf, amffaceNumamf;
-	//std::vector<float> amfnodeamfpos;
-	//std::vector<int> amfnodeindex;
-	//std::vector<int> amfnode_materialid;
+	//-----------------------AMF file Processing---------------------------------//
+
+	float *m_amfnodeTable; 
+	unsigned int *m_amffaceTable;
+
+	void amfMallocMemory(int &nodeNum, int &faceNum);
+
+	std::vector<std::string>face_material_names;
+	std::vector<std::string>total_materials;
+
+	int GetMaterialVector() {
+		return total_materials.size(); 
+	};
+
+	//-----------------------AMF file Processing---------------------------------//
+
+
 
 
 	
 private:
 	
-	//float *m_nodeTable;	
+		
 	int m_nodeNum, m_faceNum;
 	float *m_nodeTable;
 	unsigned int *m_faceTable;
@@ -246,8 +256,7 @@ private:
 	short meshID;
 	bool bUpdate;
 	
-	//	Note that: the index starts from '1'
-							//		when '0' is shown in the face table, it means that the vertex is not defined
+	
 };
 
 
@@ -389,7 +398,8 @@ public:
 	int* GetContourNumPtr() {return  m_ContourNum;};
 	GLKObList& GetVSAMeshList() {return VSAMeshList;};
 	
-
+	void ContourMesh::MaterialPlanning(float* st_stick, float* ed_stick, int* mat_stick, int material_id, int size);
+	
 	void ArrayToContour(float* st_stick, float* ed_stick, unsigned int* id_stick);
 	void ArrayToContour(float* st_stick, float* ed_stick, double imgOri[], int* stickID, float imgWidth);
 	//void ContourMaterialInfo(float* st_stick, float* ed_stick, double imgOri[], int* stickID, float imgWidth, int TotNoOfMaterials);
@@ -439,7 +449,15 @@ public:
 	float thickness;
 	GLKObList VSAMeshList;
 	
-	
+	std::vector<float>cpuStickStart_x;
+	std::vector<float>cpuStickStart_y;
+	std::vector<float>cpuStickStart_z;
+	std::vector<float>cpuStickEnd_x;
+	std::vector<float>cpuStickEnd_y;
+	std::vector<float>cpuStickEnd_z;
+	std::vector<int>cpuStickMat;
+	std::vector<float>cpuStickID;
+		
 	//----SGM code by KaChun----//
 
 private:

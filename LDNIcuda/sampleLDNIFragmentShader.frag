@@ -27,14 +27,14 @@
  */
 
 	varying vec4 color;
-    varying in float fIndex_tofrag;
+    varying in float materialIndex_tofrag;
 
 	void main( void )
 	{
 
         
 		if (color.z<0.0)
-			  gl_FragData[0] = vec4(color.x, color.y, -gl_FragCoord.z, fIndex_tofrag);
+			  gl_FragData[0] = vec4(color.x, color.y, -gl_FragCoord.z, materialIndex_tofrag);
 		else
-			  gl_FragData[0] = vec4(color.x, color.y, gl_FragCoord.z, fIndex_tofrag);
+			  gl_FragData[0] = vec4(color.x, color.y, gl_FragCoord.z, materialIndex_tofrag);
     }

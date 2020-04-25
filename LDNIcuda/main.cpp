@@ -1116,6 +1116,7 @@ void menuFuncFDMContourGeneration()
 	float samplewidth = 0.0;
 	float range = 1.0;
 	ContourMesh* cmesh = new ContourMesh();
+	QuadTrglMesh *qmesh;
 	
 	
 	
@@ -1128,7 +1129,8 @@ void menuFuncFDMContourGeneration()
 	
 	printf("The sampling width is :%f \n", samplewidth);		  // sample width is the pixel width 
 	
-	LDNIcudaOperation::LDNIFDMContouring_Generation( _pDataBoard.m_solidLDNIBody->m_cudaSolid, cmesh, samplewidth);	
+	
+	LDNIcudaOperation::LDNIFDMContouring_Generation( _pDataBoard.m_solidLDNIBody->m_cudaSolid, cmesh, qmesh, samplewidth);	
 	
 	
 	printf("After the LDNIFDMContouring_Generation \n");

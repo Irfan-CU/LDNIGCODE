@@ -1229,15 +1229,16 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	glBegin(GL_POINTS); 
 	
 	for (i = 0; i < faceNum; i++) {
-		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);	 //material error here
-		std::string tmp = mesh->face_material_names[i];
+		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);	 
+		std::string tmp = mesh->face_material_names[i];	   // face_material_names tells at which face whaat the material is.
 		
 		for (int it = 0; it < mesh->total_materials.size(); it++)
 		{
+			
+
 			if (tmp.compare(mesh->total_materials[it])==0)
 			{
-				printf("the material is %d \n", it);
-				glVertex4i(ver[0] - 1, ver[1] - 1, ver[2] - 1, it);
+				glVertex4i(ver[0] - 1, ver[1] - 1, ver[2] - 1, it+1);
 			}
 		}														   
 		//--Sendign material info to shaders for LDNI material sample points--//
@@ -1420,6 +1421,10 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 		unsigned char *devStencilBufferPtr;
 		unsigned int *devResArrayPtr;
 		unsigned int *devIndexArrayPtr=solid->GetIndexArrayPtr(nAxis);
+		//unsigned int *devIndexArrayPtr=solid->GetIndexArrayPtr(nAxis);
+		
+
+		
 		
 		CUDA_SAFE_CALL( cudaGLMapBufferObject( (void **)&devStencilBufferPtr, indexPBO) );
 		CUDA_SAFE_CALL( cudaMalloc( (void**)&devResArrayPtr, BLOCKS_PER_GRID*sizeof(unsigned int) ) );
@@ -2585,7 +2590,7 @@ __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
 			
 			temp=fabs(rgb.z)*width-sampleWidth*0.5f;
 			
-			devNxArrayPtr[arrindex]=rgb.w;		// x-component of normal	
+			devNxArrayPtr[arrindex]=rgb.w;		// x-component of normal stores the value for the material index;	
 			devNyArrayPtr[arrindex]=rgb.y;		// y-component of normal
 			
 			if (rgb.z<0) devDepthArrayPtr[arrindex]=-temp; else devDepthArrayPtr[arrindex]=temp;
