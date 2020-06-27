@@ -45,6 +45,21 @@ public:
 	std::vector<SkinPart> skin_parts;     //!< The skin parts which are filled for 100% with lines and/or insets.
 	int LDNIlayerno;
 	int LDNIpolygonnumber;
+	int id;
+	int part_mat;
+
+	void setPartMat( int partMat) 
+	{
+		this->part_mat = partMat;
+
+	}
+
+	int getpartMat()
+	{
+		return part_mat;
+	}
+
+
 	/*!
 	 * The areas inside of the mesh.
 	 * Like SliceLayerPart::outline, this class member is not used to actually determine the feature area,
@@ -138,6 +153,7 @@ public:
 	coord_tIrfan printZ;     //!< The height at which this layer needs to be printed. Can differ from sliceZ due to the raft.
 	coord_tIrfan thickness;  //!< The thickness of this layer. Can be different when using variable layer heights.
 	std::vector<SliceLayerPart> parts;  //!< An array of LayerParts which contain the actual data. The parts are printed one at a time to minimize travel outside of the 3D model.
+	std::vector<int> mat_parts;
 	Polygons polygons;
 	Polygons openPolyLines; //!< A list of lines which were never hooked up into a 2D polygon. (Currently unused in normal operation)
 	mutable std::map<size_t, Polygons> innermost_walls_cache; //!< Cache for the in some cases computationaly expensive calculations in 'getInnermostWalls'.
@@ -303,7 +319,7 @@ public:
 
 	//Polygons skirt_brim[MAX_EXTRUDERS]; //!< Skirt and brim polygons per extruder, ordered from inner to outer polygons.
 	Polygons raftOutline;               //Storage for the outline of the raft. Will be filled with lines when the GCode is generated.
-	Polygons skirt_brim[2];
+	Polygons skirt_brim[3];
 	int max_print_height_second_to_last_extruder; //!< Used in multi-extrusion: the layer number beyond which all models are printed with the same extruder
 	std::vector<int> max_print_height_per_extruder; //!< For each extruder the highest layer number at which it is used.
 	std::vector<size_t> max_print_height_order; //!< Ordered indices into max_print_height_per_extruder: back() will return the extruder number with the highest print height.

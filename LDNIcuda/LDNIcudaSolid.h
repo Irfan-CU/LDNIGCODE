@@ -100,12 +100,27 @@ public:
 	float* GetSampleDepthArrayPtr(short nAxis) {return dev_sampleDepthArray[nAxis];};
 	float* GetSampleNxArrayPtr(short nAxis) {return dev_sampleNxArray[nAxis];};
 	float* GetSampleNyArrayPtr(short nAxis) {return dev_sampleNyArray[nAxis];};
+	float* GetMaterialInOUt(short nAxis) { return dev_sampleMaterialStatus[nAxis]; };
 	
+	//int * GetMaterialNyArray(short nAxis) { return dev_materialNyArray[nAxis]; }
+	//int * GetMaterialNzArray(short nAxis) { return dev_materialNzArray[nAxis]; }
+
 	void SetIndexArrayPtr(short nAxis, unsigned int* ptr) {dev_indexArray[nAxis]=ptr;};
 	void SetSampleDepthArrayPtr(short nAxis, float* ptr) {dev_sampleDepthArray[nAxis]=ptr;};
 	void SetSampleNxArrayPtr(short nAxis, float* ptr) {dev_sampleNxArray[nAxis]=ptr;};
 	void SetSampleNyArrayPtr(short nAxis, float* ptr) {dev_sampleNyArray[nAxis]=ptr;};
-
+	
+	
+	int * GetMaterialArray(short nAxis)
+	{ 
+		return dev_materialArray[nAxis]; 
+	}
+	void SetMaterialArray(short nAxis, int* ptr) 
+	{ 
+		dev_materialArray[nAxis] = ptr; 
+	};
+	
+	
 	void CopyIndexArrayToHost(short nAxis, unsigned int* &hostIndexArray);
 	void CopySampleArrayToHost(short nAxis, float* &hostSampleDepthArray, float* &hostSampleNxArray, float* &hostSampleNyArray);
 
@@ -118,11 +133,13 @@ public:
 
 private:
 	unsigned int *dev_indexArray[3];	// dev_indexArray[nAxis][j*m_res+i] specify the starting index of ray(i,j) in the array of samples
-										// dev_indexArray[nAxis][m_res*m_res] specifies the number of samples in the nAxis direction
+	int * dev_materialArray[3];									// dev_indexArray[nAxis][m_res*m_res] specifies the number of samples in the nAxis direction
+	int* dev_material_status[3];
+	int * dev_material_normal[3];
 	float *dev_sampleNxArray[3];
 	float *dev_sampleNyArray[3];
 	float *dev_sampleDepthArray[3];		// NOTE that: the sign of z-component of normal vector is stored in the depth value
-	
+	float *dev_sampleMaterialStatus[3];
 	float m_origin[3],m_sampleWidth;	
 	int m_res,m_xSampleNum,m_ySampleNum,m_zSampleNum;
 	float bbox[6]; //Debbie 17/9

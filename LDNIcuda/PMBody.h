@@ -39,13 +39,14 @@
 
 
 
+
 //#include "gettime.h"
 
 
 
 
 class VSAEdge;
-class amfface;
+
 //----SGM code by KaChun----//
 class ContourMesh;
 //----SGM code by KaChun----//
@@ -108,6 +109,9 @@ public:
 	VSANode * GetEndPoint() {return pEndPoint;};
 	void SetEndPoint( VSANode * _pEndPointIrfan = NULL ){pEndPoint = _pEndPointIrfan;};
 
+	void SetEdgeMaterial(int MaterialIndex) { MaterialIndexEdge = MaterialIndex;  };
+	int  GetEdgeMaterial() { return MaterialIndexEdge; };
+
 	void CalLength();
 	double GetLength() {return length; };
 
@@ -125,6 +129,7 @@ private:
 	VSANode * pStartPoint;		
 	VSANode * pEndPoint;
 	
+	int MaterialIndexEdge;
 	double length;
 	unsigned int index;
 	unsigned int prev_edge_index;
@@ -155,20 +160,12 @@ private:
 	unsigned int index;
 };
 
-class amfface
-{
-public:
-	amfface(void);
-	virtual ~amfface(void);
-	int nodeid;
-	float x, y, z;
 
-};
 
 class QuadTrglMesh : public GLKObject 
 {
 	
-	friend class amfface;
+
 public:
 	
 	QuadTrglMesh(void);
@@ -177,16 +174,15 @@ public:
 	void ClearAll();
 	
 	void MallocMemory(int nodeNum, int faceNum);
-	void amfMallocMemory(int &nodeNum, int &faceNum);
+	
 	void SetNodePos(int nodeIndex/*starting from 1*/, float pos[]); 
 	void SetFaceNodes(int faceIndex/*starting from 1*/, unsigned int verIndex1, unsigned int verIndex2, unsigned int verIndex3, unsigned int verIndex4);
-	void amfSetNodePos(int index/*starting from 1*/, float pos[]);
-	void amfSetFaceNodes(int faceIndex/*starting from 1*/, unsigned int verIndex1, unsigned int verIndex2, unsigned int verIndex3, unsigned int verIndex4);
+	void Set_Node_Material_Index(int nodeIndex, int material_index); //Specifically for the amf file from which we import material in the LDNI mesh
 	void SetNodeNum(int nodetotal);
 	int GetNodeNum();
-
 	int GetFaceNumber();
 	int GetNodeNumber();
+	int Get_Node_Material_Index(int faceIndex);
 	bool IsQuadFace(int faceIndex/*starting from 1*/);
 	void GetFaceNodes(int faceIndex/*starting from 1*/, unsigned int &verIndex1, unsigned int &verIndex2, unsigned int &verIndex3, unsigned int &verIndex4);
 	void GetNodePos(int nodeIndex/*starting from 1*/, float pos[]);
@@ -211,7 +207,7 @@ public:
 
 	float* GetNodeArrayPtr() {return m_nodeTable;};
 
-	std::vector<amfface>amf_nodedata;
+	//std::vector<amfface>amf_nodedata;
 	
 
 	void SetMeshId(short i) {meshID = i;};
@@ -219,29 +215,48 @@ public:
 	void SetMeshUpdateStatus(bool status) { bUpdate = status;};
 	bool GetMeshUpdateStatus() {return bUpdate;};
 
-	std::vector<float> amffacenode_array;
+	//std::vector<float> amffacenode_array;
 	void FlipModel(bool nDir_X, bool nDir_Y, bool nDir_Z);
 	void Transformation(float dx, float dy, float dz);
 	void Scaling(float sx, float sy, float sz);
 	void ShiftToOrigin();
 	void ShiftToPosSystem();
 	
-	float *m_amfnodeTable; // was private intially
-	unsigned int *m_amffaceTable;
+
 
 	void calcFaceNormals();
+
+	//-----------------------AMF file Processing---------------------------------//
+
+	float *m_amfnodeTable; 
+	unsigned int *m_amffaceTable;
+
+	void amfMallocMemory(int &nodeNum, int &faceNum);
+
+	std::vector<std::string>face_material_names;
+	std::vector<std::string>total_materials;
+
+	int GetMaterialVector() {
+		return total_materials.size(); 
+	};
+
+	//-----------------------AMF file Processing---------------------------------//
+
+
+
+
 	
 private:
 	
-	//float *m_nodeTable;	
+		
 	int m_nodeNum, m_faceNum;
 	float *m_nodeTable;
 	unsigned int *m_faceTable;
+	unsigned int *m_node_material_Table;   //Specifically for the amf file from which we import material in the LDNI mesh
 	short meshID;
 	bool bUpdate;
 	
-	//	Note that: the index starts from '1'
-							//		when '0' is shown in the face table, it means that the vertex is not defined
+	
 };
 
 
@@ -383,14 +398,20 @@ public:
 	int* GetContourNumPtr() {return  m_ContourNum;};
 	GLKObList& GetVSAMeshList() {return VSAMeshList;};
 	
-
+	void ContourMesh::MaterialPlanning(float* st_stick, float* ed_stick, int* mat_stick, int material_id, int size);
+	
 	void ArrayToContour(float* st_stick, float* ed_stick, unsigned int* id_stick);
 	void ArrayToContour(float* st_stick, float* ed_stick, double imgOri[], int* stickID, float imgWidth);
+	//void ContourMaterialInfo(float* st_stick, float* ed_stick, double imgOri[], int* stickID, float imgWidth, int TotNoOfMaterials);
+
+
+
 	//void ConvertContourToVSAMesh(float* st_stick, float* ed_stick, int* stickID, int stickNum);
-	void BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[]);
+	void BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int * cpuStickMaterial);
 	void ArrayToImage(bool *nodes, int imageSize[]);
+	void WriteBMP(const char * filename, GLubyte * data, int m_SizeX, int m_SizeY);
 	void ArrayToImage(bool *outNodes, bool *InNodes, int imageSize[], int base, bool bSave, bool bDisplay);
-	void WriteBMP(const char *filename, GLubyte* data, int m_SizeX, int m_SizeY);
+	
 
 	//void PerformVSA2D(int* stickDir);
 	void PerformVSA3D();
@@ -428,6 +449,15 @@ public:
 	float thickness;
 	GLKObList VSAMeshList;
 	
+	std::vector<float>cpuStickStart_x;
+	std::vector<float>cpuStickStart_y;
+	std::vector<float>cpuStickStart_z;
+	std::vector<float>cpuStickEnd_x;
+	std::vector<float>cpuStickEnd_y;
+	std::vector<float>cpuStickEnd_z;
+	std::vector<int>cpuStickMat;
+	std::vector<float>cpuStickID;
+		
 	//----SGM code by KaChun----//
 
 private:

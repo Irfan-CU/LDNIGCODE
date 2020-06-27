@@ -348,6 +348,27 @@ public:
 	 */
 	bool empty() const;
 
+	
+	int id;
+
+	int polygons_MatId;
+	
+	void setId(int id)
+	{
+		this->id = id;
+	}
+	int getID()
+	{
+		return id;
+
+	}
+	std::vector<int>polygons_matid;
+	
+	int print_extruder;
+
+	
+
+
 	unsigned int pointCount() const; //!< Return the amount of points in all polygons
 
 	PolygonRef operator[] (unsigned int index)

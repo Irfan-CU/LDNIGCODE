@@ -25,11 +25,12 @@
  *   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
  *   OF SUCH DAMAGE.
  */
-
+#include <iostream>
 #include <stdio.h>
 #include <malloc.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <algorithm>
 
 #include "../common/GL/glew.h"
 
@@ -40,9 +41,11 @@
 #include "..\GLKLib\GLK.h"
 
 #include "PMBody.h"
+
 #include "LDNIcpuSolid.h"
 #include "LDNIcudaSolid.h"
 #include "LDNIcudaOperation.h"
+										
 
 #include <thrust/version.h>
 #include <thrust/host_vector.h>
@@ -53,7 +56,8 @@
 #include <thrust/copy.h>
 #include <thrust/reduce.h>
 #include <thrust/functional.h>
-#include <iostream>
+
+
 
 #define GPU_BASED_SCAN		true
 
@@ -1219,40 +1223,44 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	GLint UVLoc;	 
 	int faceNum = mesh->GetFaceNumber();
 	dispListIndex = glGenLists(1);
-	
+
 	glNewList(dispListIndex, GL_COMPILE);
+
+	glBegin(GL_POINTS);
+
+
+	//---------------------for OBJ Processing--------------------------------//
+	//for (i = 0; i < faceNum; i++) {
+	//	mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
+	//	glVertex3i(ver[0] - 1, ver[1] - 1, ver[2] - 1);
+	//	if (mesh->IsQuadFace(i + 1)) { glVertex3i(ver[0] - 1, ver[2] - 1, ver[3] - 1); }	// one more triangle
+	//}
+	//glEnd();
+	//glEndList();
+	//---------------------for OBJ Processing--------------------------------//
 	
-	for (i = 0; i < faceNum; i++)
+	
+
+	//---------------------for AMF Processing--------------------------------//
+	
+	for (i = 0; i < faceNum; i++) 
 	{
-		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
-		printf("the face index is %d and the nodes are the %d %d %d \n", i + 1, ver[0], ver[1], ver[2]);
-		for (int j = 0; j < 3; j++)
+		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);	 
+		std::string tmp = mesh->face_material_names[i];
+		
+		for (int it = 0; it < mesh->total_materials.size(); it++)
 		{
-				mesh->GetNodePos(ver[j], pos_node_check);
-				printf("the vertex is %d and the positions are %f %f %f \n", ver[j], pos_node_check[0], pos_node_check[1], pos_node_check[2]);
+			if (tmp.compare(mesh->total_materials[it])==0)
+			{
+				glVertex4i(ver[0] - 1, ver[1] - 1, ver[2] - 1, it+1);
+			}
 		}
-	
+
 	}
-	glBegin(GL_POINTS); /// Each set of 3 vertices form a triangle
-	for (i = 0; i < faceNum; i++) {
-		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
-		//glUseProgramObjectARB(g_programObj);
-		//UVLoc = glGetUniformLocationARB(g_programObj, "auv");  doesnt work give 0.0000 values
-	    //glUniform2fARB(UVLoc, 11.1, 7.2);
-		//glColor3f(1.50, 2.50, 3.50);
-		//int ii = 0;
-		//if (i < 21000) ii = 52; 
-		//else ii = 104;
-		
 	
-		
-		glVertex4i(ver[0] - 1, ver[1] - 1, ver[2] - 1, i+1);
-		
-		if (mesh->IsQuadFace(i + 1)) { glVertex3i(ver[0] - 1, ver[2] - 1, ver[3] - 1); }	// one more triangle
-	}
 	glEnd();
 	glEndList();
-
+	//---------------------for AMF Processing--------------------------------//
 
 	//-----------------------------------------------------------------------------------------
 	//	Step 4:  using program objects and the texture
@@ -1425,6 +1433,10 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 		unsigned char *devStencilBufferPtr;
 		unsigned int *devResArrayPtr;
 		unsigned int *devIndexArrayPtr=solid->GetIndexArrayPtr(nAxis);
+		//unsigned int *devIndexArrayPtr=solid->GetIndexArrayPtr(nAxis);
+		
+
+		
 		
 		CUDA_SAFE_CALL( cudaGLMapBufferObject( (void **)&devStencilBufferPtr, indexPBO) );
 		CUDA_SAFE_CALL( cudaMalloc( (void**)&devResArrayPtr, BLOCKS_PER_GRID*sizeof(unsigned int) ) );
@@ -1472,6 +1484,10 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 		float* devNxArrayPtr=solid->GetSampleNxArrayPtr(nAxis);	// taking the address to the first for the array here 
 		float* devNyArrayPtr=solid->GetSampleNyArrayPtr(nAxis);
 		float* devDepthArrayPtr=solid->GetSampleDepthArrayPtr(nAxis);
+		float *devMaterialInOut = solid->GetMaterialInOUt(nAxis);
+		//int* devmaterial_normal = solid->GetMaterial_Normal(nAxis);
+		//int* devmaterial_array = solid->GetMaterialArray(nAxis);
+		//int* dev_material_status = solid->GetMaterial_Status(nAxis);
 		tempTime=clock();
 		for(n=1;n<=n_max;n++) {
 			CUDA_SAFE_CALL( cudaGraphicsMapResources( 1, &sampleTex_resource, NULL ) );
@@ -1480,8 +1496,8 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 			CUDA_SAFE_CALL( cudaBindTextureToArray(tex2DFloat4In, in_array) );
 			//--------------------------------------------------------------------------------------------------------
 			//	fill the sampleArray on device
-			krLDNISampling_CopySamples<<<BLOCKS_PER_GRID,THREADS_PER_BLOCK>>>(devNxArrayPtr, devNyArrayPtr, 
-																	devDepthArrayPtr, n, arrsize, width, gWidth, nRes, devIndexArrayPtr);
+			
+			krLDNISampling_CopySamples<<<BLOCKS_PER_GRID,THREADS_PER_BLOCK>>>(devNxArrayPtr, devNyArrayPtr, devDepthArrayPtr, n, arrsize, width, gWidth, nRes, devIndexArrayPtr);
 			CUDA_SAFE_CALL( cudaGraphicsUnmapResources( 1, &sampleTex_resource, NULL ) );
 			if (n==n_max) break;
 
@@ -1496,8 +1512,7 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 		//	Rendering step 4: sorting the samples
 		CUDA_SAFE_CALL( cudaEventRecord( startClock, 0 ) );
 		CUDA_SAFE_CALL( cudaEventSynchronize( startClock ) );
-		krLDNISampling_SortSamples<<<BLOCKS_PER_GRID,THREADS_PER_BLOCK>>>(devNxArrayPtr, devNyArrayPtr, 
-																	devDepthArrayPtr, arrsize, devIndexArrayPtr);
+		krLDNISampling_SortSamples<<<BLOCKS_PER_GRID,THREADS_PER_BLOCK>>>(devNxArrayPtr, devNyArrayPtr, devDepthArrayPtr, arrsize, devIndexArrayPtr);
 		CUDA_SAFE_CALL( cudaEventRecord( stopClock, 0 ) );
 		CUDA_SAFE_CALL( cudaEventSynchronize( stopClock ) );
 		float   elapsedTime;
@@ -1543,8 +1558,7 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 
 	printf("\nn_max=%ld \n",overall_n_max);
 	printf("Texture Size: %f (MB)\n",(float)((float)overall_n_max*(float)nRes*(float)nRes*7.0f)/(1024.0f*1024.0f));
-	printf("Readback time: %ld (ms)\nSorting time: %ld (ms)\n", 
-		readbackTime, sortingTime);
+	printf("Readback time: %ld (ms)\nSorting time: %ld (ms)\n", readbackTime, sortingTime);
 
 	CUDA_SAFE_CALL( cudaEventDestroy( startClock ) );
 	CUDA_SAFE_CALL( cudaEventDestroy( stopClock ) );
@@ -2576,8 +2590,9 @@ __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
 {
 	int index = threadIdx.x + blockIdx.x*blockDim.x;
 	int arrindex, num, ix, iy;
+	int material_in_out = 0;
+	
 	float4 rgb;		float temp;
-	//printf("the index is %d %d \n", blockDim.x, gridDim.x);
 	while (index < arrsize) {
 		num = devIndexArrayPtr[index + 1] - devIndexArrayPtr[index];		// tells how many samples are present on a ray which is in wXw grid
 		if (num>=n)
@@ -2589,12 +2604,25 @@ __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
 			
 			temp=fabs(rgb.z)*width-sampleWidth*0.5f;
 			
-			devNxArrayPtr[arrindex]=rgb.x;		// x-component of normal	
+			devNxArrayPtr[arrindex]=rgb.w;		// material index;	
 			devNyArrayPtr[arrindex]=rgb.y;		// y-component of normal
+			//devMaterialInOut[arrindex] = 0.0000;
+			/*
+			for (int i = devIndexArrayPtr[index]; i <= devIndexArrayPtr[index + 1]; i++)
+			{
+				if (material_in_out == 0 || material_in_out != devNxArrayPtr[i])
+				{
+					devMaterialInOut[arrindex] = 1.0000;
+					material_in_out = devNxArrayPtr[arrindex];
+				}
+				else
+				{
+					devMaterialInOut[arrindex] = 0.0000;
+				}
+			}
+			*/
 			if (rgb.z<0) devDepthArrayPtr[arrindex]=-temp; else devDepthArrayPtr[arrindex]=temp;
-			printf("The ray is %d and the sample number is %d and the depth is %f \n",index, arrindex, devDepthArrayPtr[arrindex]);
 			
-
 		}
 		index += blockDim.x * gridDim.x;
 	}
@@ -3102,6 +3130,8 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, GLuint vbo,
 		float* devNxArrayPtr=solid->GetSampleNxArrayPtr(nAxis);
 		float* devNyArrayPtr=solid->GetSampleNyArrayPtr(nAxis);
 		float* devDepthArrayPtr=solid->GetSampleDepthArrayPtr(nAxis);
+		//float* devMaterialInOUt = solid->GetMaterialInOUt(nAxis);
+		
 		tempTime=clock();
 		for(n=1;n<=n_max;n++) {
 			CUDA_SAFE_CALL( cudaGraphicsMapResources( 1, &sampleTex_resource, NULL ) );

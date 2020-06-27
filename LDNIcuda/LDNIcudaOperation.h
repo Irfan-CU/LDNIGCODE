@@ -36,6 +36,9 @@
 
 #include <vector_types.h>
 #include<driver_types.h>
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+
 
 
 class LDNIcpuSolid;
@@ -46,7 +49,7 @@ class GLKObList;
 
 
 
-class LDNIcudaOperation
+class LDNIcudaOperation	
 {
 public:
 	LDNIcudaOperation(void) {};
@@ -77,14 +80,17 @@ public:
 	static float LDNIFDMContouring_CompRotationBoundingBox(LDNIcudaSolid* solid, double rotBoundingBox[], double clipPlanNm[]);
 	static void LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[], 
 												float angle, float thickness, double clipPlanNm[], float nSampleWidth, bool *&gridNodes,
-												float2 *&stickStart, float2 *&stickEnd, unsigned int *&stickIndex, int *&noinfill_node, int infillnodecount, float *&infillnode_xposition, float *&infillnode_zposition, float *&infillnode_yposition, int *&stickID, int *&prevStickID,  int2 *&stickDir);
+												float2 *&stickStart, float2 *&stickStart1, float2 *&stickStart2, float2 *&stickStart3, float2 *&stickEnd, unsigned int *&stickIndex, int *&noinfill_node, 
+												int infillnodecount, float *&infillnode_xposition, float *&infillnode_zposition, float *&infillnode_yposition, int *&stickID, int *&prevStickID,  int2 *&stickDir, 
+												int *&stickMaterial, int *&stickMaterial1, int *&stickMaterial2, int *&stickMaterial3 , unsigned int *&material_index1, 
+												unsigned int *&material_index2, unsigned int *&material_index3, QuadTrglMesh *qmesh, unsigned int*&material_status);
 	//static void LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[],
 	//												float angle, float thickness, double clipPlanNm[], float nSampleWidth, float2 *stickStart, 
 	//												float2 *stickEnd, int *stickID);
 	/*static void LDNIFDMContouring_Infill(int imageSize[]);  */
 
 	static void LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[],
-													  float nSampleWidth, float2 *stickStart, float2 *stickEnd, int *stickID, int2 *stickDir, bool bOutPutSGM = false);
+													  float nSampleWidth, float2 *stickStart, float2 *stickEnd, int *stickID, int2 *stickDir, int *stickMaterial, int*stickMaterial1, int*stickMateria2, int*stickMateria3, unsigned int *&material_index1, bool bOutPutSGM = false);
 													
 	static void LDNIFDMContouring_SupportContourGeneration(LDNIcudaSolid* solid, ContourMesh *c_mesh, bool *gridNodes, double rotBoundingBox[], double clipPlaneNm[], double thickness, double nSampleWidth, double distortRatio, int imageSize[], bool bOutPutSGM = false);
 	static void LDNIFDMContouring_BuildDistanceMap(bool *gridNodes, int layerID, int imageSize[], short2 *&disMapA, short2 *&disMapB, int disTexSize);
@@ -95,7 +101,7 @@ public:
 	
 	
 	static void LDNIFDMContouring_BuildSearchStickIndex(int *&stickID, int *prevStickId, int stickNum);
-	static void LDNIFDMContouring_Generation(LDNIcudaSolid* solid, ContourMesh *c_mesh, float nSampleWidth);
+	static void LDNIFDMContouring_Generation(LDNIcudaSolid* solid, ContourMesh *c_mesh, QuadTrglMesh *mesh, float nSampleWidth);
 	static void LDNIFDMContouring_GenerationwithSupporting(LDNIcudaSolid* solid, ContourMesh *c_mesh, ContourMesh *supt_mesh, float nSampleWidth);
 
 
@@ -144,8 +150,6 @@ public:
 	
 	static void GetCudaDeviceProperty();
 
-	
-	
 
 
 private:
@@ -179,9 +183,24 @@ private:
 
 	//-----------------------------------------------------------------------------------------------------
 	//	Functions for service
-	static float _distanceToBoundBoxBoundary(LDNIcudaSolid* inputSolid);
-			// LDNI sampling arranged into layer heights arranged 
+	static float _distanceToBoundBoxBoundary(LDNIcudaSolid* inputSolid);   
+	// LDNI sampling arranged into layer heights arranged 
 
+	/*Vectors for the material allocation for the amf file*/
+	thrust::host_vector<int>cpuStickMaterial1;
+	
+	
+	/*
+	std::vector<float>cpuStickStart1;
+	std::vector<float>cpuStickStart2;
+	std::vector<float>cpuStickStart3;
+	std::vector<float>cpuStickEnd1;
+	std::vector<float>cpuStickEnd2;
+	std::vector<float>cpuStickEnd3;
+	std::vector<int>cpuStickMaterial1;
+	std::vector<int>cpuStickMaterial2;
+	std::vector<int>cpuStickMaterial3;
+	 */
 
 };
 
@@ -192,7 +211,9 @@ public:
 	int max_no_of_layer;
 	int max_height;
 	float layer_thickness;
-	
+
+
+
 
 	float allowable_layer_height = 1;	 
 	void SetlayernodePosition(int iteration, float pos1[]);

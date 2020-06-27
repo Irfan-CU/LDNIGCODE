@@ -101,7 +101,7 @@ private:
 
 	void generatetriangleinfill(Polygons& result);
 
-	void generateLineInfill(Polygons& result, int line_distance, int infill_rotation, coord_tIrfan shift);
+	void generateLineInfill(Polygons& result, int line_distance, const double& infill_rotation, coord_tIrfan shift);
 
 	void generateLinearBasedInfill(const int outline_offset, Polygons& result, const int line_distance, const curaIrfan::PointMatrix& rotation_matrix, ZigzagConnectorProcessor& zigzag_connector_processor, const bool connected_zigzags, coord_tIrfan extra_shift);
 

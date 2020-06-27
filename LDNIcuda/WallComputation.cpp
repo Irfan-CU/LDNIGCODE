@@ -20,6 +20,7 @@
 		const bool spiralize = false;// settings.get<bool>("magic_spiralize");
 		
 		
+
 	//	printf("the size of the indie the insets functions is parts outline is %d \n", part->outline.pointCount());
 		const coord_tIrfan wall_0_inset = MM2INT(0.0);
 		coord_tIrfan line_width_0 = MM2INT(0.35);
@@ -28,9 +29,9 @@
 		if (layer_nr == 0)
 		{
 			//const ExtruderTrain& train_wall_0 = 0;// settings.get<ExtruderTrain&>("wall_0_extruder_nr");
-			line_width_0 *= Ratio(120/100);// train_wall_0.settings.get<Ratio>("initial_layer_line_width_factor");
+			line_width_0 *= 100/100;// train_wall_0.settings.get<Ratio>("initial_layer_line_width_factor");
 			//const ExtruderTrain& train_wall_x = 0;// settings.get<ExtruderTrain&>("wall_x_extruder_nr");
-			line_width_x *= Ratio(120 / 100);// train_wall_x.settings.get<Ratio>("initial_layer_line_width_factor");
+			line_width_x *= 100/100;// train_wall_x.settings.get<Ratio>("initial_layer_line_width_factor");
 		}
 		bool support_enable = false;
 		bool support_tree_enable = true;
@@ -46,9 +47,9 @@
 			if (i == 0)
 			{
 				//printf("Starting the inset of the i %d \n", i);
-				part->insets[0] = part->outline.offset(-line_width_0 / 2 - wall_0_inset);
+				part->insets[0] = part->outline.offset(wall_0_inset);
 				//printf("the distance to offset is %d \n", -line_width_0_int / 2);
-				//printf("Succesffully did the inset of the i %d \n", part->insets[0].size());
+				//printf("Succesffully did the inset of the %d \n", part->insets[0].size());
 			}
 			else if (i == 1)
 			{
@@ -62,7 +63,8 @@
 				part->insets[i] = part->insets[i - 1].offset(-line_width_x);
 				//printf("Succesffully did the inset of the i %d \n", part->insets[i].size());
 			}
-			//printf("working 2 \n");
+			
+			
 			//printf("the insets %d point count is %d \n",i, part->outline.pointCount());
 			const size_t inset_part_count = part->insets[i].size();
 			constexpr size_t minimum_part_saving = 3; //Only try if the part has more pieces than the previous inset and saves at least this many parts.
@@ -121,9 +123,10 @@
 				part->insets.pop_back();
 				break;
 			}
-			//printf("working 4 \n");
-			//printf("the size of the indie the insets functions is parts outline is %d and the part number is %d \n", part->insets[i].pointCount());
+			
 		}
+		//printf("the insets iseze is dor the part are %d and the part mat is %d\n", part->insets.size(),part->getpartMat());
+		
 		
 
 	}
@@ -139,10 +142,13 @@
 		for (unsigned int partNr = 0; partNr < layer->parts.size(); partNr++)
 		{
 			//printf("working 1 \n");
+		
 			generateInsets(&layer->parts[partNr]);
 			//printf("working 5 \n");
-		//	printf("the inset is genrated for layer %d are %d \n",layer_nr, layer->parts[partNr].insets.size());
+			//printf("the parts in this layer are %d  and %d\n", layer->parts.size(), partNr);
+			//printf("the inset is genrated for layer %d are %d \n",layer_nr, layer->parts[partNr].insets.size());
 		}
+		//fill_outline_gaps = false;
 	//	printf("the code is at the line 117 of wallcomputation.cpp \n");
 		const bool remove_parts_with_no_insets = true;// !settings.get<bool>("fill_outline_gaps");
 		//Remove the parts which did not generate an inset. As these parts are too small to print,

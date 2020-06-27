@@ -192,15 +192,17 @@
 		unsigned int layer_nr = 0; 
 		
 		SlicerSegment segment; SlicerLayer	slicerlayer; int mesh_count = 0;
+		
 
 		for (Pos_1 = mesh_list.GetHeadPosition(); Pos_1 != NULL; )
 		{
-		//	printf("layernr is %d \n", layer_nr);
-			//assert(layer_nr < slice_layer_count);
-			
-				int edge = 1;  int i = 1;
+				int edge = 1;  int i = 1;	int n = 0;
+				int edg_mat_copy;
+				int edg_mat;
+				bool mat_change = true;
 				mesh1 = (VSAMesh *)(mesh_list.GetNext(Pos_1));
 				Polygon poly;
+				double xx1, zz1, aa1, cc1;
 
 				for (Pos_2 = mesh1->GetVSAEdgeList().GetHeadPosition(); Pos_2 != NULL; )
 				{
@@ -209,57 +211,189 @@
 					//printf("Yeah I am here on line 1935 of the code %d \n", mesh_idx);
 					edge1->GetStartPoint()->GetCoord3D(xx, yy, zz);
 					edge1->GetEndPoint()->GetCoord3D(aa, bb, cc);
-					int edge_id = edge1->GetIndexNo();// .GetIndexNo();
-					segment.segmentidx = edge_id;
-					
-					const coord_tIrfan xx_int = MM2INT(xx * 30);
-					const coord_tIrfan aa_int = MM2INT(aa * 30);
-					const coord_tIrfan zz_int = MM2INT(zz * 30);
-					const coord_tIrfan cc_int = MM2INT(cc * 30);
+					edg_mat = edge1->GetEdgeMaterial();
+					if (edg_mat != 5 && (mat_change==true))
+					{
+						edg_mat_copy = edg_mat;
+					}
+					if (edg_mat == 5)
+					{
+						edg_mat_copy = 5;
+						mat_change = false;
+					}
+				    //Interface detection and zigzag pattern development here.
 
-					curaIrfan::PointIrfan st(xx_int, zz_int);
-					curaIrfan::PointIrfan ed(aa_int, cc_int);
-					
-					segment.start.X = xx_int;
-					segment.start.Y = zz_int;
-					segment.end.X = aa_int;
-					segment.end.Y = cc_int;
-					//printf("Yeah I am here on line 228 of the code %d \n");
-					layers[layer_nr].segments.push_back(segment);
-					//printf("Yeah I am here on line 230 of the code %d \n");
-					segment.addedToPolygon = false;
-					if (edge == 1)
-					{
-						poly.add(segment.end);
-						poly.add(segment.start);   
-						
-					}
-					else if (edge!=1 && edge != mesh1->GetVSAEdgeList().GetCount())
-					{
-						poly.add(segment.start);
-						
-					}
-					else 
+					//if (edg_mat == 5)
+					//{
+					//	if (n == 0)
+					//	{
+					//		xx1 = xx;
+					//		zz1 = zz;
+					//		
+					//	}
+					//	n++;
+					//	if (n < 3)
+					//	{
+					//		continue;
+					//	}
 
+					//	if (n == 3)
+					//	{
+					//		n = 0;
+
+					//		double mmx = (xx1 + aa)*0.5;
+					//		double mmy = (zz1 + cc)*0.5;
+
+					//		const coord_tIrfan mmx_int = MM2INT(mmx * 30);
+					//		const coord_tIrfan mmy_int = MM2INT(mmy * 30);
+					//		const coord_tIrfan xx_int = MM2INT(xx1 * 30);
+					//		const coord_tIrfan aa_int = MM2INT(aa * 30);
+					//		const coord_tIrfan zz_int = MM2INT(zz1 * 30);
+					//		const coord_tIrfan cc_int = MM2INT(cc * 30);
+					//		const double cos_component = std::cos(0.7853);
+					//		const double sin_component = std::sin(0.7853);
+					//		const double newx = (mmx_int - aa_int);
+					//		const double newy = (mmy_int - cc_int);
+
+					//		curaIrfan::PointIrfan mm_int_tmp_rot;
+					//		mm_int_tmp_rot.X = (cos_component * newx - sin_component * newy + aa_int);
+					//		mm_int_tmp_rot.Y = (sin_component * newx + cos_component * newy + cc_int);
+
+					//		//curaIrfan::PointIrfan mm_int_tmp_rot = curaIrfan::PointIrfan(cos_component *newx - sin_component * newy, sin_component * newx + cos_component * newy);
+
+
+
+					//		segment.start.X = mm_int_tmp_rot.X;
+					//		segment.start.Y = mm_int_tmp_rot.Y;
+					//		segment.end.X = aa_int;
+					//		segment.end.Y = cc_int;
+
+					//		//printf("the rotated point is %d , %d and %d , %d \n", mm_int_tmp_rot.X, mm_int_tmp_rot.Y, aa_int, cc_int);
+
+					//		layers[layer_nr].segments.push_back(segment);
+					//		segment.addedToPolygon = false;
+
+					//		if (edge == 1)
+					//		{
+					//			poly.add(segment.end);
+					//			poly.add(segment.start);
+
+					//			edge++;
+					//			segment.end.X = mm_int_tmp_rot.X;
+					//			segment.end.Y = mm_int_tmp_rot.Y;
+					//			segment.start.X = xx_int;
+					//			segment.start.Y = zz_int;
+
+					//			poly.add(segment.end);
+					//			poly.add(segment.start);
+					//			edge++;
+
+
+					//		}
+					//		else if (edge != 1 && edge != mesh1->GetVSAEdgeList().GetCount())
+					//		{
+					//			segment.end.X = mm_int_tmp_rot.X;
+					//			segment.end.Y = mm_int_tmp_rot.Y;
+					//			segment.start.X = xx_int;
+					//			segment.start.Y = zz_int;
+
+
+					//			poly.add(segment.end);
+					//			poly.add(segment.start);
+
+					//			edge++;
+
+					//		}
+					//		else
+
+					//		{
+					//			segment.start.X = mm_int_tmp_rot.X;
+					//			segment.start.Y = mm_int_tmp_rot.Y;
+					//			segment.end.X = aa_int;
+					//			segment.end.Y = cc_int;
+
+					//			poly.add(segment.end);
+					//			poly.add(segment.start);
+					//			edge++;
+					//			segment.end.X = mm_int_tmp_rot.X;
+					//			segment.end.Y = mm_int_tmp_rot.Y;
+					//			segment.start.X = xx_int;
+					//			segment.start.Y = zz_int;
+
+					//			poly.add(segment.end);
+					//			poly.add(segment.start);
+					//			edge++;
+
+					//		}
+
+
+					//	}
+					//	
+					//}
+
+					//int edge_id = edge1->GetIndexNo();// .GetIndexNo();
+					//segment.segmentidx = edge_id;
+					//
+					//
+					//
+					//if (edg_mat != 5)
 					{
-						poly.add(segment.end);
-						poly.add(segment.start);
-						
-					}
-					edge++;
+						const coord_tIrfan xx_int = MM2INT(xx * 30);
+						const coord_tIrfan aa_int = MM2INT(aa * 30);
+						const coord_tIrfan zz_int = MM2INT(zz * 30);
+						const coord_tIrfan cc_int = MM2INT(cc * 30);
+
+						segment.start.X = xx_int;
+						segment.start.Y = zz_int;
+						segment.end.X = aa_int;
+						segment.end.Y = cc_int;
+						layers[layer_nr].segments.push_back(segment);
+						segment.addedToPolygon = false;
+
+						if (edge == 1)
+						{
+							poly.add(segment.end);
+							poly.add(segment.start);
+
+						}
+						else if (edge != 1 && edge != mesh1->GetVSAEdgeList().GetCount())
+						{
+							poly.add(segment.start);
+
+						}
+						else
+
+						{
+							poly.add(segment.end);
+							poly.add(segment.start);
+
+						}
+
+						edge++;
 					
+					}
+
 				}
+				//one polygon is formed in one loop
+
+
+
 				layers[layer_nr].polygons.add(poly);
-				//printf("the polygons point count is %d \n", layers[layer_nr].polygons.pointCount());
+					 // output is 1,2,3
+				layers[layer_nr].polygons.setId(mesh_count);
+
+				layers[layer_nr].polygons.polygons_matid.push_back(edg_mat_copy);
+				
+				
 				mesh_count++;
 				if (meshin_layer[layer_nr] == mesh_count)
 				{
 					layer_nr++;
-					//printf("layer no is %d \n and contours in this layer are %d \n", layer_nr, mesh_count);
+					//printf("layer no is %d \n and contours in this layer are %d and the material is %d  \n", layer_nr, mesh_count);
 					mesh_count = 0;	
 				}
 		}
-			//printf("the polygons size inside is is %d \n", layers[layer_nr].polygons.size());
+		//printf("the polygons size inside is is %d and %d\n", layers[129].polygons.size(),1);	  //layer1 has 3;		max layers are 129
 		
 		std::vector<SlicerLayer>& layers_ref = layers; // force layers not to be copied into the threads
 

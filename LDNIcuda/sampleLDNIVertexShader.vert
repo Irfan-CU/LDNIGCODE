@@ -29,7 +29,7 @@
 uniform samplerRect vertexTexture;
 uniform int sizeNx;
 uniform vec3 Cent;
-varying out float f_Index;
+varying out float material_Index;
 
 void main( void )
 {
@@ -49,6 +49,6 @@ void main( void )
 	
 	gl_PointSize=1.0;
 
-	f_Index= gl_Vertex.w;    
+material_Index= gl_Vertex.w;    
 
 }

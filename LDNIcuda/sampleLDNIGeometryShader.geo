@@ -31,8 +31,8 @@
 #extension GL_EXT_geometry_shader4: enable
 
 varying out vec4 color;
-varying in float f_Index[];
-varying out float fIndex_tofrag;
+varying in float material_Index[];
+varying out float materialIndex_tofrag;
 
 vec4 CalPlaneEq(vec3 P0, vec3 P1, vec3 P2)
 {
@@ -55,7 +55,7 @@ void main( void )
 {
 	color = CalPlaneEq(gl_BackColorIn[0].xyz, gl_PositionIn[0].xyz, gl_FrontColorIn[0].xyz);
 	
-	fIndex_tofrag=f_Index[0];  //Sending values to the frag_shader.
+	materialIndex_tofrag=material_Index[0];  //Sending values to the frag_shader.
 	
 //	if ((color.x != 0.0)  || (color.y != 0.0) || (color.z != 0.0)) 
 	{ 

@@ -48,4 +48,24 @@
 		return (fan_speed >= 0 && fan_speed <= 100) ? fan_speed : config->getFanSpeed();
 	}
 
+	void GCodePath::setPathMat(int mat)
+	{
+		this->path_mat = mat;
+	}
+	int GCodePath::getPathMat()
+	{
+		return path_mat;
+	}
+	void GCodePath::setextruder(int extruder)
+	{
+		this->path_ext = extruder;
+	}
+	int GCodePath::getextruder()
+	{
+		return path_ext;
+	}
+
+
+
+
 
