@@ -267,17 +267,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 //	printf("}}}}{}}{}{}{}{}}}{}{}}}{}{}}{}{}}{}{}}{}{}{}{}{}}{}{}{}{}{}{Inside Gcode layer is %d \n", layer_nr);
 	coord_tIrfan layer_thicnkess = storage.Layers[0].thickness;
 	gcode.setLayerNr(layer_nr);
-	gcode.writeLayerComment(layer_nr);
-	std::vector<int>path_mat_order1;
-	std::vector<int>path_mat_order2;
-	std::vector<int>path_mat_order3;
-	std::vector<int>path_mat_order5;
-	std::vector<int>path_mat_order6;
-	std::vector<int>path_mat_order7;
-
-	
-	
-	
+	gcode.writeLayerComment(layer_nr);	
 	
 	// flow-rate compensation
 	//const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
@@ -371,16 +361,6 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 		gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
 		gcode.extruder_offset = 0.0;
 
-		for (unsigned int path_idx = 0; path_idx < paths.size(); path_idx++)
-		{
-			GCodePath& path = paths[path_idx];
-			if (path.config->type == PrintFeatureType::OuterWall)
-			{
-				printf("the layer is %d and the material is %d \n", layer_nr, path.getPathMat());
-			}
-			
-			
-		}
 		/*
 		//for (unsigned int path_it = 0; path_it < paths.size(); path_it++)
 		//{
@@ -454,14 +434,6 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 		//}
 		*/
 		
-		path_mat_order1.insert(path_mat_order1.end(), path_mat_order2.begin(), path_mat_order2.end());
-		
-		path_mat_order1.insert(path_mat_order1.end(), path_mat_order3.begin(), path_mat_order3.end());
-		int count1 = path_mat_order1.size();
-		//gcode.extruder_offset = 18000.0;
-		path_mat_order1.insert(path_mat_order1.end(), path_mat_order5.begin(), path_mat_order5.end());
-		path_mat_order1.insert(path_mat_order1.end(), path_mat_order6.begin(), path_mat_order6.end());
-		path_mat_order1.insert(path_mat_order1.end(), path_mat_order7.begin(), path_mat_order7.end());
 		
 		//std::ostringstream tmp;
 		//tmp << "T" << 0;
@@ -489,12 +461,11 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 				if (gcode.current_extruder == 0)
 				{
 					ext = 1;
-					gcode.extruder_offset =18000.0;
-					//std::ostringstream tmp;
-					//tmp << "T" << 1;
+					
+					
 					gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
 					gcode.extruder1_extrusion_offset = false;
-					//continue;
+					
 				}
 
 			}
@@ -503,19 +474,12 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 				if (gcode.current_extruder == 1)
 				{
 					ext = 0;
-					gcode.extruder_offset = 000.0;
-					//std::ostringstream tmp;
-					//tmp << "T" << 1;
-
+					
 					gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-					//gcode.extruder1_extrusion_offset = false;
-					//continue;
+					
 				}
 
 			}
-
-			//else if (path.getPathMat() == 5 && (path.config->type == PrintFeatureType::OuterWall))
-			//{
 
 			//	if (gcode.current_extruder == 1)
 			//	{
@@ -534,12 +498,10 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 				if (gcode.current_extruder == 0)
 				{
 					ext = 1;
-					gcode.extruder_offset = 18000.0;
-					//std::ostringstream tmp;
-					//tmp << "T" << 1;
+				
 					gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
 					gcode.extruder1_extrusion_offset = false;
-					//continue;
+					
 				}
 			}
 
@@ -1031,7 +993,7 @@ void LayerPlan::addWall(ConstPolygonRef wall, int start_idx, const GCodePathConf
 	double speed_factor = 1.0; // start first line at normal speed
 	coord_tIrfan distance_to_bridge_start = 0; // will be updated before each line is processed
 
-	const coord_tIrfan min_bridge_line_len = MM2INT(5);// mesh.settings.get<coord_tIrfan>("bridge_wall_min_length");
+	const coord_tIrfan min_bridge_line_len = MM2INT(0);// mesh.settings.get<coord_tIrfan>("bridge_wall_min_length");
 	const Ratio wall_min_flow = 0;// mesh.settings.get<Ratio>("wall_min_flow");
 	const bool wall_min_flow_retract = false;// mesh.settings.get<bool>("wall_min_flow_retract");
 
@@ -1204,7 +1166,7 @@ void LayerPlan::addWall(ConstPolygonRef wall, int start_idx, const GCodePathConf
 
 void LayerPlan::addWalls(const Polygons& walls,const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, WallOverlapComputation* wall_overlap_computation, const ZSeamConfig& z_seam_config, coord_tIrfan wall_0_wipe_dist, float flow_ratio, bool always_retract)
 {
-	printf("the walls size is %d \for the layer number %d \n", walls.size(), layer_nr);
+	
 	PathOrderOptimizer orderOptimizer(getLastPlannedPositionOrStartingPosition(), z_seam_config);
 	for (unsigned int poly_idx = 0; poly_idx < walls.size(); poly_idx++)
 	{

@@ -212,6 +212,7 @@ void GCodeExport::startExtruder(const size_t new_extruder)
 		*output_stream << "T" << new_extruder << new_line;
 	}
 	current_extruder = new_extruder;
+	assert(getCurrentExtrudedVolume() == 0.0);
 	resetExtrusionValue(); // zero the E value on the new extruder, just to be sure
 
 	//Change the Z position so it gets re-written again. We do not know if the switch code modified the Z position.
@@ -242,8 +243,17 @@ void GCodeExport::resetExtrusionValue()
 double GCodeExport::getCurrentExtrudedVolume() const
 {
 	double extrusion_amount = current_e_value;
-
-	return extrusion_amount;
+	extrusion_amount -= extruder_attr[current_extruder].retraction_e_amount_at_e_start; // subtract the increment in E which was used for the first unretraction instead of extrusion
+	extrusion_amount += extruder_attr[current_extruder].retraction_e_amount_current; // add the decrement in E which the filament is behind on extrusion due to the last retraction
+	
+	/*if (is_volumetric)
+	{
+		return extrusion_amount;
+	}
+	else*/
+	
+	return extrusion_amount * extruder_attr[current_extruder].filament_area;
+	
 }
 void GCodeExport::setExtruderFanNumber(int extruder)
 {
@@ -486,15 +496,17 @@ void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, cons
 	
 		if (current_extruder == 1 && extruder1_extrusion_offset == false)
 		{
-			const double output_e =0.0000;
-			*output_stream << " E" << output_e;
+			current_e_offset = 0.000;
+			const double output_e = (relative_extrusion) ? e + current_e_offset - current_e_value : e + current_e_offset;
+			*output_stream << " E" << 0.000;
+			
 			extruder1_extrusion_offset = true;
 
 
 		}	
 		
 
-		else
+		else 
 		{
 			const double output_e = (relative_extrusion) ? e + current_e_offset - current_e_value : e + current_e_offset;
 			*output_stream << " E" << output_e;
@@ -856,41 +868,25 @@ void GCodeExport::insertWipeScript(const WipeScriptConfig& wipe_config, coord_tI
 void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& retraction_config_old_extruder, coord_tIrfan perform_z_hop /*= 0*/)
 {
 	bool retraction_enable = true;
+	if ((current_extruder == 0) && (new_extruder == 1))
+	{
+		extruder_offset = 18000;
+	}
+	else if ((current_extruder == 1) && (new_extruder == 0))
+	{
+		extruder_offset = 000;
+	}
+
 	if (current_extruder == new_extruder)
 	{
 		return;
 	}
 	
-	if (retraction_enable)
-	{
-		constexpr bool force = true;
-		constexpr bool extruder_switch = true;
-		writeRetraction(retraction_config_old_extruder, force, extruder_switch);
-	}
-
-	/*if (perform_z_hop > 0)
-	{
-		writeZhopStart(perform_z_hop);
-	}*/
-
+	constexpr bool force = true;
+	constexpr bool extruder_switch = true;
+	writeRetraction(retraction_config_old_extruder, force, extruder_switch);
+	
 	resetExtrusionValue(); // zero the E value on the old extruder, so that the current_e_value is registered on the old extruder
 
-	/*const std::string end_code = old_extruder_settings.get<std::string>("machine_extruder_end_code");
-
-	if (!end_code.empty())
-	{
-		if (relative_extrusion)
-		{
-			writeExtrusionMode(false); // ensure absolute extrusion mode is set before the end gcode
-		}
-
-		writeCode(end_code.c_str());
-
-		if (relative_extrusion)
-		{
-			writeExtrusionMode(true); // restore relative extrusion mode
-		}
-	}
-	 */
 	startExtruder(new_extruder);
 }

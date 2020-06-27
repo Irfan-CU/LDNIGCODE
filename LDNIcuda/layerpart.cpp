@@ -35,7 +35,6 @@ It's also the first step that stores the result in the "data storage" so all oth
 		for (unsigned int i = 0; i < result.size(); i++)
 		{
 			storageLayer.parts.emplace_back();
-			
 			storageLayer.mat_parts.emplace_back(layer->polygons.polygons_matid[i]);
 			storageLayer.parts[i].part_mat = layer->polygons.polygons_matid[i];
 			storageLayer.parts[i].outline = result[i];

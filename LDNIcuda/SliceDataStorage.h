@@ -54,7 +54,7 @@ public:
 
 	}
 
-	int getpartMat() 
+	int getpartMat()
 	{
 		return part_mat;
 	}

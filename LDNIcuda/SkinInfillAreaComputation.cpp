@@ -450,7 +450,7 @@
 		//printf("the infill size is %d \n points in parts are %d \n", infill.size(),part.insets.back().pointCount());
 		infill.removeSmallAreas(MIN_AREA_SIZE);
 		part.infill_area = infill.offset(infill_skin_overlap);
-		printf("the infill area size is %d for the layer %d \n", part.infill_area.size(), layer_nr);
+		
 		//printf("****the infill size for the part is %d and point count is %d and the layer is %d\n",infill.size(),part.infill_area.pointCount(),layer_nr);
 	}
 

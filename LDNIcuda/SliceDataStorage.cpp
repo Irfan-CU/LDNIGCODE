@@ -278,7 +278,7 @@ Polygons SliceDataStorage::getLayerOutlines(const int layer_nr, const bool inclu
 	}
 	else
 	{
-		printf("Inside the platformadhesion \n");
+		
 		Polygons total;
 		coord_tIrfan maximum_resolution = std::numeric_limits<coord_tIrfan>::max();
 		coord_tIrfan maximum_deviation = std::numeric_limits<coord_tIrfan>::max();
@@ -380,7 +380,7 @@ void SliceLayer::getOutlines(Polygons& result, bool external_polys_only) const
 		else
 		{
 			result.add(part.print_outline);
-			printf("result size is %d \n", result.size());
+			
 		}
 	}
 }

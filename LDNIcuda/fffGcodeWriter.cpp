@@ -94,7 +94,7 @@ void FffGcodeWriter::writeGCode(SliceDataStorage& storage,bool start)
 		[this, total_layers](LayerPlan* gcode_layer)
 	{
 		//Progress::messageProgress(Progress::Stage::EXPORT, std::max(0, gcode_layer->getLayerNr()) + 1, total_layers);
-		printf("processing the layer number %d \n", gcode_layer->getLayerNr());
+		
 		///int layer=gcode_layer->getLayerNr();
 	 	layer_plan_buffer.handle(*gcode_layer, gcode);
 	};
@@ -782,7 +782,6 @@ bool FffGcodeWriter::processMultiLayerInfill(const SliceDataStorage& storage, co
 	if (!storage.infill_angles.empty())
 	{
 		const size_t combined_infill_layers = std::max(unsigned(1), round_divide(MM2INT(0.2), std::max(MM2INT(0.01 * 15), coord_tIrfan(1))));
-		printf("the combined layer are %d \n", combined_infill_layers);
 		infill_angle = storage.infill_angles.at((gcode_layer.getLayerNr() / combined_infill_layers) % storage.infill_angles.size());
 	}
 	
@@ -1112,13 +1111,14 @@ bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& g
 						}
 						else
 						{
+							//printf("the cofig inset 0 line width is %d \n", mesh_config.insetX_config.getLineWidth());
 							WallOverlapComputation wall_overlap_computation(outer_wall, mesh_config.inset0_config.getLineWidth());
 							gcode_layer.addWalls(outer_wall, mesh_config.inset0_config, mesh_config.bridge_inset0_config, &wall_overlap_computation, z_seam_config, MM2INT(0.2), flow, retract_before_outer_wall);
 						}
 					}
 				}
 				// Inner walls are processed
-				else if (!part.insets[processed_inset_number].empty() && extruder_nr == -1)
+				else if (!part.insets[processed_inset_number].empty() && extruder_nr == 0)
 				{
 					added_something = true;
 					//setExtruder_addPrime(storage, gcode_layer, extruder_nr);
@@ -1132,7 +1132,8 @@ bool FffGcodeWriter::processInsets(const SliceDataStorage& storage, LayerPlan& g
 					}
 					else
 					{
-						WallOverlapComputation wall_overlap_computation(inner_wall, mesh_config.insetX_config.getLineWidth());
+						//printf("the cofig inset x line width is %d \n", mesh_config.insetX_config.getLineWidth());
+						WallOverlapComputation wall_overlap_computation(inner_wall, mesh_config.inset0_config.getLineWidth());
 						gcode_layer.addWalls(inner_wall, mesh_config.insetX_config, mesh_config.bridge_insetX_config, &wall_overlap_computation, z_seam_config);
 					}
 				}
