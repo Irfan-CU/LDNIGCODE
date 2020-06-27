@@ -21,9 +21,9 @@
 		
 		
 	//	printf("the size of the indie the insets functions is parts outline is %d \n", part->outline.pointCount());
-		const coord_tIrfan wall_0_inset = MM2INT(0.0);
-		coord_tIrfan line_width_0 = MM2INT(0.35);
-		coord_tIrfan line_width_x = MM2INT(0.30);
+		const coord_tIrfan wall_0_inset = 0.0;
+		coord_tIrfan line_width_0 = 0.35;
+		coord_tIrfan line_width_x = 0.30;
 
 		if (layer_nr == 0)
 		{
@@ -62,6 +62,7 @@
 				part->insets[i] = part->insets[i - 1].offset(-line_width_x);
 				//printf("Succesffully did the inset of the i %d \n", part->insets[i].size());
 			}
+			
 			//printf("working 2 \n");
 			//printf("the insets %d point count is %d \n",i, part->outline.pointCount());
 			const size_t inset_part_count = part->insets[i].size();
@@ -121,9 +122,10 @@
 				part->insets.pop_back();
 				break;
 			}
-			//printf("working 4 \n");
-			//printf("the size of the indie the insets functions is parts outline is %d and the part number is %d \n", part->insets[i].pointCount());
+			
 		}
+		//printf("the insets iseze is dor the part are %d \n", part->insets.size());
+		
 		
 
 	}
@@ -141,8 +143,10 @@
 			//printf("working 1 \n");
 			generateInsets(&layer->parts[partNr]);
 			//printf("working 5 \n");
-		//	printf("the inset is genrated for layer %d are %d \n",layer_nr, layer->parts[partNr].insets.size());
+			//printf("the parts in this layer are %d  and %d\n", layer->parts.size(), partNr);
+			//printf("the inset is genrated for layer %d are %d \n",layer_nr, layer->parts[partNr].insets.size());
 		}
+		//fill_outline_gaps = false;
 	//	printf("the code is at the line 117 of wallcomputation.cpp \n");
 		const bool remove_parts_with_no_insets = true;// !settings.get<bool>("fill_outline_gaps");
 		//Remove the parts which did not generate an inset. As these parts are too small to print,

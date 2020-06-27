@@ -19,11 +19,16 @@
 		push(layer_plan);
 		
 		int layernum = layer_plan.getLayerNr();
+	
 		coord_tIrfan layer_thickness = layer_plan.layer_thickness;
+		layer_plan.layer_parts;
+		
 		LayerPlan* to_be_written = processBuffer(layernum, layer_thickness);
 		//printf("processed buffer for the layer number \%d \n", layer_plan.getLayerNr());
+
 		if (to_be_written)
 		{
+			
 			to_be_written->writeGCode(gcode);
 			delete to_be_written;
 		}
@@ -253,7 +258,7 @@
 
 	void LayerPlanBuffer::insertTempCommands()
 	{
-		printf("the buffer.back()->extruder_plans.size() is %d \n ", buffer.back()->extruder_plans[1].paths.size());
+		//printf("the buffer.back()->extruder_plans.size() is %d \n ", buffer.back()->extruder_plans[1].paths.size());
 		if (buffer.back()->extruder_plans.size() == 0 || (buffer.back()->extruder_plans.size() == 1 && buffer.back()->extruder_plans[0].paths.size() == 0))
 		{ // disregard empty layer
 			buffer.pop_back();

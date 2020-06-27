@@ -84,7 +84,7 @@ void PMBody::BuildGLList(bool bShadeOrMesh, bool bContourList)
 	if (bContourList)
 	{	
 		m_drawContourID = glGenLists(1);
-		printf("going to _buildContourList(); is being exexuted\n");
+		
 		_buildContourList();
 		printf("_buildContourList(); is being exexuted\n");
 		
@@ -2061,15 +2061,14 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 		//calculating angels between different sticks 
 	}
 	
-	
+	printf("Do you want to Process Gcode for this AMF file \n");
+	char response;
+	std::cin >> response;
+	if (response == 'Y' || response == 'y')
+	{
+		int count1 = VSAMeshList.GetCount();
 
-	printf("Yeah I am here on line 1873 of the code\n");
-	/*
-	int check;
-	std::cin >> check;
-	
-	int count1 = VSAMeshList.GetCount();
-		if (count1 > 300)
+		//	if (count1 > 300)
 		{
 			Application *application;
 			unsigned int mesh_idx, edge_index = 0;
@@ -2082,17 +2081,16 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 			VSAEdge *edge1;
 			GLKPOSITION Pos_1;
 			GLKPOSITION Pos_2;
-
-			//Polygon poly;
-			//Polygons polygons;
 			SliceDataStorage storage;
-			SliceLayerPart layerpart;
+			//SliceLayerPart layerpart;
 			Mesh* mesh;
 			SlicerSegment segment;
 			//Polygons genrated_result_lines;
 			FffPolygonGenerator polygongenrator;
+			
 
 
+			
 
 			FffGcodeWriter gcode;
 
@@ -2101,34 +2099,22 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 			storage.Layers.resize(iRes[1]);
 			std::vector<PolygonsPart> new_parts;
 			new_parts.clear();
-			printf("The layers are iRes[1]= %d \n", iRes[1]);
-			//application->run(total_meshes, VSAMeshList, c_mesh, storage, iRes[1], meshin_layer, rotBoundingBox);
-
 
 			bool slice_model = polygongenrator.sliceModel(VSAMeshList, c_mesh, storage, iRes[1], meshin_layer, rotBoundingBox);
 			if (slice_model)
 			{
-				printf("the Silce Model is working perfectly \n ");
-
-
+				
 				polygongenrator.slices2polygons(storage);
 			}
 
-
-			printf("Yes Sliced Perfectly and slices2Polygons ready for Gcode \n");
 			const char* filename = "cura_after";
 			bool file_open = gcode.setTargetFile(filename);
 			bool start = true;
 			gcode.writeGCode(storage, start);
 		}
-	
-	    
-	
-	
+	}
 
-
-
-	//Open the comment till here to genrate the Gcode.
+		//Open the comment till here to genrate the Gcode.
 	
 	/*
 	for (int layerno = 0; layerno < 1; layerno++)

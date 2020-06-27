@@ -96,12 +96,12 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 	AreaSupport::generateSupportAreas(storage);
 	TreeSupport tree_support_generator(storage);
 	tree_support_generator.generateSupportAreas(storage);
-	
-	if (!isEmptyLayer(storage, 0))
-	{
-		printf("Processing platform adhesion\n");
-		processPlatformAdhesion(storage);
-	}
+	//
+	//if (!isEmptyLayer(storage, 0))
+	//{
+	//	printf("Processing platform adhesion\n");
+	//	processPlatformAdhesion(storage);
+	//}
 	
 	
 	processDerivedWallsSkinInfill(storage);
@@ -221,7 +221,7 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 	
 	storage.print_layer_count = 0;
 	
-	//printf("at line 225 \n");
+	
 
 	for (unsigned int meshIdx = 0; meshIdx < slicerList.size(); meshIdx++)
 	{
@@ -296,7 +296,7 @@ void FffPolygonGenerator::processBasicWallsSkinInfill(SliceDataStorage& storage,
 	size_t mesh_idx = mesh_order[mesh_order_idx];
 	//printf("inside processBasicWallsSkinInfill\n");
 	//size_t mesh_idx = 1;
-	size_t storage_layer_count = storage.Layers.size();	  //141
+	size_t storage_layer_count = storage.Layers.size();	 
 	std::vector<double> walls_vs_skin_timing({ 22.953, 48.858 });
 	ProgressStageEstimator* mesh_inset_skin_progress_estimator = new ProgressStageEstimator(walls_vs_skin_timing);
 	inset_skin_progress_estimate.nextStage(mesh_inset_skin_progress_estimator); // the stage of this function call
@@ -401,7 +401,8 @@ void FffPolygonGenerator::processBasicWallsSkinInfill(SliceDataStorage& storage,
 				//_processed_layer_count = processed_layer_count;
 				//double progress = inset_skin_progress_estimate.progress(_processed_layer_count);
 				//Progress::messageProgress(Progress::Stage::INSET_SKIN, progress * 100, 100);
-				printf("Processed skins and infill layer %i of %i\n", layer_number, storage_layer_count);
+				//printf("Processed skins and infill layer %i of %i\n", layer_number, storage_layer_count);
+				;
 		    }
 #pragma omp atomic
 			processed_layer_count++;
@@ -474,8 +475,8 @@ void FffPolygonGenerator::processDerivedWallsSkinInfill(SliceDataStorage& storag
 		// Pre-compute Cross Fractal
 		// combine infill
 
-		printf("**********************************Starting Coming Infill**************************************\n");
-		SkinInfillAreaComputation::combineInfillLayers(storage);
+		
+		//SkinInfillAreaComputation::combineInfillLayers(storage);
 	}
 
 void FffPolygonGenerator::processInsets(SliceDataStorage& storage, int layer_nr)

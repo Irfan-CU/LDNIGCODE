@@ -203,7 +203,7 @@
 		const GCodePathConfig& config = gcode_layer.configs_storage.prime_tower_config_per_extruder[extruder_nr];
 
 		gcode_layer.addPolygonsByOptimizer(gcode_layer.getLayerNr(), storage.getlayer_thickness(), pattern.polygons, config);
-		gcode_layer.addLinesByOptimizer(storage.getlayer_thickness(), config, pattern.lines, gcode_layer.getLayerNr(), SpaceFillType::Lines);
+		gcode_layer.addLinesByOptimizer(storage.getlayer_thickness(), config, pattern.lines, gcode_layer.getLayerNr(),1, SpaceFillType::Lines);
 	}
 
 	void PrimeTower::subtractFromSupport(SliceDataStorage& storage)

@@ -100,7 +100,7 @@ public:
 	float* GetSampleDepthArrayPtr(short nAxis) {return dev_sampleDepthArray[nAxis];};
 	float* GetSampleNxArrayPtr(short nAxis) {return dev_sampleNxArray[nAxis];};
 	float* GetSampleNyArrayPtr(short nAxis) {return dev_sampleNyArray[nAxis];};
-	
+	float* GetMaterialInOUt(short nAxis) { return dev_sampleMaterialStatus[nAxis]; };
 	
 	//int * GetMaterialNyArray(short nAxis) { return dev_materialNyArray[nAxis]; }
 	//int * GetMaterialNzArray(short nAxis) { return dev_materialNzArray[nAxis]; }
@@ -139,7 +139,7 @@ private:
 	float *dev_sampleNxArray[3];
 	float *dev_sampleNyArray[3];
 	float *dev_sampleDepthArray[3];		// NOTE that: the sign of z-component of normal vector is stored in the depth value
-	
+	float *dev_sampleMaterialStatus[3];
 	float m_origin[3],m_sampleWidth;	
 	int m_res,m_xSampleNum,m_ySampleNum,m_zSampleNum;
 	float bbox[6]; //Debbie 17/9

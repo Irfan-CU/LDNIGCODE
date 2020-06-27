@@ -61,11 +61,11 @@ void Infill::_generate(Polygons& result_polygons, Polygons& result_lines)
 
 	generatetriangleinfill(result_lines); 
 	
-	printf("@@before connecting infill linzes size inside the infill is %d \n", result_lines.size());
+	//printf("@@before connecting infill linzes size inside the infill is %d \n", result_lines.size());
 
 	result_lines.clear();
 	connectLines(result_lines);
-	printf("@@the connected infill linzes size inside the infill is %d \n", result_lines.size());
+	//printf("@@the connected infill linzes size inside the infill is %d \n", result_lines.size());
 	crossings_on_line.clear();
 	
 	//connectLines(result_lines, polygon);
@@ -93,7 +93,7 @@ coord_tIrfan Infill::getShiftOffsetFromInfillOriginAndRotation(const double& inf
 }
 
 
-void Infill::generateLineInfill(Polygons& result, int line_distance, int infill_rotation, coord_tIrfan shift)
+void Infill::generateLineInfill(Polygons& result, int line_distance, const double&  infill_rotation, coord_tIrfan shift)
 {
 	
 	shift += getShiftOffsetFromInfillOriginAndRotation(infill_rotation);
@@ -269,7 +269,7 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	{
 		return;  // don't add connection if boundary already contains whole outline!
 	}
-	printf("the cutlist size is %d \n", cut_list.size());
+	//printf("the cutlist size is %d \n", cut_list.size());
 
 	addLineInfill(result, rotation_matrix, scanline_min_idx, line_distance, boundary, cut_list, shift);
 }
@@ -504,7 +504,7 @@ void Infill::addLineInfill(Polygons& result, const curaIrfan::PointMatrix& rotat
 		}
 		scanline_idx += 1;
 	}
-	printf("the result add line in add lines is %d \n", result.size());
+
 }
 
 bool Infill::InfillLineSegment::operator ==(const InfillLineSegment& other) const
@@ -713,5 +713,5 @@ void Infill::connectLines(Polygons& result_lines)
 
 		completed_groups.insert(group);
 	}
-	printf("the connected groups inside infill size is %d \n", completed_groups.size());
+	//printf("the connected groups inside infill size is %d \n", completed_groups.size());
 }

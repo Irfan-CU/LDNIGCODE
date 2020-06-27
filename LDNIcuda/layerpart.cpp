@@ -25,12 +25,19 @@ It's also the first step that stores the result in the "data storage" so all oth
 		//storageLayer.openPolyLines = layer->openPolylines;
 		std::vector<PolygonsPart> result;
 		const bool union_layers = true;
+		
 		result = layer->polygons.splitIntoParts(union_layers);	  //polygons in slicer list
+		
+																  //printf("the id of the contour is %d and  result size is %d annd %d \n", layer->polygons.getpolygons_matid(), result.size(), layer->polygons.size());
+
 		//printf("the size of the parts are %d and the point count in the part is %d \n",result.size(),result.);
 		//printf("the polygons size is %d ", layer->polygons.size());
 		for (unsigned int i = 0; i < result.size(); i++)
 		{
 			storageLayer.parts.emplace_back();
+			
+			storageLayer.mat_parts.emplace_back(layer->polygons.polygons_matid[i]);
+			storageLayer.parts[i].part_mat = layer->polygons.polygons_matid[i];
 			storageLayer.parts[i].outline = result[i];
 			storageLayer.parts[i].boundaryBox.calculate(storageLayer.parts[i].outline);
 		//	printf("the size of the parts %d outline is %d \n",i, storageLayer.parts[i].outline.pointCount());
@@ -48,7 +55,7 @@ It's also the first step that stores the result in the "data storage" so all oth
 		{
 			SliceLayer& layer_storage = storage.Layers[layer_nr];
 			SlicerLayer& slice_layer = slicer->layers[layer_nr];
-			//printf("the layer nr is %d",layer_nr);
+			
 			createLayerWithParts(layer_storage, &slice_layer);
 			//printf("the parts are genrated for layer %d and the parts size is %d \n", layer_nr, layer_storage.parts.size());
 		}
@@ -56,6 +63,8 @@ It's also the first step that stores the result in the "data storage" so all oth
 		for (int layer_nr = total_layers - 1; layer_nr >= 0; layer_nr--)
 		{
 			SliceLayer& layer_storage = storage.Layers[layer_nr];
+			for (int i = 0; i < layer_storage.parts.size(); i++)
+			//printf("the layer nr is %d and the parts are %d and the materials is %d \n", layer_nr, i, layer_storage.mat_parts[i]);
 			ESurfaceMode magic_mesh_surface_mode = ESurfaceMode::NORMAL;
 		   /*
 			if  (layer_storage.parts.size() > 0 || magic_mesh_surface_mode != ESurfaceMode::NORMAL && layer_storage.openPolyLines.size() > 0)

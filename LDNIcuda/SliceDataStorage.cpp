@@ -73,7 +73,7 @@ bool SliceMeshStorage::getExtruderIsUsed(const size_t extruder_nr) const
 
 bool SliceMeshStorage::getExtruderIsUsed(const size_t extruder_nr, const int& layer_nr) const
 {
-	printf("isndie the get extruders is used \n");
+	
 	SliceDataStorage* storage;
 	const SliceLayer& layer = storage->Layers[layer_nr];
 	int skin_outline_count = 1;
@@ -195,10 +195,11 @@ std::vector<bool> SliceDataStorage::getExtrudersUsed() const
 std::vector<bool> SliceDataStorage::getExtrudersUsed(int layer_nr) const
 {
 	std::vector<bool> ret;
-	ret.resize(1, false);
+	ret.resize(3, false);
 	bool include_adhesion = true;
 	bool include_helper_parts = true;
 	bool include_models = true;
+	
 	
 	if (layer_nr > 0)
 	{ // only include adhesion only for layers where platform adhesion actually occurs
@@ -208,6 +209,17 @@ std::vector<bool> SliceDataStorage::getExtrudersUsed(int layer_nr) const
 	
 	// TODO: ooze shield, draft shield ..?
 
+	ret[0] = true;
+	{ // process brim/skirt
+		for (size_t extruder_nr = 0; extruder_nr < 3; extruder_nr++)
+		{
+			if (skirt_brim[extruder_nr].size() > 0)
+			{
+				ret[extruder_nr] = true;
+				continue;
+			}
+		}
+	}
 
 	if (include_models)
 	{

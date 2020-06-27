@@ -42,6 +42,11 @@
 
 		TimeMaterialEstimates estimates; //!< Naive time and material estimates
 
+		int path_mat;     //Describes the material at this path
+		int path_ext;     //path ext is here for the infill extruder allocation
+
+		int part_id;
+
 		/*!
 		 * \brief Creates a new g-code path.
 		 *
@@ -90,6 +95,16 @@
 		 * \return the value of fan_speed if it is in the range 0-100, otherwise the value from the config
 		 */
 		double getFanSpeed() const;
+		
+		void setPathMat( int path_Mat);
+
+		int getPathMat();
+
+		void setextruder(int extruder);
+		
+		int getextruder();
+
+
 	};
 
 //namespace cura

@@ -28,7 +28,7 @@ public:
 		char extruderCharacter;
 
 		double filament_area; //!< in mm^2 for non-volumetric, cylindrical filament
-
+		
 		double totalFilament; //!< total filament used per extruder in mm^3
 		double currentTemperature;
 		bool waited_for_temperature; //!< Whether the most recent temperature command has been a heat-and-wait command (M109) or not (M104).
@@ -64,7 +64,7 @@ public:
 			, fan_number(0)
 		{ }
 	};
-
+	int64_t extruder_offset;
 	ExtruderTrainAttributes extruder_attr[16];
 	//used by layerplan.h
 	unsigned int layer_nr;
@@ -110,6 +110,9 @@ public:
 
 	size_t current_extruder;
 
+	bool extruder0_extrusion_offset;
+	bool extruder1_extrusion_offset;
+
 	std::string machine_name = "Ultimaker 3";
 
 	std::string machine_buildplate_type;
@@ -129,7 +132,9 @@ public:
 
 	
 
-	void writeCode(const char*str);
+	void GCodeExport::writeCode(const char* str);
+	void writextruderchnageCode(const int extruder);
+	
 
 	void writeLine(const char*line);
 
@@ -148,6 +153,8 @@ public:
 	double getCurrentExtrudedVolume() const;
 
 	void setExtruderFanNumber(int extruder);
+
+
 
 	void writeTemperatureCommand(const size_t extruder, const double& temperature, const bool wait);
 

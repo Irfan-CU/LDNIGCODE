@@ -92,7 +92,7 @@ void generateMultipleVolumesOverlap(std::vector<Slicer*> &volumes)
 					{
 						continue;
 					}
-					printf("*****Warning the code is at wrong place somehow at ine 40 in multivolumes.cpp \n");
+					printf("*****Warning the code is at wrong place somehow at ine 96 in multivolumes.cpp \n");
 					SlicerLayer& other_volume_layer = other_volume->layers[layer_nr];
 					all_other_volumes = all_other_volumes.unionPolygons(other_volume_layer.polygons.offset(offset_to_merge_other_merged_volumes));
 				}

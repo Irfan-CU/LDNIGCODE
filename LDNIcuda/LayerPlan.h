@@ -221,6 +221,7 @@
 	class LayerPlan
 	{
 		friend class LayerPlanBuffer;
+		friend class SliceLayerPart;
 
 	private:
 		const SliceDataStorage& storage;
@@ -230,6 +231,10 @@
 		coord_tIrfan final_travel_z;
 		bool mode_skip_agressive_merge;
 		void setIsInside(bool _is_inside);
+		int layer_mat;
+		std::vector <SliceLayerPart> layer_parts;
+		std::vector <int> layer_parts_mat;
+		 
 	private:
 		Polygons computeCombBoundaryInside(const size_t max_inset);
 		const int layer_nr; //!< The layer number of this layer plan
@@ -264,6 +269,13 @@
 		Polygons bridge_wall_mask; //!< The regions of a layer part that are not supported, used for bridging
 		Polygons overhang_mask; //!< The regions of a layer part where the walls overhang
 		const std::vector<FanSpeedLayerTimeSettings> fan_speed_layer_time_settings_per_extruder;
+		// Parts in the layer 
+		
+		// Material in each part
+		// Paths relation to the part
+		
+
+
 	private:
 		/*!
 		 * Either create a new path with the given config or return the last path if it already had that config.
@@ -302,6 +314,8 @@
 			return last_planned_position.value_or(layer_start_pos_per_extruder[getExtruder()]);
 		}
 
+		float extruder_offset;
+
 		void writeGCode(GCodeExport& gcode);
 
 		void setMesh(const std::string mesh_id);
@@ -310,9 +324,9 @@
 
 		bool setExtruder(const size_t extruder_nr);
 		
-		void addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePathConfig& config, const Polygons& polygons, int layernum, SpaceFillType space_fill_type, bool enable_travel_optimization = false, int wipe_dist = 0, float flow_ratio = 1.0, std::optional<curaIrfan::PointIrfan> near_start_location = std::optional<curaIrfan::PointIrfan>(), double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
+		void addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePathConfig& config, const Polygons& polygons, int layernum,int mat, SpaceFillType space_fill_type, bool enable_travel_optimization = false, int wipe_dist = 0, float flow_ratio = 1.0, std::optional<curaIrfan::PointIrfan> near_start_location = std::optional<curaIrfan::PointIrfan>(), double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
 	        
-		void addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathConfig& config, curaIrfan::PointIrfan p, int layernum, SpaceFillType space_fill_type, const Ratio& flow = 1.0, bool spiralize = false, Ratio speed_factor = 1.0, double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
+		void addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathConfig& config, curaIrfan::PointIrfan p, int layernum, int mat, SpaceFillType space_fill_type, const Ratio& flow = 1.0, bool spiralize = false, Ratio speed_factor = 1.0, double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
 	 	
 		bool getSkirtBrimIsPlanned(unsigned int extruder_nr) const
 		{

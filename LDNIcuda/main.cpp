@@ -1124,13 +1124,13 @@ void menuFuncFDMContourGeneration()
 	cmesh->setRange(_pDataBoard.m_solidLDNIBody->GetRange());
 	range = _pDataBoard.m_solidLDNIBody->GetRange();
 	printf("ragne %f \n",range);
-	printf("\nPlease specify the binary image sampling width: ");		 // depennds on the printer
+	printf("\nPlease specify the binary image sampling width: ");
 	scanf("%s",inputStr);	printf("\n");	sscanf(inputStr,"%f",&samplewidth);
 	
 	printf("The sampling width is :%f \n", samplewidth);		  // sample width is the pixel width 
 	
 	
-	LDNIcudaOperation::LDNIFDMContouring_Generation( _pDataBoard.m_solidLDNIBody->m_cudaSolid, cmesh, qmesh, samplewidth);	
+	LDNIcudaOperation::LDNIFDMContouring_Generation( _pDataBoard.m_solidLDNIBody->m_cudaSolid, cmesh, qmesh, samplewidth);
 	
 	
 	printf("After the LDNIFDMContouring_Generation \n");

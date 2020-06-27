@@ -1223,32 +1223,44 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	GLint UVLoc;	 
 	int faceNum = mesh->GetFaceNumber();
 	dispListIndex = glGenLists(1);
-	
+
 	glNewList(dispListIndex, GL_COMPILE);
+
+	glBegin(GL_POINTS);
+
+
+	//---------------------for OBJ Processing--------------------------------//
+	//for (i = 0; i < faceNum; i++) {
+	//	mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
+	//	glVertex3i(ver[0] - 1, ver[1] - 1, ver[2] - 1);
+	//	if (mesh->IsQuadFace(i + 1)) { glVertex3i(ver[0] - 1, ver[2] - 1, ver[3] - 1); }	// one more triangle
+	//}
+	//glEnd();
+	//glEndList();
+	//---------------------for OBJ Processing--------------------------------//
 	
-	glBegin(GL_POINTS); 
 	
-	for (i = 0; i < faceNum; i++) {
+
+	//---------------------for AMF Processing--------------------------------//
+	
+	for (i = 0; i < faceNum; i++) 
+	{
 		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);	 
-		std::string tmp = mesh->face_material_names[i];	   // face_material_names tells at which face whaat the material is.
+		std::string tmp = mesh->face_material_names[i];
 		
 		for (int it = 0; it < mesh->total_materials.size(); it++)
 		{
-			
-
 			if (tmp.compare(mesh->total_materials[it])==0)
 			{
 				glVertex4i(ver[0] - 1, ver[1] - 1, ver[2] - 1, it+1);
 			}
-		}														   
-		//--Sendign material info to shaders for LDNI material sample points--//
-		
-		if (mesh->IsQuadFace(i + 1)) { glVertex3i(ver[0] - 1, ver[2] - 1, ver[3] - 1); }	// one more triangle
+		}
+
 	}
 	
 	glEnd();
 	glEndList();
-
+	//---------------------for AMF Processing--------------------------------//
 
 	//-----------------------------------------------------------------------------------------
 	//	Step 4:  using program objects and the texture
@@ -1472,6 +1484,7 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 		float* devNxArrayPtr=solid->GetSampleNxArrayPtr(nAxis);	// taking the address to the first for the array here 
 		float* devNyArrayPtr=solid->GetSampleNyArrayPtr(nAxis);
 		float* devDepthArrayPtr=solid->GetSampleDepthArrayPtr(nAxis);
+		float *devMaterialInOut = solid->GetMaterialInOUt(nAxis);
 		//int* devmaterial_normal = solid->GetMaterial_Normal(nAxis);
 		//int* devmaterial_array = solid->GetMaterialArray(nAxis);
 		//int* dev_material_status = solid->GetMaterial_Status(nAxis);
@@ -2577,6 +2590,7 @@ __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
 {
 	int index = threadIdx.x + blockIdx.x*blockDim.x;
 	int arrindex, num, ix, iy;
+	int material_in_out = 0;
 	
 	float4 rgb;		float temp;
 	while (index < arrsize) {
@@ -2590,9 +2604,23 @@ __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
 			
 			temp=fabs(rgb.z)*width-sampleWidth*0.5f;
 			
-			devNxArrayPtr[arrindex]=rgb.w;		// x-component of normal stores the value for the material index;	
+			devNxArrayPtr[arrindex]=rgb.w;		// material index;	
 			devNyArrayPtr[arrindex]=rgb.y;		// y-component of normal
-			
+			//devMaterialInOut[arrindex] = 0.0000;
+			/*
+			for (int i = devIndexArrayPtr[index]; i <= devIndexArrayPtr[index + 1]; i++)
+			{
+				if (material_in_out == 0 || material_in_out != devNxArrayPtr[i])
+				{
+					devMaterialInOut[arrindex] = 1.0000;
+					material_in_out = devNxArrayPtr[arrindex];
+				}
+				else
+				{
+					devMaterialInOut[arrindex] = 0.0000;
+				}
+			}
+			*/
 			if (rgb.z<0) devDepthArrayPtr[arrindex]=-temp; else devDepthArrayPtr[arrindex]=temp;
 			
 		}
@@ -3102,6 +3130,8 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, GLuint vbo,
 		float* devNxArrayPtr=solid->GetSampleNxArrayPtr(nAxis);
 		float* devNyArrayPtr=solid->GetSampleNyArrayPtr(nAxis);
 		float* devDepthArrayPtr=solid->GetSampleDepthArrayPtr(nAxis);
+		//float* devMaterialInOUt = solid->GetMaterialInOUt(nAxis);
+		
 		tempTime=clock();
 		for(n=1;n<=n_max;n++) {
 			CUDA_SAFE_CALL( cudaGraphicsMapResources( 1, &sampleTex_resource, NULL ) );

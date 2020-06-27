@@ -83,7 +83,7 @@ void GCodeExport::setInitialAndBuildVolumeTemps(const unsigned int start_extrude
 {
 	//const Scene& scene = Application::getInstance().current_slice->scene;
 	const size_t extruder_count = 1;
-	for (size_t extruder_nr = 0; extruder_nr < extruder_count; extruder_nr++)
+	for (size_t extruder_nr = 0; extruder_nr < 3; extruder_nr++)
 	{
 		const double print_temp_0 = 205;
 		const double print_temp_here = 200;
@@ -108,7 +108,7 @@ void GCodeExport::resetTotalPrintTimeAndFilament()
 	{
 		total_print_times[i] = 0.0;
 	}
-	for (unsigned int e = 0; e < 2; e++)
+	for (unsigned int e = 0; e < 16; e++)
 	{
 		extruder_attr[e].totalFilament = 0.0;
 		extruder_attr[e].currentTemperature = 0;
@@ -165,11 +165,7 @@ void GCodeExport::setFilamentDiameter(const size_t extruder, const double diamet
 
 
 }
-void GCodeExport::writeCode(const char* str)
-{
-	
-	*output_stream << str << new_line;
-}
+
 
 void GCodeExport::writeComment(const std::string& unsanitized_comment)
 {
@@ -256,6 +252,17 @@ void GCodeExport::setExtruderFanNumber(int extruder)
 		fan_number = extruder_attr[extruder].fan_number;
 		current_fan_speed = -1; // ensure fan speed gcode gets output for this fan
 	}
+}
+
+void GCodeExport::writeCode(const char* str)
+{
+	*output_stream << str << new_line;
+}
+
+void GCodeExport::writextruderchnageCode(const int extruder)
+{
+	
+	*output_stream<< ";The new material is"<< extruder << new_line;
 }
 
 
@@ -462,8 +469,8 @@ void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, cons
 	
 	curaIrfan::PointIrfan gcode_pos = getGcodePos(x, y, current_extruder);
 	total_bounding_box.include(Point3(gcode_pos.X, gcode_pos.Y, z));
-	
-	*output_stream << " X" << MMtoStream{ gcode_pos.X + 100000}  << " Y" << MMtoStream{ gcode_pos.Y + 100000};
+
+	*output_stream << " X" << MMtoStream{ (gcode_pos.X - extruder_offset) + 100000} << " Y" << MMtoStream{ gcode_pos.Y + 100000};
 	
 	if (z != currentPosition.z)
 	{
@@ -477,8 +484,23 @@ void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, cons
 	if (e + current_e_offset != current_e_value)
 	{
 	
-		const double output_e = (relative_extrusion) ? e + current_e_offset - current_e_value : e + current_e_offset;
-		*output_stream << " E" << output_e;
+		if (current_extruder == 1 && extruder1_extrusion_offset == false)
+		{
+			const double output_e =0.0000;
+			*output_stream << " E" << output_e;
+			extruder1_extrusion_offset = true;
+
+
+		}	
+		
+
+		else
+		{
+			const double output_e = (relative_extrusion) ? e + current_e_offset - current_e_value : e + current_e_offset;
+			*output_stream << " E" << output_e;
+		}
+
+		
 		
 	}
 	
@@ -560,6 +582,7 @@ void GCodeExport::writeTravel(const Point3& p, const double& speed, coord_tIrfan
 }
 void GCodeExport::writeTravel(const curaIrfan::PointIrfan& p, const double& speed, coord_tIrfan layer_thicnkess)
 {
+	
 	writeTravel(Point3(p.X, p.Y, current_layer_z), speed, layer_thicnkess);
 }
 void GCodeExport::writeTravel(const coord_tIrfan& x, const coord_tIrfan& y, const coord_tIrfan& z1, const double& speed, coord_tIrfan layer_thicnkess)
@@ -837,7 +860,6 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
 	{
 		return;
 	}
-
 	
 	if (retraction_enable)
 	{
@@ -846,10 +868,10 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
 		writeRetraction(retraction_config_old_extruder, force, extruder_switch);
 	}
 
-	if (perform_z_hop > 0)
+	/*if (perform_z_hop > 0)
 	{
 		writeZhopStart(perform_z_hop);
-	}
+	}*/
 
 	resetExtrusionValue(); // zero the E value on the old extruder, so that the current_e_value is registered on the old extruder
 

@@ -83,7 +83,7 @@ public:
 												float2 *&stickStart, float2 *&stickStart1, float2 *&stickStart2, float2 *&stickStart3, float2 *&stickEnd, unsigned int *&stickIndex, int *&noinfill_node, 
 												int infillnodecount, float *&infillnode_xposition, float *&infillnode_zposition, float *&infillnode_yposition, int *&stickID, int *&prevStickID,  int2 *&stickDir, 
 												int *&stickMaterial, int *&stickMaterial1, int *&stickMaterial2, int *&stickMaterial3 , unsigned int *&material_index1, 
-												unsigned int *&material_index2, unsigned int *&material_index3, QuadTrglMesh *qmesh);
+												unsigned int *&material_index2, unsigned int *&material_index3, QuadTrglMesh *qmesh, unsigned int*&material_status);
 	//static void LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[],
 	//												float angle, float thickness, double clipPlanNm[], float nSampleWidth, float2 *stickStart, 
 	//												float2 *stickEnd, int *stickID);

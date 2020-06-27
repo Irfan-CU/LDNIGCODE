@@ -205,11 +205,8 @@
 	 */
 	void SkinInfillAreaComputation::generateSkinAndInfillAreas(SliceLayerPart& part)
 	{
-		//printf("@line 203 the part.insets.back() pointcount is %d \n", part.insets.back().pointCount());
+		
 		Polygons original_outline = part.insets.back().offset(-innermost_wall_line_width / 2);
-		//printf("the original_outline size is %d \n", original_outline.size());
-		//printf("@line 205 the original_outline pointcount is %d \n", original_outline.pointCount());
-		// make a copy of the outline which we later intersect and union with the resized skins to ensure the resized skin isn't too large or removed completely.
 		Polygons upskin;
 		if (top_layer_count > 0)
 		{
@@ -449,10 +446,11 @@
 		
 		Polygons infill = part.insets.back().offset(offset_from_inner_wall);
 		//printf("****before skin difference the infill size for the part is %d and point count is %d \n", infill.size(), part.infill_area.pointCount());
-		infill = infill.difference(skin);
+		//infill = infill.difference(skin);
 		//printf("the infill size is %d \n points in parts are %d \n", infill.size(),part.insets.back().pointCount());
 		infill.removeSmallAreas(MIN_AREA_SIZE);
 		part.infill_area = infill.offset(infill_skin_overlap);
+		printf("the infill area size is %d for the layer %d \n", part.infill_area.size(), layer_nr);
 		//printf("****the infill size for the part is %d and point count is %d and the layer is %d\n",infill.size(),part.infill_area.pointCount(),layer_nr);
 	}
 
@@ -563,7 +561,7 @@
 		layer_skip_count = gradual_infill_step_layer_count / n_skip_steps_per_gradual_step;
 		const size_t max_infill_steps = 0;// mesh.settings.get<size_t>("gradual_infill_steps");
 
-		const int min_layer = 4;//mesh.settings.get<size_t>("bottom_layers");
+		const int min_layer = 0;//mesh.settings.get<size_t>("bottom_layers");
 		const int max_layer = storage.Layers.size()-1-0;// mesh.layers.size() - 1 - mesh.settings.get<size_t>("top_layers");
 		
 		for (int layer_idx = 0; layer_idx < static_cast<int>(storage.Layers.size()); layer_idx++)
