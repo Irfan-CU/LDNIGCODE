@@ -50,6 +50,7 @@ class SliceLayerPart;
 		 *
 		 * \param part The part for which to generate the insets.
 		 */
+		void generateInsets(SliceLayerPart* part, SliceLayerPart* part_zigzag);
 		void generateInsets(SliceLayerPart* part);
 
 	};

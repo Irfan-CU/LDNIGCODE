@@ -52,7 +52,7 @@
 			MeshPathConfigs(const SliceDataStorage& storage, const coord_tIrfan layer_thickness, const int& layer_nr, const std::vector<Ratio>& line_width_factor_per_extruder);
 			void smoothAllSpeeds(GCodePathConfig::SpeedDerivatives first_layer_config, const int& layer_nr, const int& max_speed_layer);
 
-			int &mesh_mat;
+			//int &mesh_mat;
 		};
 
 		GCodePathConfig raft_base_config;

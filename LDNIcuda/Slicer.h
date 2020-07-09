@@ -54,11 +54,14 @@
 	{
 	public:
 		std::vector<SlicerSegment> segments;
+		std::vector<SlicerSegment> segments_zigzag; //duplicate 
 		std::unordered_map<int, int> face_idx_to_segment_idx; // topology
 		std::vector<Polygons> infillpolygons;
 		int z = -1;
 		Polygons polygons;
+		Polygons polygons_Zigzag;//these polygos are for 
 		Polygons openPolylines;
+		bool inteference_zigzag;//bool for the zig-zag boundary at the interference
 			
 	};
 

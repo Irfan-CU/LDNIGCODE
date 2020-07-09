@@ -126,9 +126,7 @@ void LayerPlan::addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePa
 	Polygons boundary;
 	
 	curaIrfan::PointIrfan startPoint = near_start_location.value_or(getLastPlannedPositionOrStartingPosition());
-	//printf("near_start_location.value_or(getLastPlannedPositionOrStartingPosition() is %d and %d \n",startPoint.X,startPoint.Y);
 	LineOrderOptimizer orderOptimizer(startPoint, &boundary);
-	//printf("the polygon sizse for the line order optimizer is %d \n", polygons.size());
 	
 	for (unsigned int line_idx = 0; line_idx < polygons.size(); line_idx++)
 	{
@@ -139,22 +137,18 @@ void LayerPlan::addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePa
 	{
 		const unsigned int poly_idx = orderOptimizer.polyOrder[order_idx];
 		ConstPolygonRef polygon = polygons[poly_idx];
-	
-		
-		//printf("the pints size is %d \n", polygon.size());
-		const size_t start = orderOptimizer.polyStart[poly_idx];
+	const size_t start = orderOptimizer.polyStart[poly_idx];
 		const size_t end = 1 - start;
 		const curaIrfan::PointIrfan& p0 = polygon[start];
 		addTravel(layer_thickness, layernum,p0);
-		//printf("@@the polygon starting point is %d and %d the start id is %d  \n", p0.X, p0.Y,start);
+		
 		const curaIrfan::PointIrfan& p1 = polygon[end];
-		//printf("@@the polygon ending point is %d and %d end id is %d \n", p1.X,p1.Y,end );
-		//const GCodePathConfig *config;
-		//addExtrusionMove(p1,space_fill_type, flow_ratio, false, 1.0, fan_speed);
+		
 		layernum = polygons.print_extruder;
+		
 		addExtrusionMove(layer_thickness, config, p1, layernum, mat, space_fill_type, flow_ratio, false, 1.0, fan_speed);
 	}
-	//printf("***** the extruder plans and paths size are %d \n", extruder_plans[0].paths.size());
+	
 	
 }
 
@@ -163,7 +157,7 @@ void LayerPlan::addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathCo
 	
 	GCodePath* path = getLatestPathWithConfig(layer_thickness, config, space_fill_type, flow, spiralize, speed_factor);
 	path->points.push_back(p);
-	//printf("@@the points size is %d \n", path->points.size());
+	
 	path->setFanSpeed(fan_speed);
 	last_planned_position = p;
 	
@@ -171,21 +165,13 @@ void LayerPlan::addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathCo
 	if (layer_parts_mat.size() != 0)
 	{
 		path->setPathMat(layer_parts_mat.back());
-		
-		
 	}
 	else
 	{
-		path->setPathMat(100);//setting the default material not possible
-
+		path->setPathMat(100);
 	}
 	path->setextruder(layernum);
 
-	/*printf("the path's part _id is %d \n", path->part_id);
-	if (layer_parts_mat.size() != 0)
-	{
-		printf("the layerparts mat is %d \n",layer_parts_mat.back());
-	}*/
 
 }
  
@@ -361,83 +347,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 		gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
 		gcode.extruder_offset = 0.0;
 
-		/*
-		//for (unsigned int path_it = 0; path_it < paths.size(); path_it++)
-		//{
-		//	if (path.config->type == PrintFeatureType::OuterWall)
-		//	{
-
-		//		for (int point_idx = 1; point_idx < path.points.size(); point_idx++)
-		//		{
-		//			if (path.config->type == PrintFeatureType::OuterWall)
-		//			{
-		//				int newx = (path.points[point_idx].X - path.points[point_idx - 1].X);
-		//				int newy = (path.points[point_idx].Y - path.points[point_idx - 1].Y);
-		//				curaIrfan::PointIrfan mm_int_tmp_rot;
-		//				if (newy > 250 && newx < 10)
-		//				{
-		//					for (int div = 1; div <= 10; div++)
-		//					{
-
-		//						int new_divd_y = div * (newy / 10);
-		//						if ((div % 2) != 0)
-		//						{
-		//							int newx = (path.points[point_idx].X - path.points[point_idx - 1].X);
-		//							int newy = (new_divd_y - path.points[point_idx - 1].Y);
-		//							double cos_component = std::cos(0.7853);
-		//							double sin_component = std::sin(0.7853);
-		//							mm_int_tmp_rot.X = (cos_component * newx - sin_component * newy + path.points[point_idx - 1].X);
-		//							mm_int_tmp_rot.Y = (sin_component * newx + cos_component * newy + path.points[point_idx - 1].Y);
-		//							path.points.insert((path.points.begin() + point_idx), mm_int_tmp_rot);
-		//							point_idx++;
-
-		//						}
-		//						else
-		//						{
-		//							int newx = (path.points[point_idx].X - path.points[point_idx - 1].X);
-		//							int newy = (new_divd_y - path.points[point_idx - 1].Y);
-		//							double cos_component = std::cos(-0.7853);
-		//							double sin_component = std::sin(-0.7853);
-		//							mm_int_tmp_rot.X = (cos_component * newx - sin_component * newy + path.points[point_idx - 1].X);
-		//							mm_int_tmp_rot.Y = (sin_component * newx + cos_component * newy + path.points[point_idx - 1].Y);
-		//							path.points.insert((path.points.begin() + point_idx), mm_int_tmp_rot);
-		//							point_idx++;
-
-		//						}
-
-		//					}
-
-
-		//				}
-
-		//				else
-		//				{
-		//					//printf("the unrotated point is X %d and Y %d \n", path.points[point_idx].X, path.points[point_idx].Y);
-
-		//					//printf("the unrotated point is cos %f and Sin %f \n", cos_component, cos_component);
-		//					double cos_component = std::cos(0.7853);
-		//					double sin_component = std::sin(0.7853);
-		//					mm_int_tmp_rot.X = (cos_component * newx - sin_component * newy + path.points[point_idx - 1].X);
-		//					mm_int_tmp_rot.Y = (sin_component * newx + cos_component * newy + path.points[point_idx - 1].Y);
-		//					//printf("the unrotated point is mm_int_tmp_rot.X %d and mm_int_tmp_rot.Y %d \n", mm_int_tmp_rot.X, mm_int_tmp_rot.Y);
-		//					path.points[point_idx].X = mm_int_tmp_rot.X;
-		//					path.points[point_idx].Y = mm_int_tmp_rot.Y;
-		//				}
-
-
-
-
-		//			}
-		//		}
-
-		//	}
-		//}
-		*/
-		
-		
-		//std::ostringstream tmp;
-		//tmp << "T" << 0;
-		//gcode.writeLine(tmp.str().c_str());
+	
 
 		for (unsigned int path_idx = 0; path_idx < paths.size(); path_idx++)
 		{
@@ -445,18 +355,8 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 			extruder_plan.handleInserts(path_idx, gcode);
 
 			GCodePath& path = paths[path_idx];
-			
-			
-			//unsigned int it = path_mat_order1[path_idx];
-
-			//extruder_plan.handleInserts(it, gcode);
-			//GCodePath& path = paths[it];
-			int partmat  = path.getPathMat();
-			std::stringstream ss;
-			ss << "partmat:" << partmat;
-			gcode.writeComment(ss.str());
-			
-			if ((path.getPathMat() == 5 && path.getextruder() ==1 && (path.config->type == PrintFeatureType::Infill)))
+						
+			if (( path.getPathMat() == 5) && (path.getextruder() == 1) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))
 			{	
 				if (gcode.current_extruder == 0)
 				{
@@ -469,7 +369,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 				}
 
 			}
-			else if (path.getPathMat() == 5 && path.getextruder() == 0 && (path.config->type == PrintFeatureType::Infill))
+			else if ((path.getPathMat() == 5) && (path.getextruder() == 0) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))
 			{
 				if (gcode.current_extruder == 1)
 				{
@@ -504,6 +404,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 					
 				}
 			}
+			else 
 
 
 
@@ -813,12 +714,16 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 	const Ratio overhang_speed_factor = Ratio(1);// mesh.settings.get<Ratio>("wall_overhang_speed_factor");
 
 	curaIrfan::PointIrfan cur_point = p0;
-
-	// helper function to add a single non-bridge line
-
-	// If the line precedes a bridge line, it may be coasted to reduce the nozzle pressure before the bridge is reached
-
-	// alternatively, if the line follows a bridge line, it may be segmented and the print speed gradually increased to reduce under-extrusion
+	int wall_extruder;
+	
+	if (layer_parts_mat.back() == 5)
+	{
+		wall_extruder = 1;
+	}
+	else
+	{
+		wall_extruder = 0;
+	}
 
 	auto addNonBridgeLine = [&](const curaIrfan::PointIrfan& line_end)
 	{										
@@ -858,15 +763,16 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 						// segment is longer than coast distance so extrude using non-bridge config to start of coast
 						curaIrfan::PointIrfan point=  curaIrfan::operator+(segment_end, curaIrfan::operator*(coast_dist, curaIrfan::operator/((curaIrfan::operator-(cur_point, segment_end)), len)));
 										
-						addExtrusionMove(layer_thickness, non_bridge_config, point, layer_nr,1, SpaceFillType::Polygons, segment_flow, spiralize, speed_factor);
+						addExtrusionMove(layer_thickness, non_bridge_config, point, wall_extruder,1, SpaceFillType::Polygons, segment_flow, spiralize, speed_factor);
 					}
 					// then coast to start of bridge segment
-					addExtrusionMove(layer_thickness, non_bridge_config, segment_end, layer_nr, 1, SpaceFillType::Polygons, 0, spiralize, speed_factor);
+					addExtrusionMove(layer_thickness, non_bridge_config, segment_end, wall_extruder, 1, SpaceFillType::Polygons, 0, spiralize, speed_factor);
 				}
 				else
 				{
 					// no coasting required, just normal segment using non-bridge config
-					addExtrusionMove(layer_thickness, non_bridge_config, segment_end, layer_nr, 1, SpaceFillType::Polygons, segment_flow, spiralize,
+					
+					addExtrusionMove(layer_thickness, non_bridge_config, segment_end, wall_extruder, 1, SpaceFillType::Polygons, segment_flow, spiralize,
 						(overhang_mask.empty() || (!overhang_mask.inside(p0, true) && !overhang_mask.inside(p1, true))) ? speed_factor : overhang_speed_factor);
 				}
 
@@ -875,7 +781,7 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 			else
 			{
 				// no coasting required, just normal segment using non-bridge config
-				addExtrusionMove(layer_thickness, non_bridge_config, segment_end, layer_nr, 1, SpaceFillType::Polygons, segment_flow, spiralize,
+				addExtrusionMove(layer_thickness, non_bridge_config, segment_end, wall_extruder, 1, SpaceFillType::Polygons, segment_flow, spiralize,
 					(overhang_mask.empty() || (!overhang_mask.inside(p0, true) && !overhang_mask.inside(p1, true))) ? speed_factor : overhang_speed_factor);
 			}
 			curaIrfan::PointIrfan flow_multiplier= curaIrfan::operator*(curaIrfan::operator*(segment_flow, speed_factor), non_bridge_config.getSpeed());
@@ -889,7 +795,7 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 	if (bridge_wall_mask.empty())
 	{
 		// no bridges required
-		addExtrusionMove(layer_thickness, non_bridge_config, p1, layer_nr, 1, SpaceFillType::Polygons, flow, spiralize,
+		addExtrusionMove(layer_thickness, non_bridge_config, p1, wall_extruder, 1, SpaceFillType::Polygons, flow, spiralize,
 			(overhang_mask.empty() || (!overhang_mask.inside(p0, true) && !overhang_mask.inside(p1, true))) ? 1.0_r : overhang_speed_factor);
 	}
 	else
@@ -949,7 +855,7 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 
 					if (bridge_line_len > min_line_len)
 					{
-						addExtrusionMove(layer_thickness , bridge_config, b1, layer_nr, 1, SpaceFillType::Polygons, flow);
+						addExtrusionMove(layer_thickness , bridge_config, b1, wall_extruder, 1, SpaceFillType::Polygons, flow);
 						non_bridge_line_volume = 0;
 						cur_point = b1;
 						// after a bridge segment, start slow and accelerate to avoid under-extrusion due to extruder lag
@@ -973,7 +879,7 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 		else if (bridge_wall_mask.inside(p0, true) && curaIrfan::vSize(curaIrfan::operator-(p0 , p1)) >= min_bridge_line_len)
 		{
 			// both p0 and p1 must be above air (the result will be ugly!)
-			addExtrusionMove(layer_thickness, bridge_config, p1, layer_nr, 1, SpaceFillType::Polygons, flow);
+			addExtrusionMove(layer_thickness, bridge_config, p1, wall_extruder, 1, SpaceFillType::Polygons, flow);
 			non_bridge_line_volume = 0;
 		}
 		else

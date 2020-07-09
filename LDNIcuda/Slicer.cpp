@@ -173,6 +173,7 @@
 		double xx, aa, bb, cc, yy, zz;
 		assert(slice_layer_count > 0);
 	   	layers.resize(slice_layer_count);
+		
 
 		// set (and initialize compensation for) initial layer, depending on slicing mode
 		const coord_tIrfan initial_layer_thickness = storage.getlayer_thickness();// MM2INT(0.1);// Application::getInstance().current_slice->scene.current_mesh_group->settings.get<coord_t>("layer_height_0");
@@ -202,16 +203,21 @@
 				bool mat_change = true;
 				mesh1 = (VSAMesh *)(mesh_list.GetNext(Pos_1));
 				Polygon poly;
+				Polygon poly_zigzag;
 				double xx1, zz1, aa1, cc1;
 
 				for (Pos_2 = mesh1->GetVSAEdgeList().GetHeadPosition(); Pos_2 != NULL; )
 				{
+					
 					//printf("Yeah I am here on line 1933 of the code %d \n");
 					edge1 = (VSAEdge *)(mesh1->GetVSAEdgeList().GetNext(Pos_2));
 					//printf("Yeah I am here on line 1935 of the code %d \n", mesh_idx);
 					edge1->GetStartPoint()->GetCoord3D(xx, yy, zz);
 					edge1->GetEndPoint()->GetCoord3D(aa, bb, cc);
 					edg_mat = edge1->GetEdgeMaterial();
+					//prev and next material here means that 
+					
+					
 					if (edg_mat != 5 && (mat_change==true))
 					{
 						edg_mat_copy = edg_mat;
@@ -221,123 +227,153 @@
 						edg_mat_copy = 5;
 						mat_change = false;
 					}
-				    //Interface detection and zigzag pattern development here.
 
-					//if (edg_mat == 5)
-					//{
-					//	if (n == 0)
-					//	{
-					//		xx1 = xx;
-					//		zz1 = zz;
-					//		
-					//	}
-					//	n++;
-					//	if (n < 3)
-					//	{
-					//		continue;
-					//	}
-
-					//	if (n == 3)
-					//	{
-					//		n = 0;
-
-					//		double mmx = (xx1 + aa)*0.5;
-					//		double mmy = (zz1 + cc)*0.5;
-
-					//		const coord_tIrfan mmx_int = MM2INT(mmx * 30);
-					//		const coord_tIrfan mmy_int = MM2INT(mmy * 30);
-					//		const coord_tIrfan xx_int = MM2INT(xx1 * 30);
-					//		const coord_tIrfan aa_int = MM2INT(aa * 30);
-					//		const coord_tIrfan zz_int = MM2INT(zz1 * 30);
-					//		const coord_tIrfan cc_int = MM2INT(cc * 30);
-					//		const double cos_component = std::cos(0.7853);
-					//		const double sin_component = std::sin(0.7853);
-					//		const double newx = (mmx_int - aa_int);
-					//		const double newy = (mmy_int - cc_int);
-
-					//		curaIrfan::PointIrfan mm_int_tmp_rot;
-					//		mm_int_tmp_rot.X = (cos_component * newx - sin_component * newy + aa_int);
-					//		mm_int_tmp_rot.Y = (sin_component * newx + cos_component * newy + cc_int);
-
-					//		//curaIrfan::PointIrfan mm_int_tmp_rot = curaIrfan::PointIrfan(cos_component *newx - sin_component * newy, sin_component * newx + cos_component * newy);
-
-
-
-					//		segment.start.X = mm_int_tmp_rot.X;
-					//		segment.start.Y = mm_int_tmp_rot.Y;
-					//		segment.end.X = aa_int;
-					//		segment.end.Y = cc_int;
-
-					//		//printf("the rotated point is %d , %d and %d , %d \n", mm_int_tmp_rot.X, mm_int_tmp_rot.Y, aa_int, cc_int);
-
-					//		layers[layer_nr].segments.push_back(segment);
-					//		segment.addedToPolygon = false;
-
-					//		if (edge == 1)
-					//		{
-					//			poly.add(segment.end);
-					//			poly.add(segment.start);
-
-					//			edge++;
-					//			segment.end.X = mm_int_tmp_rot.X;
-					//			segment.end.Y = mm_int_tmp_rot.Y;
-					//			segment.start.X = xx_int;
-					//			segment.start.Y = zz_int;
-
-					//			poly.add(segment.end);
-					//			poly.add(segment.start);
-					//			edge++;
-
-
-					//		}
-					//		else if (edge != 1 && edge != mesh1->GetVSAEdgeList().GetCount())
-					//		{
-					//			segment.end.X = mm_int_tmp_rot.X;
-					//			segment.end.Y = mm_int_tmp_rot.Y;
-					//			segment.start.X = xx_int;
-					//			segment.start.Y = zz_int;
-
-
-					//			poly.add(segment.end);
-					//			poly.add(segment.start);
-
-					//			edge++;
-
-					//		}
-					//		else
-
-					//		{
-					//			segment.start.X = mm_int_tmp_rot.X;
-					//			segment.start.Y = mm_int_tmp_rot.Y;
-					//			segment.end.X = aa_int;
-					//			segment.end.Y = cc_int;
-
-					//			poly.add(segment.end);
-					//			poly.add(segment.start);
-					//			edge++;
-					//			segment.end.X = mm_int_tmp_rot.X;
-					//			segment.end.Y = mm_int_tmp_rot.Y;
-					//			segment.start.X = xx_int;
-					//			segment.start.Y = zz_int;
-
-					//			poly.add(segment.end);
-					//			poly.add(segment.start);
-					//			edge++;
-
-					//		}
-
-
-					//	}
-					//	
-					//}
-
-					//int edge_id = edge1->GetIndexNo();// .GetIndexNo();
-					//segment.segmentidx = edge_id;
-					//
-					//
-					//
-					//if (edg_mat != 5)
+					if ((edge1->GetprevEdgeMaterial() == 5) || (edge1->GetnextEdgeMaterial() == 5))
 					{
+						layers[layer_nr].inteference_zigzag = true;
+						const double cos_component = std::cos(0.7853);
+						const double sin_component = std::sin(0.7853);
+						curaIrfan::PointIrfan mm_int_tmp_rot;
+						
+						if ((edge1->GetIndexNo()) % 2 != 0)
+						{
+							const coord_tIrfan xx_int = MM2INT(xx * 30);
+							const coord_tIrfan aa_int = MM2INT(aa * 30);
+							const coord_tIrfan zz_int = MM2INT(zz * 30);
+							const coord_tIrfan cc_int = MM2INT(cc * 30);
+							
+							segment.start.X = xx_int;
+							segment.start.Y = zz_int;
+							segment.end.X = aa_int;
+							segment.end.Y = cc_int;
+							layers[layer_nr].segments.push_back(segment);
+							segment.addedToPolygon = false;
+
+							if (edge == 1)
+							{
+								poly.add(segment.end);
+								poly.add(segment.start);
+
+							}
+							else if (edge != 1 && edge != mesh1->GetVSAEdgeList().GetCount())
+							{
+								poly.add(segment.start);
+
+							}
+							else
+
+							{
+								poly.add(segment.end);
+								poly.add(segment.start);
+
+							}
+				
+							const double newx = (xx_int - aa_int);
+							const double newy = (zz_int - cc_int);
+
+							mm_int_tmp_rot.X = (cos_component * newx - sin_component * newy + aa_int);
+							mm_int_tmp_rot.Y = (sin_component * newx + cos_component * newy + cc_int);
+
+							segment.start.X = mm_int_tmp_rot.X;
+							segment.start.Y = mm_int_tmp_rot.Y;
+							segment.end.X = aa_int;
+							segment.end.Y = zz_int;
+
+
+							layers[layer_nr].segments_zigzag.push_back(segment);
+							segment.addedToPolygon = false;
+
+							if (edge == 1)
+							{
+								poly_zigzag.add(segment.end);
+								poly_zigzag.add(segment.start);
+
+							}
+							else if (edge != 1 && edge != mesh1->GetVSAEdgeList().GetCount())
+							{
+								poly_zigzag.add(segment.start);
+
+							}
+							else
+
+							{
+								poly_zigzag.add(segment.end);
+								poly_zigzag.add(segment.start);
+
+							}
+
+							edge++;
+							//printf("its working the old points are %d %d %d %d \n", xx_int, zz_int, aa_int, cc_int);
+							//printf("its working the new points are %d %d %d %d \n", xx_int, zz_int, mm_int_tmp_rot.X, mm_int_tmp_rot.Y);
+						}
+						else
+						{
+							const coord_tIrfan xx_int = MM2INT(xx * 30);
+							const coord_tIrfan aa_int = MM2INT(aa * 30);
+							const coord_tIrfan zz_int = MM2INT(zz * 30);
+							const coord_tIrfan cc_int = MM2INT(cc * 30);
+
+							segment.start.X = xx_int;
+							segment.start.Y = zz_int;
+							segment.end.X = aa_int;
+							segment.end.Y = cc_int;
+							layers[layer_nr].segments.push_back(segment);
+							segment.addedToPolygon = false;
+
+							if (edge == 1)
+							{
+								poly.add(segment.end);
+								poly.add(segment.start);
+
+							}
+							else if (edge != 1 && edge != mesh1->GetVSAEdgeList().GetCount())
+							{
+								poly.add(segment.start);
+
+							}
+							else
+
+							{
+								poly.add(segment.end);
+								poly.add(segment.start);
+
+							}
+
+							segment.start.X = xx_int;
+							segment.start.Y = zz_int;
+							segment.end.X = aa_int;
+							segment.end.Y = cc_int;
+							layers[layer_nr].segments_zigzag.push_back(segment);
+							segment.addedToPolygon = false;
+
+							if (edge == 1)
+							{
+								poly_zigzag.add(segment.end);
+								poly_zigzag.add(segment.start);
+
+							}
+							else if (edge != 1 && edge != mesh1->GetVSAEdgeList().GetCount())
+							{
+								poly_zigzag.add(segment.start);
+
+							}
+							else
+
+							{
+								poly_zigzag.add(segment.end);
+								poly_zigzag.add(segment.start);
+
+							}
+
+							edge++;
+						}
+						
+					}
+				   
+					else
+					{
+
+
 						const coord_tIrfan xx_int = MM2INT(xx * 30);
 						const coord_tIrfan aa_int = MM2INT(aa * 30);
 						const coord_tIrfan zz_int = MM2INT(zz * 30);
@@ -348,17 +384,21 @@
 						segment.end.X = aa_int;
 						segment.end.Y = cc_int;
 						layers[layer_nr].segments.push_back(segment);
+						layers[layer_nr].segments_zigzag.push_back(segment);
 						segment.addedToPolygon = false;
 
 						if (edge == 1)
 						{
 							poly.add(segment.end);
 							poly.add(segment.start);
+							poly_zigzag.add(segment.end);
+							poly_zigzag.add(segment.start);
 
 						}
 						else if (edge != 1 && edge != mesh1->GetVSAEdgeList().GetCount())
 						{
 							poly.add(segment.start);
+							poly_zigzag.add(segment.start);
 
 						}
 						else
@@ -366,22 +406,23 @@
 						{
 							poly.add(segment.end);
 							poly.add(segment.start);
+							poly_zigzag.add(segment.end);
+							poly_zigzag.add(segment.start);
 
 						}
 
 						edge++;
-					
+
 					}
 
 				}
 				//one polygon is formed in one loop
 
-
-
+				
+				layers[layer_nr].polygons_Zigzag.add(poly_zigzag);
+				
 				layers[layer_nr].polygons.add(poly);
-					 // output is 1,2,3
 				layers[layer_nr].polygons.setId(mesh_count);
-
 				layers[layer_nr].polygons.polygons_matid.push_back(edg_mat_copy);
 				
 				
@@ -389,31 +430,8 @@
 				if (meshin_layer[layer_nr] == mesh_count)
 				{
 					layer_nr++;
-					//printf("layer no is %d \n and contours in this layer are %d and the material is %d  \n", layer_nr, mesh_count);
 					mesh_count = 0;	
 				}
 		}
-		//printf("the polygons size inside is is %d and %d\n", layers[129].polygons.size(),1);	  //layer1 has 3;		max layers are 129
-		
-		std::vector<SlicerLayer>& layers_ref = layers; // force layers not to be copied into the threads
-
-	   	int  layer_apply_initial_xy_offset = 0;
-		if (layers.size() > 0 && layers[0].polygons.size() == 0)
-		{
-			layer_apply_initial_xy_offset = 1;
-		}
-
-
-		// Use a signed type for the loop counter so MSVC compiles (because it uses OpenMP 2.0, an old version).
-		for (int layer_nr = 0; layer_nr < static_cast<int>(layers_ref.size()); layer_nr++)
-		{
-			const coord_tIrfan xy_offset = 0;
-
-			if (xy_offset != 0)
-			{
-				layers_ref[layer_nr].polygons = layers_ref[layer_nr].polygons.offset(xy_offset);
-			}
-		}
-
-		
+				
 	}

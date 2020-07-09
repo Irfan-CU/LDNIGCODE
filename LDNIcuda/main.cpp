@@ -1164,7 +1164,7 @@ void menuFuncFDMContourGeneration()
 void menuFuncLDNIContouring()		 // for converting cuda solid to binary points
 {
 	if (_pDataBoard.m_solidLDNIBody==NULL || _pDataBoard.m_solidLDNIBody->m_cudaSolid==NULL) {
-		printf("None cuda-LDNI-solid found!\n");	 // Condition to check if LDNI solid is present
+		printf("None cuda-LDNI-solid found!\n");	 // Conditwion to check if LDNI solid is present
 		return;
 	}
 

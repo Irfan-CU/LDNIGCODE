@@ -72,17 +72,12 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
    
 	for (int mesh_order_idx = 0; mesh_order_idx < 1; mesh_order_idx++)
 	{
-		processBasicWallsSkinInfill(storage, mesh_order_idx, mesh_order, inset_skin_progress_estimate);
-		//Progress::messageProgress(Progress::Stage::INSET_SKIN, mesh_order_idx + 1, storage.meshes.size());
-		
+		processBasicWallsSkinInfill(storage, mesh_order_idx, mesh_order, inset_skin_progress_estimate);		
 	}
-	//current mesh group seeting are for the whole single 3D MESH
+
 	if (isEmptyLayer(storage, 0) && !isEmptyLayer(storage, 1))
 	{
-		// the first layer is empty, the second is not empty, so remove the empty first layer as support isn't going to be generated under it.
-		// Do this irrespective of the value of remove_empty_first_layers as that setting is hidden when support is enabled and so cannot be relied upon
-
-		removeEmptyFirstLayers(storage, storage.print_layer_count); // changes storage.print_layer_count!
+		removeEmptyFirstLayers(storage, storage.print_layer_count); 
 	}
 	if (storage.print_layer_count == 0)
 	{
@@ -96,12 +91,9 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 	AreaSupport::generateSupportAreas(storage);
 	TreeSupport tree_support_generator(storage);
 	tree_support_generator.generateSupportAreas(storage);
-	//
-	//if (!isEmptyLayer(storage, 0))
-	//{
-	//	printf("Processing platform adhesion\n");
-	//	processPlatformAdhesion(storage);
-	//}
+	
+	//processOutlineGaps(storage);
+	processPerimeterGaps(storage);
 	
 	
 	processDerivedWallsSkinInfill(storage);
@@ -109,6 +101,76 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 	AreaSupport::generateSupportInfillFeatures(storage);
 }
 
+void FffPolygonGenerator::processPerimeterGaps(SliceDataStorage& storage)
+{
+		constexpr int perimeter_gaps_extra_offset = 15; // extra offset so that the perimeter gaps aren't created everywhere due to rounding errors
+		const bool fill_perimeter_gaps = true;
+		bool filter_out_tiny_gaps = true;
+
+		for (int layer_nr = 0; layer_nr < storage.Layers.size(); layer_nr++)
+		{
+			
+			bool fill_gaps_between_inner_wall_and_skin_or_infill = false;
+			SliceLayer& layer = storage.Layers[layer_nr];
+			coord_tIrfan wall_line_width_0 = MM2INT(0.35);
+			coord_tIrfan wall_line_width_x = MM2INT(0.30);
+			coord_tIrfan skin_line_width = MM2INT(0.4);
+			if (layer_nr == 0)
+			{
+				
+				
+				wall_line_width_0 *= 100 / 100;
+				wall_line_width_x *= 100 / 100;
+				skin_line_width *= 100 / 100;
+			}
+			for (SliceLayerPart& part : layer.parts)
+			{
+				// handle perimeter gaps of normal insets
+				int line_width = wall_line_width_0;
+				for (unsigned int inset_idx = 0; static_cast<int>(inset_idx) < static_cast<int>(part.insets.size()) - 1; inset_idx++)
+				{
+					const Polygons outer = part.insets[inset_idx].offset(-1 * line_width / 2 - perimeter_gaps_extra_offset);
+					line_width = wall_line_width_x;
+
+					Polygons inner = part.insets[inset_idx + 1].offset(line_width / 2);
+					part.perimeter_gaps.add(outer.difference(inner));
+				}
+
+				if (filter_out_tiny_gaps) {
+					part.perimeter_gaps.removeSmallAreas(2 * INT2MM(wall_line_width_0) * INT2MM(wall_line_width_0)); // remove small outline gaps to reduce blobs on outside of model
+				}
+
+				// gap between inner wall and skin/infill
+				
+
+				// add perimeter gaps for skin insets
+			
+				for (SkinPart& skin_part : part.skin_parts)
+				{
+					skin_part.SkinPart_mat = part.getpartMat();
+
+					if (skin_part.insets.size() > 0)
+					{
+						// add perimeter gaps between the outer skin inset and the innermost wall
+						const Polygons outer = skin_part.outline;
+						const Polygons inner = skin_part.insets[0].offset(skin_line_width / 2 + perimeter_gaps_extra_offset);
+						skin_part.perimeter_gaps.add(outer.difference(inner));
+
+						for (unsigned int inset_idx = 1; inset_idx < skin_part.insets.size(); inset_idx++)
+						{ // add perimeter gaps between consecutive skin walls
+							const Polygons outer = skin_part.insets[inset_idx - 1].offset(-1 * skin_line_width / 2 - perimeter_gaps_extra_offset);
+							const Polygons inner = skin_part.insets[inset_idx].offset(skin_line_width / 2);
+							skin_part.perimeter_gaps.add(outer.difference(inner));
+						}
+
+						if (filter_out_tiny_gaps) {
+							skin_part.perimeter_gaps.removeSmallAreas(2 * INT2MM(skin_line_width) * INT2MM(skin_line_width)); // remove small outline gaps to reduce blobs on outside of model
+						}
+					}
+				}
+			}
+		}
+	}
 
 void FffPolygonGenerator::processPlatformAdhesion(SliceDataStorage& storage)
 {
@@ -294,8 +356,7 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 void FffPolygonGenerator::processBasicWallsSkinInfill(SliceDataStorage& storage, const size_t mesh_order_idx, const std::vector<size_t>& mesh_order, ProgressStageEstimator& inset_skin_progress_estimate)
 {
 	size_t mesh_idx = mesh_order[mesh_order_idx];
-	//printf("inside processBasicWallsSkinInfill\n");
-	//size_t mesh_idx = 1;
+	
 	size_t storage_layer_count = storage.Layers.size();	 
 	std::vector<double> walls_vs_skin_timing({ 22.953, 48.858 });
 	ProgressStageEstimator* mesh_inset_skin_progress_estimator = new ProgressStageEstimator(walls_vs_skin_timing);
@@ -313,24 +374,19 @@ void FffPolygonGenerator::processBasicWallsSkinInfill(SliceDataStorage& storage,
 				
 		processInsets(storage, layer_number);
 		
-		// , layercheck->parts[0].insets[0].pointCount(), layercheck->parts[0].insets[1].pointCount(), layercheck->parts[2].insets[0].pointCount());
-		//printf("Insets are successfully developed line 187 nof fffPolygonGenerator.cpp\n");
+		
 #ifdef _OPENMP
-		//if (omp_get_thread_num() == 0)
+		
 #endif
-		//{ // progress estimation is done only in one thread so that no two threads message progress at the same time
-		//	int _processed_layer_count;
+		
 #if _OPENMP < 201107
 #pragma omp critical
 #else
 #pragma omp atomic read
 #endif
-			//_processed_layer_count = processed_layer_count;
-			//double progress = inset_skin_progress_estimate.progress(_processed_layer_count);
-			//Progress::messageProgress(Progress::Stage::INSET_SKIN, progress * 100, 100);
-			//printf("Processed insets for layer %d \n", layer_number);
+		
 
-		//}
+		
 #pragma omp atomic
 		processed_layer_count++;
 	}
@@ -476,7 +532,7 @@ void FffPolygonGenerator::processDerivedWallsSkinInfill(SliceDataStorage& storag
 		// combine infill
 
 		
-		//SkinInfillAreaComputation::combineInfillLayers(storage);
+		SkinInfillAreaComputation::combineInfillLayers(storage);
 	}
 
 void FffPolygonGenerator::processInsets(SliceDataStorage& storage, int layer_nr)
@@ -487,5 +543,3 @@ void FffPolygonGenerator::processInsets(SliceDataStorage& storage, int layer_nr)
 	
 }
 
-	// fuzzy skin
-	
