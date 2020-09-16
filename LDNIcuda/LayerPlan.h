@@ -33,6 +33,7 @@
 		friend class LayerPlanBuffer; // TODO: LayerPlanBuffer handles paths directly
 	protected:
 		std::vector<GCodePath> paths; //!< The paths planned for this extruder
+		std::vector<GCodePath> arranged_paths;
 		std::list<NozzleTempInsert> inserts; //!< The nozzle temperature command inserts, to be inserted in between paths
 
 		double heated_pre_travel_time; //!< The time at the start of this ExtruderPlan during which the head travels and has a temperature of initial_print_temperature

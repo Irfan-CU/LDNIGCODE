@@ -124,11 +124,15 @@
 	void WallsComputation::generateInsets(SliceLayerPart* part)
 	{
 		size_t inset_count = 3;
+		if (part->getpartMat() == 5)
+		{
+			size_t inset_count = 1;
+		}
 
 		const bool spiralize = false;
 		const coord_tIrfan wall_0_inset = MM2INT(0.1);
-		coord_tIrfan line_width_0 = MM2INT(0.35);
-		coord_tIrfan line_width_x = MM2INT(0.30);
+		coord_tIrfan line_width_0 = MM2INT(0.0);
+		coord_tIrfan line_width_x = MM2INT(0.0);
 
 		if (layer_nr == 0)
 		{
@@ -150,13 +154,19 @@
 			{
 
 				part->insets[0] = part->outline.offset(wall_0_inset);
-
+				//for Intersecting Circles
+				/*if (part->getpartMat() == 5)
+				{
+					part->insets[0] = part->outline.offset(wall_0_inset * 4);
+				}*/
+				//for Intersecting Circles
+				
 			}
 			else if (i == 1)
 			{
 
 				part->insets[1] = part->insets[0].offset(-line_width_0 / 2 + wall_0_inset - line_width_x / 2);
-
+				
 			}
 			else
 			{
@@ -165,8 +175,10 @@
 				
 
 			}
-
+			
+			
 			const size_t inset_part_count = part->insets[i].size();
+			
 			constexpr size_t minimum_part_saving = 3;
 			constexpr coord_tIrfan try_smaller = 10;
 
@@ -199,7 +211,7 @@
 			{
 				if (recompute_outline_based_on_outer_wall)
 				{
-					part->print_outline = part->insets[0].offset(line_width_0 / 2, ClipperLib::jtSquare);
+					part->print_outline = part->insets[0].offset(line_width_0 / 2, ClipperLib::jtRound); //jtsquare for the rectangles
 
 				}
 				else
@@ -229,13 +241,16 @@
 		for (unsigned int partNr = 0; partNr < layer->parts.size(); partNr++)
 		{
 			
-			if (layer->parts_zigzag[partNr].outline_zigzag.size() != 0)
+			/*if (layer->parts_zigzag[partNr].outline_zigzag.size() != 0)
 			{
 				generateInsets(&layer->parts[partNr], &layer->parts_zigzag[partNr]);
 			}
-			else			
+			else*/			
 			{
-				generateInsets(&layer->parts[partNr]);
+					
+					generateInsets(&layer->parts[partNr]);
+					printf("the part insets size is %d %d %d and %d \n", layer->parts[partNr].insets[0].size(), layer->parts[partNr].insets[1].size(), layer->parts[partNr].insets[2].size(),layer->parts[partNr].outline.size());
+				
 			}
 			
 			

@@ -23,6 +23,7 @@
 #define POLY_ASSERT(e) do {} while(0)
 #endif
 
+using namespace std;
 
 class Polygons;
 class Polygon;
@@ -198,7 +199,10 @@ public:
 	{
 		return path->push_back(p);
 	}
-	unsigned int size() const
+
+	
+
+	unsigned int size()  const
 	{
 		return path->size();
 	}
@@ -323,6 +327,10 @@ public:
 		poly = std::move(other.poly);
 		return *this;
 	}
+
+	Polygon T_joint(Polygon T, vector<int>materials,int shift);	//shift is needed to match t joints from polygons
+	
+
 
 };
 

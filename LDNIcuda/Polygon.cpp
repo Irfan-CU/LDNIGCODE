@@ -1,6 +1,7 @@
 
 #include "Polygon.h"
 #include "LinearAlgebra2D.h"
+#include "Slicer.h"
 
 bool PolygonsPart::inside(curaIrfan::PointIrfan p, bool border_result) const
 {
@@ -217,10 +218,12 @@ void Polygons::splitIntoParts_processPolyTreeNode(ClipperLib::PolyNode* node, st
 {
 	for (int n = 0; n < node->ChildCount(); n++)
 	{
-		//printf("the child count is %d \n", node->ChildCount());
+		
 		ClipperLib::PolyNode* child = node->Childs[n];
+		
 		PolygonsPart part;
 		part.add(child->Contour);
+		
 		for (int i = 0; i < child->ChildCount(); i++)
 		{
 			part.add(child->Childs[i]->Contour);
@@ -745,4 +748,176 @@ void Polygons::addPolyTreeNodeRecursive(const ClipperLib::PolyNode& node)
 		paths.push_back(child->Contour);
 		addPolyTreeNodeRecursive(*child);
 	}
+}
+
+
+Polygon Polygon::T_joint(Polygon poly_circle, std::vector<int>poly_circle_material, int shift)
+{
+	std::vector<int> t_jointPointsX, t_jointPointsY, t_jointPointsmat;
+	int mat5Counter = 0;
+	bool opposite_Tjoint = true;
+	int edge_length = 200;
+	SlicerSegment segment;
+	Polygon T_joint;
+
+	for (int st_edge = 0; st_edge < poly_circle.size(); st_edge++)
+	{
+		t_jointPointsX.push_back((poly_circle[st_edge].X));
+		t_jointPointsY.push_back((poly_circle[st_edge].Y));
+		t_jointPointsmat.push_back(poly_circle_material[st_edge]);
+		if (poly_circle_material[st_edge] == 5)
+		{
+			mat5Counter++;
+		}
+	}
+	auto it = find(poly_circle_material.begin(), poly_circle_material.end(), 5);
+	int count_interface_mat = count(poly_circle_material.begin(), poly_circle_material.end(), 5);	//interface mat id=5
+	int id;
+	if (it != poly_circle_material.end())
+	{
+		id = distance(poly_circle_material.begin(), it);
+	}
+	else {
+		std::cout << "No Interface of materials occurs in the gemoetry";
+		return poly_circle;
+	}
+	if (shift != 0)
+		opposite_Tjoint = false;
+
+	for (int st_edge_tmp = id + (24 + shift); st_edge_tmp < (id + (count_interface_mat - 1)); st_edge_tmp += 80)
+	{
+
+		float nx, ny, length;
+
+		nx = (t_jointPointsY[st_edge_tmp] - t_jointPointsY[st_edge_tmp + 1]);
+		ny = (t_jointPointsX[st_edge_tmp + 1] - t_jointPointsX[st_edge_tmp]);
+		if (opposite_Tjoint)
+		{
+
+			nx = -(t_jointPointsY[st_edge_tmp] - t_jointPointsY[st_edge_tmp + 1]);
+			ny = -(t_jointPointsX[st_edge_tmp + 1] - t_jointPointsX[st_edge_tmp]);
+			length = edge_length * 6;
+
+		}
+		else if (!opposite_Tjoint)
+		{
+
+			nx = (t_jointPointsY[st_edge_tmp] - t_jointPointsY[st_edge_tmp + 1]);
+			ny = (t_jointPointsX[st_edge_tmp + 1] - t_jointPointsX[st_edge_tmp]);
+			length = edge_length*0.75;
+		}
+		float nMod = std::sqrt(nx*nx + ny * ny);
+		float nx1 = nx / nMod;
+		float ny1 = ny / nMod;
+
+		t_jointPointsX.insert(t_jointPointsX.begin() + (st_edge_tmp + 1), (t_jointPointsX[st_edge_tmp] + (nx1 * length)));
+		t_jointPointsY.insert(t_jointPointsY.begin() + (st_edge_tmp + 1), (t_jointPointsY[st_edge_tmp] + (ny1 * length)));
+
+		for (int T_st = 0; T_st < 5; T_st++) //7 is the last nnumber of T joint Point
+		{
+			nx = -(t_jointPointsY[st_edge_tmp] - t_jointPointsY[st_edge_tmp + 1]);
+			ny = -(t_jointPointsX[st_edge_tmp + 1] - t_jointPointsX[st_edge_tmp]);
+
+			if (opposite_Tjoint)
+			{
+				nx = (t_jointPointsY[st_edge_tmp] - t_jointPointsY[st_edge_tmp + 1]);
+				ny = (t_jointPointsX[st_edge_tmp + 1] - t_jointPointsX[st_edge_tmp]);
+
+
+			}
+			else
+			{
+				nx = -(t_jointPointsY[st_edge_tmp] - t_jointPointsY[st_edge_tmp + 1]);
+				ny = -(t_jointPointsX[st_edge_tmp + 1] - t_jointPointsX[st_edge_tmp]);
+
+
+			}
+
+			nMod = std::sqrt(nx*nx + ny * ny);
+			if (T_st == 0)
+			{
+				nx = -(nx);
+				ny = -(ny);
+			}
+			nx1 = nx / nMod;
+			ny1 = ny / nMod;
+			length = edge_length;
+			if ((T_st == 1) || (T_st == 3))
+			{
+				if (opposite_Tjoint)
+				{
+					length = edge_length * 2;
+				}
+				else if (!opposite_Tjoint)
+				{
+					length = edge_length * 7;
+				}
+			}
+
+			else if ((T_st == 0) || (T_st == 4))
+			{
+				if (opposite_Tjoint)
+				{
+					length = (edge_length * 2);
+				}
+				else
+				{
+					length = (edge_length * 3);
+				}
+
+			}
+
+			else if (T_st == 2)
+			{
+				if (opposite_Tjoint)
+				{
+					length = (edge_length * 5);
+				}
+				else
+				{
+					length = (edge_length * 10);
+				}
+
+				//length = 3000;
+			}
+
+
+			if (T_st <= 4)
+			{
+				t_jointPointsX.insert(t_jointPointsX.begin() + (st_edge_tmp + 2), ((t_jointPointsX[st_edge_tmp + 1]) + (nx1 * length)));
+				t_jointPointsY.insert(t_jointPointsY.begin() + (st_edge_tmp + 2), ((t_jointPointsY[st_edge_tmp + 1]) + (ny1 * length)));
+			}
+
+			st_edge_tmp++;
+
+
+		}
+		opposite_Tjoint = !opposite_Tjoint;
+
+
+	}
+
+	for (int T_chk = 0; T_chk < t_jointPointsX.size() - 1; T_chk++)
+	{
+
+		if (T_chk == 0)
+		{
+			segment.start.X = t_jointPointsX[T_chk];
+			segment.start.Y = t_jointPointsY[T_chk];
+			T_joint.add(segment.start);
+			segment.end.X = t_jointPointsX[T_chk + 1];
+			segment.end.Y = t_jointPointsY[T_chk + 1];
+			T_joint.add(segment.end);
+		}
+		else
+		{
+			segment.end.X = t_jointPointsX[T_chk + 1];
+			segment.end.Y = t_jointPointsY[T_chk + 1];
+			T_joint.add(segment.end);
+		}
+
+	}
+
+	return T_joint;
+
 }

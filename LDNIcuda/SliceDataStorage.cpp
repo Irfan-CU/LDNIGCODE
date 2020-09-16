@@ -245,7 +245,7 @@ std::vector<WipeScriptConfig> SliceDataStorage::initializeWipeConfigs()
 std::vector<RetractionConfig> SliceDataStorage::initializeRetractionConfigs()
 {
 	std::vector<RetractionConfig> ret;
-	ret.resize(1); // initializes with constructor RetractionConfig()
+	ret.resize(2); // initializes with constructor RetractionConfig()
 	return ret;
 }
 

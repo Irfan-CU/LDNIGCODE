@@ -481,7 +481,7 @@ void PMBody::_buildContourList()
 
 					else
 					{
-						j = 8;
+						j = 11;
 						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
 						glColor3f(rgb[0], rgb[1], rgb[2]);
 					}
@@ -1763,7 +1763,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	// so that use patchNum to count how many contour per slice	
 	int l = 0;
 	std::vector<int>meshin_layer;
-    meshin_layer.resize(iRes[1]+1,0);
+    meshin_layer.resize(iRes[1],0);
 	for (i = 0; i < iRes[1]; i++)
 	{
 	
@@ -2027,12 +2027,12 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 		for (Pos2 = vmesh->GetVSAEdgeList().GetHeadPosition(); Pos2 != NULL; )
 		{
 			vedge = (VSAEdge *)(vmesh->GetVSAEdgeList().GetNext(Pos2));
-
 			vedge->GetStartPoint()->GetCoord3D(xx, yy, zz);
 			vedge->GetEndPoint()->GetCoord3D(aa, bb, cc);
 
+			if (vedge->GetEdgeMaterial() != 5)
 			{
-				//printf("the ending point is %f,%f,%f\n",aa,bb,cc);
+				vmesh->SetCircleInterMat(vedge->GetEdgeMaterial());
 			}
 
 
@@ -2069,51 +2069,8 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	if (response == 'Y' || response == 'y')
 	{
 		int count1 = VSAMeshList.GetCount();
-
-		//	if (count1 > 300)
-		{
-			Application *application;
-			unsigned int mesh_idx, edge_index = 0;
-			VSAMesh *mesh1;
-			VSAEdge  *edge;
-			ContourMesh *cmesh;
-			VSAMesh  Mesho;
-			VSAEdge  edgeo;
-			ContourMesh c_mesh;
-			VSAEdge *edge1;
-			GLKPOSITION Pos_1;
-			GLKPOSITION Pos_2;
-			SliceDataStorage storage;
-			//SliceLayerPart layerpart;
-			Mesh* mesh;
-			SlicerSegment segment;
-			//Polygons genrated_result_lines;
-			FffPolygonGenerator polygongenrator;
-			
-
-
-			
-
-			FffGcodeWriter gcode;
-
-			storage.Layers.clear();
-
-			storage.Layers.resize(iRes[1]);
-			std::vector<PolygonsPart> new_parts;
-			new_parts.clear();
-
-			bool slice_model = polygongenrator.sliceModel(VSAMeshList, c_mesh, storage, iRes[1], meshin_layer, rotBoundingBox);
-			if (slice_model)
-			{
-				
-				polygongenrator.slices2polygons(storage);
-			}
-
-			const char* filename = "cura_after";
-			bool file_open = gcode.setTargetFile(filename);
-			bool start = true;
-			gcode.writeGCode(storage, start);
-		}
+		processGcode(meshin_layer,rotBoundingBox);
+		
 	}
 
 	printf("Finished build-up.\n");
@@ -2121,6 +2078,35 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	free(patchID);
 
 }
+
+void ContourMesh::processGcode(std::vector<int>meshin_layer, double rotBoundingBox[])
+{
+	
+	ContourMesh c_mesh;
+	SliceDataStorage storage;
+	FffPolygonGenerator polygongenrator;
+    FffGcodeWriter gcode;
+
+	storage.Layers.clear();
+
+	storage.Layers.resize(iRes[1]);
+	
+	int scale = 1;
+	storage.set_scale(scale);
+	bool slice_model = polygongenrator.sliceModel(VSAMeshList, c_mesh, storage, iRes[1], meshin_layer, rotBoundingBox);
+	if (slice_model)
+	{
+		polygongenrator.slices2polygons(storage);
+	}
+
+	const char* filename = "cura_after";
+	bool file_open = gcode.setTargetFile(filename);
+	bool start = true;
+	gcode.writeGCode(storage, start);
+
+}
+
+
 /*
 namespace curaIrfan
 {

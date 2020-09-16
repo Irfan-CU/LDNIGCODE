@@ -72,8 +72,13 @@ void Infill::_generate(Polygons& result_polygons, Polygons& result_lines)
 	
 	//printf("@@before connecting infill linzes size inside the infill is %d \n", result_lines.size());
 
-	result_lines.clear();
-	connectLines(result_lines);
+	if (pattern != EFillMethod::LINES)
+	{
+		result_lines.clear();
+
+		connectLines(result_lines);
+	}
+	
 	//printf("@@the connected infill linzes size inside the infill is %d \n", result_lines.size());
 	crossings_on_line.clear();
 	
@@ -141,7 +146,7 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	crossings_on_line.resize(outline.size()); //One for each polygon.
 
 	outline.applyMatrix(rotation_matrix);
-
+	
 	if (shift < 0)
 	{
 		shift = line_distance - (-shift) % line_distance;
@@ -150,7 +155,7 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	{
 		shift = shift % line_distance;
 	}
-
+	
 	AABB boundary(outline);
 	
 	int scanline_min_idx = computeScanSegmentIdx(boundary.min.X - shift, line_distance);
@@ -272,6 +277,7 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	//printf("the cutlist size is %d \n", cut_list.size());
 
 	addLineInfill(result, rotation_matrix, scanline_min_idx, line_distance, boundary, cut_list, shift);
+	
 }
 
 /*
@@ -567,6 +573,7 @@ void Infill::connectLines(Polygons& result_lines)
 
 			for (InfillLineSegment* crossing : crossings_on_line[polygon_index][vertex_index])
 			{
+				
 				if (!previous_crossing) //If we're not yet drawing, then we have been trying to find the next vertex. We found it! Let's start drawing.
 				{
 					previous_crossing = crossing;

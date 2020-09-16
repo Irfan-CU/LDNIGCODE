@@ -67,8 +67,8 @@
 	SkinInfillAreaComputation::SkinInfillAreaComputation(const int& layer_nr, SliceDataStorage& storage, bool process_infill)
 		: layer_nr(layer_nr)
 		, storage(storage)
-		, bottom_layer_count(6)
-		, top_layer_count(4)
+		, bottom_layer_count(0)//6
+		, top_layer_count(0)//4
 		, wall_line_count(3)
 		, skin_line_width(getSkinLineWidth(storage, layer_nr))
 		, wall_line_width_0(getWallLineWidth0(storage, layer_nr))
@@ -159,10 +159,6 @@
 		{
 			SliceLayerPart& part = layer->parts[part_nr];
 			generateSkinInsetsAndInnerSkinInfill(&part);
-
-			
-
-			
 		}
 	}
 
@@ -208,7 +204,11 @@
 	void SkinInfillAreaComputation::generateSkinAndInfillAreas(SliceLayerPart& part)
 	{
 		
+		printf("the parts insets sizes zre %d %d %d \n",part.insets[0].size(), part.insets[1].size(), part.insets[2].size());
 		Polygons original_outline = part.insets.back().offset(-innermost_wall_line_width / 2);
+		
+		
+		
 		Polygons upskin;
 		if (top_layer_count > 0)
 		{
@@ -365,6 +365,7 @@
 		
 		for (SkinPart& skin_part : part->skin_parts)
 		{
+		
 			generateSkinInsets(skin_part);
 			generateInnerSkinInfill(skin_part);
 		}
@@ -437,7 +438,8 @@
 		
 		Polygons infill = part.insets.back().offset(offset_from_inner_wall);
 		infill = infill.difference(skin);
-		infill.removeSmallAreas(MIN_AREA_SIZE);
+		
+		//infill.removeSmallAreas(MIN_AREA_SIZE);  //removed for circular intersectio case as the intersection area is very small area;
 		part.infill_area = infill.offset(infill_skin_overlap);
 		
 	}
@@ -544,8 +546,8 @@
 		layer_skip_count = gradual_infill_step_layer_count / n_skip_steps_per_gradual_step;
 		const size_t max_infill_steps = 0;
 
-		const int min_layer = 6;
-		const int max_layer = storage.Layers.size()-1-4;
+		const int min_layer = 0;//6;// 6 for the bottom layers
+		const int max_layer = storage.Layers.size() - 1;// storage.Layers.size() - 1 - 4;  //4
 		
 		for (int layer_idx = 0; layer_idx < static_cast<int>(storage.Layers.size()); layer_idx++)
 		{ // loop also over layers which don't contain infill cause of bottom_ and top_layer to initialize their infill_area_per_combine_per_density
@@ -557,15 +559,16 @@
 				
 				const Polygons& infill_area = part.getOwnInfillArea();
 			
-
+				
 				if (infill_area.size() == 0 || layer_idx < min_layer || layer_idx > max_layer)
 				{ 
 					part.infill_area_per_combine_per_density.emplace_back(); 
 					part.infill_area_per_combine_per_density.back().emplace_back(); // put empty infill area in the newly constructed infill_area_per_combine
 					//printf("doing part.infill_area_per_combine_per_density.back().emplace_back() @ line 548 of skin infillAreaComputation\n");
-																					// note: no need to copy part.infill_area, cause it's the empty vector anyway
+					printf("The layer numer is %d for the gradual infill in the bottom layer processing and the size is %d \n",layer_idx, part.infill_area_per_combine_per_density[0][0].size());// note: no need to copy part.infill_area, cause it's the empty vector anyway
 					continue;
 				}
+				
 				Polygons less_dense_infill = infill_area; // one step less dense with each infill_step
 				for (size_t infill_step = 0; infill_step < max_infill_steps; infill_step++)
 				{
@@ -607,7 +610,9 @@
 				//printf("the infill_area_per_combine_current_density part %d and the layer is %d", infill_area_per_combine_current_density.size(),layer_idx);
 				part.infill_area_own = nullptr; // clear infill_area_own, it's not needed any more.
 				assert(part.infill_area_per_combine_per_density.size() != 0 && "infill_area_per_combine_per_density is now initialized");
+				printf("this layer has outline size %d and infill size is %d \n", part.infill_area_per_combine_per_density[0][0].size(),infill_area.size());
 			}
+			
 		}
 	}
 

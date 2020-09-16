@@ -100,6 +100,8 @@ extern __global__ void krFDMinfill_positions (bool *gridNode, double3 rotdir, fl
 
 extern __global__ void krFDMContouring_Materialplanning(bool *gridNodes, int3 imageRes, int cellNum, unsigned int* count, unsigned int* material_index1);
 
+extern __global__ void krFDMContouring_Materialcheck(bool *gridNodes, int3 imageRes, int cellNum, unsigned int* count, unsigned int* material_index1);
+
 extern __global__ void krFDMContouring_CountAllStick(bool *gridNodes, int3 imageRes, int cellNum, unsigned int* count, unsigned int* material_index1);
 
 extern __global__ void krFDMMaaterialVariation (bool* gridNodes, int3 imagedRes, int cellNum, unsigned int* material_index1);
@@ -620,18 +622,10 @@ void LDNIcudaOperation::LDNIFDMContouring_Generation(LDNIcudaSolid* solid, Conto
 	printf("Bounding box %f %f %f %f %f %f \n", rotBoundingBox[0], rotBoundingBox[1], rotBoundingBox[2], rotBoundingBox[3], rotBoundingBox[4], rotBoundingBox[5]);
 	printf("-------------------------------------------\n");
 	printf("Image Size : %d X %d X %d \n", BinaryImageSize[0], BinaryImageSize[1], BinaryImageSize[2]);
-	//printf("the total_material inside mesh is %d \n", q_mesh->total_materials.size());
-
+	
 	c_mesh->setImageOrigin(rotBoundingBox[0], rotBoundingBox[4]);
 	c_mesh->setSampleWidth(nSampleWidth);
-	/*
-	for (int i = 0; i < qmesh->total_materials.size(); i++)
-	{
-		printf("the material is %s \n", qmesh->total_materials[i]);
-	 }
-	 */
-	//range = MAX(rotBoundingBox[1]-rotBoundingBox[0], rotBoundingBox[3]-rotBoundingBox[2]);
-	//range = MAX(range, rotBoundingBox[5]-rotBoundingBox[4]);
+	
 	
 	
 
@@ -2678,7 +2672,7 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, C
 		solid->GetIndexArrayPtr(1), solid->GetSampleDepthArrayPtr(1), solid->GetSampleNxArrayPtr(1),
 		solid->GetIndexArrayPtr(2), solid->GetSampleDepthArrayPtr(2), solid->GetSampleNxArrayPtr(2))
 	*/
-
+	
 	krFDMContouring_BinarySampling << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, make_double3(clipPlanNm[0], clipPlanNm[1], clipPlanNm[2])
 		, angle, nRes, solid->GetIndexArrayPtr(0), solid->GetSampleDepthArrayPtr(0), solid->GetSampleNxArrayPtr(0), solid->GetSampleNyArrayPtr(0),
 		solid->GetIndexArrayPtr(1), solid->GetSampleDepthArrayPtr(1), solid->GetSampleNxArrayPtr(1), solid->GetSampleNyArrayPtr(1),
@@ -2720,6 +2714,9 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, C
 	
 	krFDMContouring_Materialplanning << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, make_int3(imageSize[0] - 1, imageSize[1], imageSize[2] - 1),
 		(imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1), stickIndex, material_index1);
+
+	/*krFDMContouring_Materialcheck << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, make_int3(imageSize[0] - 1, imageSize[1], imageSize[2] - 1),
+		(imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1), stickIndex, material_index1);*/
 	
 	krFDMContouring_CountAllStick << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, make_int3(imageSize[0] - 1, imageSize[1], imageSize[2] - 1),
 		(imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1), stickIndex, material_index1);
@@ -5180,52 +5177,7 @@ __global__ void krFDMContouring_ConstrainedSmoothing(float2 *newStart, float2 *n
 				bVert = true;
 			}
 			i = (int)((st_pt.x - imgOri.x) / imgWidth + 0.001);
-			/*if (((st_pt.x - imgOri.x)/imgWidth) - i > 0.3) //0.5 is mid point
-			{
-				if (ed_pt.y > st_pt.y)
-				{
-					pt1.x = imgOri.x + imgWidth*(i+1);
-					pt1.y = st_pt.y;
-					pt2.x = imgOri.x + imgWidth*i;
-					pt2.y = st_pt.y;
-				}
-				else
-				{
-					pt1.x = imgOri.x + imgWidth*i;
-					pt1.y = st_pt.y;
-					pt2.x = imgOri.x + imgWidth*(i+1);
-					pt2.y = st_pt.y;
-				}
-
-
-
-				bVert = false;
-			}
-			else
-			{
-				i = (int)((st_pt.y - imgOri.y)/imgWidth+0.001);
-
-				if (ed_pt.x > st_pt.x)
-				{
-					pt1.x = st_pt.x;
-					pt1.y = imgOri.y + imgWidth*i;
-					pt2.x = st_pt.x;
-					pt2.y = imgOri.y + imgWidth*(i+1);
-				}
-				else
-				{
-					pt1.x = st_pt.x;
-					pt1.y = imgOri.y + imgWidth*(i+1);
-					pt2.x = st_pt.x;
-					pt2.y = imgOri.y + imgWidth*i;
-				}
-
-
-				bVert = true;
-			}*/
-
-
-
+			
 			intersect = _calTwoLineSegmentsIntersection(prev_st, pt1, pt2, ed_pt, pt);
 			if (!intersect)
 			{
@@ -5518,39 +5470,82 @@ __global__ void krFDMContouring_Materialplanning(bool *gridNodes, int3 imageRes,
 		
 		a_node = gridNodes[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix];
 		b_node = gridNodes[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1];
-		c_node = gridNodes[(iz+1)*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1];
+		c_node = gridNodes[(iz+1)*imageRes.x*imageRes.y + iy * imageRes.x + ix];
+		d_node = gridNodes[(iz + 1)*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1];
 		
 
 		int material_a_node = material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix];
 		int material_b_node = material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1];
-		int material_c_node = material_index1[(iz + 1)*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1];
+		int material_c_node = material_index1[(iz + 1)*imageRes.x*imageRes.y + iy * imageRes.x + ix];
+		int material_d_node = material_index1[(iz + 1)*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1];
+		
 		//printf("a_nodes is %d and the b_nodes is %d and the materiala is %d and materialb is %d \n", a_node, b_node, material_a_node, material_b_node);
 		if ((a_node == b_node) && (material_a_node != material_b_node))
 		{
-			
+			//printf("the unchanged material status is %d %d %d \n", material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix - 1], material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix], material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1]);
 			gridNodes[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix] = false;
 			material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix] = 5;
-			gridNodes[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix+1] = false;
-			material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix+1] = 5;
-		/*	if (material_a_node == 1)
-			{
-				gridNodes[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix] = false;
-				material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix] = 5;
-			}
-			if (material_b_node == 1)
-			{
-				gridNodes[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix+1] = false;
-				material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix+1] = 5;
-			}*/
-			
-			
+			//printf("the new material status is %d %d %d \n", material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix - 1], material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix], material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1]);
 		}
+	/*	if ((material_a_node == 5) || (material_b_node == 5) || (material_c_node == 5) || (material_d_node == 5))
+		{
+			printf("the unchanged material status is %d %d %d %d \n", material_a_node, material_b_node, material_c_node, material_d_node);
+		}*/
+		
+		
+
 
 
 		index += blockDim.x * gridDim.x;
 	}
 
 }
+
+__global__ void krFDMContouring_Materialcheck(bool *gridNodes, int3 imageRes, int cellNum, unsigned int* count, unsigned int* material_index1)
+{
+	int index = threadIdx.x + blockIdx.x*blockDim.x;
+	unsigned int ix, iy, iz, realx = imageRes.x + 1, material_bnodes, material_a_node, material_b_node, material_c_node;
+	bool a_node, b_node, c_node, d_node;
+
+
+	while (index < cellNum)
+	{
+		ix = index % imageRes.x;	iy = (index / imageRes.x) % imageRes.y;
+		iz = index / (imageRes.x*imageRes.y);
+
+
+		a_node = gridNodes[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix];
+		b_node = gridNodes[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1];
+		c_node = gridNodes[(iz + 1)*imageRes.x*imageRes.y + iy * imageRes.x + ix];
+		d_node = gridNodes[(iz + 1)*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1];
+
+
+		int material_a_node = material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix];
+		int material_b_node = material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1];
+		int material_c_node = material_index1[(iz + 1)*imageRes.x*imageRes.y + iy * imageRes.x + ix];
+		int material_d_node = material_index1[(iz + 1)*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1];
+
+		//printf("a_nodes is %d and the b_nodes is %d and the materiala is %d and materialb is %d \n", a_node, b_node, material_a_node, material_b_node);
+		if ((a_node == c_node) && (material_a_node != material_c_node))
+		{
+			//printf("the unchanged material status is %d %d %d \n", material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix - 1], material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix], material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1]);
+			gridNodes[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix] = false;
+			material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix] = 5;
+			//printf("the new material status is %d %d %d \n", material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix - 1], material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix], material_index1[iz*imageRes.x*imageRes.y + iy * imageRes.x + ix + 1]);
+		}
+
+
+
+		index += blockDim.x * gridDim.x;
+	}
+
+}
+
+
+
+
+
+
 
 __global__ void krFDMContouring_CountAllStick(bool *gridNodes, int3 imageRes, int cellNum, unsigned int* count, unsigned int* material_index1)
 {
@@ -5564,8 +5559,6 @@ __global__ void krFDMContouring_CountAllStick(bool *gridNodes, int3 imageRes, in
 		ix = index % imageRes.x;	iy = (index / imageRes.x) % imageRes.y;
 		iz = index / (imageRes.x*imageRes.y);
 	
-		
-
 		bnodes = gridNodes[iz*realx*imageRes.y + iy * realx + ix];
 		bnodes_tmp = gridNodes[(iz+1)*realx*imageRes.y + iy * realx + ix];
 		material_bnodes = *&material_index1[iz*realx*imageRes.y + iy * realx + ix];// moving the nodes here and getting the status of the nodes
@@ -5724,19 +5717,23 @@ __global__ void krFDMContouring_FindAllStickInAxisZ(bool *gridNodes, unsigned in
 			stickID[st + pos] = id;
 			prevStickId[st + pos] = prev_id;
 			stickDir[st + pos] = make_int2(-ix, iz);
-			if (material_a_node == 0.0000)
+			
+			if (material_a_node == 0)
 			{
 				stickMaterial[st + pos] = material_b_node;
+				
 			}
-			if (material_b_node == 0.0000)
+			if (material_b_node == 0)
 			{
 				stickMaterial[st + pos] = material_a_node;
+				
 			}
 			
 			if ((material_a_node == 5) || (material_b_node == 5))
 			{
-				//printf("the material_a_node is %d and the the material_b_node is %d and theand at b2 node its %d in %d z\n", material_a_node, material_b_node,  material_b1_node,material_a1_node);
-				if (material_a_node == 5 && material_b_node == 1)
+				
+				stickMaterial[st + pos] = 5;
+				/*if (material_a_node == 5 && material_b_node == 1)
 				{
 					prevStickMat[st + pos] = material_a1_node;
 					stickMaterial[st + pos] = 5;
@@ -5762,10 +5759,11 @@ __global__ void krFDMContouring_FindAllStickInAxisZ(bool *gridNodes, unsigned in
 					nextStickMat[st + pos] = material_b1_node;
 
 				}
-
-
+*/
+			
 
 			}
+			
 		}
 
 		
@@ -5960,19 +5958,45 @@ __global__ void krFDMContouring_FindAllStickInAxisX(bool *gridNodes, unsigned in
 			stickID[st + pos] = id;
 			prevStickId[st + pos] = prev_id;
 			stickDir[st + pos] = make_int2(ix, iz);
-			if (material_a_node == 0.00)
+			
+			if (material_a_node == 0)
 			{
-				stickMaterial[st + pos] = material_b_node;
+				//stickMaterial[st + pos] = material_b_node;
+				if (material_b_node == 5)
+				{
+					stickMaterial[st + pos] = material_a_node;
+
+				}
+				else
+				{
+					stickMaterial[st + pos] = material_b_node;
+				}
+				
 			}
-			if (material_b_node == 0.00)
+			else if (material_b_node == 0)
 			{
-				stickMaterial[st + pos] = material_a_node;
+				if (material_a_node == 5)
+				{
+					stickMaterial[st + pos] = material_b_node;
+
+				}
+				else
+				{
+					stickMaterial[st + pos] = material_a_node;
+				}
+				
+				
 			}
 			//printf("the material_a_node is %d and the a_node is %d the material_b_node is %d and the b_node is %d in x\n", material_a_node, a_node, material_b_node, b_node);
-			if ((material_a_node == 5) || (material_b_node == 5))
+			else if ((material_a_node == 5) || (material_b_node == 5))
 			{
-				//printf("the material_a_node is %d and the the material_b_node is %d and theand at b2 node its %d in %d z\n", material_a_node, material_b_node,  material_b1_node,material_a1_node);
-				if (material_a_node == 5 && material_b_node == 1)
+				
+				// For Intersecting Circles
+				
+				stickMaterial[st + pos] =2;
+				
+				// For Intersecting Circles
+				/*if (material_a_node == 5 && material_b_node == 1)
 				{
 
 					prevStickMat[st + pos] = material_a1_node;
@@ -5997,11 +6021,22 @@ __global__ void krFDMContouring_FindAllStickInAxisX(bool *gridNodes, unsigned in
 					prevStickMat[st + pos] = material_a_node;
 					stickMaterial[st + pos] = material_b_node;
 					nextStickMat[st + pos] = material_b1_node;
-				}
+				}*/
 
+			
 
 
 			}
+		/*	else if ((material_a_node == 2) || (material_b_node == 2))
+			{
+				stickMaterial[st + pos] = 2;
+			}
+			else if ((material_a_node == 1) || (material_b_node == 1))
+			{
+				stickMaterial[st + pos] = 1;
+			}*/
+			
+		
 
 		}
 		index += blockDim.x * gridDim.x;
@@ -6027,14 +6062,8 @@ __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 rotdir, 
 	float3 origin, double2 imgorigin, float gwidth, int3 imageRes,
 	int nodeNum, float thickness, float imgWidth,int *infill_node, unsigned int* material_index1,  int cellNum)
 {
-	// xIndexArray = dev_indexArray[nAxis];
-	//arrindex = (int)(devIndexArrayPtr[index]) + n - 1;
-	//devNxArrayPtr[arrindex]=rgb.w;	
-
-	//FILE *fp;
-	//fopen("Infill.txt", "w");
-	int index = threadIdx.x + blockIdx.x*blockDim.x;  // based on the state of the vertex
-	//printf("the index is %d \n", index);
+	
+	int index = threadIdx.x + blockIdx.x*blockDim.x;  
 	unsigned int num, st;
 
 
@@ -6043,9 +6072,8 @@ __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 rotdir, 
 	double xx, yy, zz;
 	double3 systemCoord, rot_p;
 	float3 ori_p;
-	//int x = 0;
+	
 	unsigned short k;
-   // nodenum is the number of the
 	systemCoord.x = 0.0;	systemCoord.y = 0.0;	systemCoord.z = 0.0;
 	
 	while (index < nodeNum) 
@@ -6695,7 +6723,7 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 		matz[mat_xcv] = 10;
 	}
 	
-
+	
 	if (num > 0)
 	{
 
@@ -6720,12 +6748,19 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 					}
 				}
 			}
-			//printf("num is %d \n", num);
-			/*if (num == 10)
-			{
-				printf("the materials are %f,%f, %f,%f, %f,%f, %f,%f, %f,%f, \n", NxarrayPtr[st + 0], NxarrayPtr[st + 1], NxarrayPtr[st + 2], NxarrayPtr[st + 3], NxarrayPtr[st + 4], NxarrayPtr[st + 5], NxarrayPtr[st + 6], NxarrayPtr[st + 7], NxarrayPtr[st + 8], NxarrayPtr[st + 9]);
-				printf("the num status is %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, \n", matx[0], matx[1], matx[2], matx[3], matx[4], matx[5], matx[6], matx[7], matx[8], matx[9]);
-			}*/
+			//if (num > 2)
+
+			//{
+			//	if (NxarrayPtr[st + 1] == NxarrayPtr[st + 2])
+			//	{
+			//		printf("num is %d \n", num);
+			//		printf("the materials are %f,%f, %f,%f,\n", NxarrayPtr[st + 0], NxarrayPtr[st + 1], NxarrayPtr[st + 2], NxarrayPtr[st + 3]);// NxarrayPtr[st + 4], NxarrayPtr[st + 5]);// NxarrayPtr[st + 6], NxarrayPtr[st + 7], NxarrayPtr[st + 8], NxarrayPtr[st + 9]);
+			//		printf("the num status is %d, %d, %d, %d, %d, %d \n", matx[0], matx[1], matx[2], matx[3]);// , matx[6], matx[7], matx[8], matx[9]);
+
+			//	}
+			//}
+
+			
 			
 		}
 		
@@ -6733,7 +6768,7 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 		{
 			if (xx < fabs(xDepth[st + index]))
 			{
-				*&material_index1[index1] = 0.0000;
+				*&material_index1[index1] = 0.0000;	   //material which is outer the whole body domain
 				break;
 
 			}
@@ -6741,48 +6776,111 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 			if ((xx >= fabs(xDepth[st + index])) && (xx <= fabs(xDepth[st + index + 1])))
 			{
 
-				if ((fabs((NxarrayPtr[st + index]) - ((NxarrayPtr[st + index + 1])))<0.1) && ((matx[index] == 0) && (matx[index+1] == 1)))
+				if ((fabs((NxarrayPtr[st + index]) - (NxarrayPtr[st + index + 1])) < 0.1))
 				{
-					*&material_index1[index1] = (NxarrayPtr[st + index]);
-					//printf("same material assigned which is %d \n", *&material_index1[index1]);
-					counter++; break;
-					
+					if ((matx[index] == 0) && (matx[index + 1] == 1) && (num == 2))
+					{
+						*&material_index1[index1] = NxarrayPtr[st + index];
+						//printf("same material assigned which is %d \n", *&material_index1[index1]);
+						counter++; break;
+					}
+					else if ((matx[index] == 0) && (matx[index + 1] == 1) && (num > 2))
+					{
+						*&material_index1[index1] = 5;
+						break;
+						
+					}
 
 				}
-				
+
+		//		//if ((fabs((NxarrayPtr[st + index]) - ((NxarrayPtr[st + index + 1])))<0.1) && ((matx[index] == 0) && (matx[index+1] == 1)))
+		//		//{
+		//		//	*&material_index1[index1] = 5;// (NxarrayPtr[st + index]);
+		//		//	//printf("same material assigned which is %d \n", *&material_index1[index1]);
+		//		//	counter++; break;
+		//		//	
+
+		//		//}
+
+		//		
 				else if (fabs((NxarrayPtr[st + index]) - ((NxarrayPtr[st + index + 1]))) > 0.1)
 				{
+					//Case for Intersecting Cylinders
 					if ((matx[index] == 0) && (matx[index + 1] == 0))
 					{
-						*&material_index1[index1] = (NxarrayPtr[st + index]);
-						counter++; break;
+						
+						/*if ((fabs(xDepth[st + index] - xDepth[st + index + 1]) < 0.27))
+						{
+							*&material_index1[index1] = 5;
+							break;
+						}*/
+						if (NxarrayPtr[st + index] == 1.00)
+						{
+							*&material_index1[index1] = 1;
+							counter++; break;
+						}
+						else if (NxarrayPtr[st + index] == 2.00)
+						{
+							*&material_index1[index1] = 2;
+							counter++; break;
+						}
+						
+						//counter++; break;
 					}
 					else if ((matx[index] == 1) && (matx[index + 1] == 1))
 					{
-						*&material_index1[index1] = (NxarrayPtr[st + index +1]);
+						
+						*&material_index1[index1] = (NxarrayPtr[st + index+1]);
 						counter++; break;
 					}
-
-					else if (((matx[index]) == 0) && (matx[index + 1] == 1))
+					else if ((matx[index] == 0) && (matx[index + 1] == 1))
 					{
-						*&material_index1[index1] = (NxarrayPtr[st + index]);
-						counter++; break;
-
+						*&material_index1[index1] = 5;
+						break;
+						
 					}
-					/*
-					else if (((matx[index]) == 1) && (matx[index + 1] == 0))
-					{
-						*&material_index1[index1] = (NxarrayPtr[st + index + 1]);
-						counter++; break;
 
-					}
-					*/
+					
+		//		//	/*
+		//		//	if ((matx[index] == 0) && (matx[index + 1] == 0))
+		//		//	{
+		//		//		*&material_index1[index1] = (NxarrayPtr[st + index]);
+		//		//		counter++; break;
+		//		//	}
+
+		//		//	if ((matx[index] == 1) && (matx[index + 1] == 1))
+		//		//	{
+		//		//		*&material_index1[index1] = 5;
+		//		//		counter++; break;
+		//		//	}
+		//		//	
+		//		//	/*else if ((((matx[index]) == 0) && (matx[index + 1] == 1)) && ((NxarrayPtr[st + 1] == NxarrayPtr[st + 2])))
+		//		//	{
+		//		//		*&material_index1[index1] = 5;
+		//		//		counter++; break;
+
+		//		//	}*/
+		//		//	/*
+		//		//	else if (((matx[index]) == 1) && (matx[index + 1] == 0))
+		//		//	{
+		//		//		*&material_index1[index1] = (NxarrayPtr[st + index + 1]);
+		//		//		counter++; break;
+
+		//		//	}
+		//		//	*/
 					
 					
 				}
 				
 
 			}
+			
+			//added for circle Intersection
+			if ((xx > fabs(xDepth[st + num])))
+			{
+				*&material_index1[index1] = 0.0000;
+			}
+			//added for circle Intersection
 			
 		}
 	}
@@ -6792,7 +6890,7 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 
 		return true;
 	}
-
+	
 
 	st = yIndex[i*res + k];
 	num = yIndex[i*res + k + 1] - st;
@@ -6818,59 +6916,148 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 					}
 				}
 			}
-			//printf("the material is %d %d %d %d %d %d \n", matx[0], matx[1], matx[2], matx[3]);
-			//printf("the material is %f %f %f %f %f %f \n", NxarrayPtr[0], NxarrayPtr[1], NxarrayPtr[2], NxarrayPtr[3], NxarrayPtr[4], NxarrayPtr[5]);
 
+			/*if (num > 2)
+			{
+				if (NyarrayPtr[st + 1] == NyarrayPtr[st + 2])
+				{
+					printf("the status in y is %d %d %d %d \n", maty[0], maty[1], maty[2], maty[3]);
+					printf("the material in y %f %f %f %f \n", NyarrayPtr[st + 0], NyarrayPtr[st + 1], NyarrayPtr[st + 2], NyarrayPtr[st + 3]);
+				}
+				
+			}*/
+			
+
+			
+			
 		}
 		for (index = 0; index < num; index++)
 		{
 			if (yy < fabs(yDepth[st + index]))
 			{
-				*&material_index1[index1] = 0.00000;
+				*&material_index1[index1] = 0;
 				break;
 			}
 			
-			
 			if ((yy >= fabs(yDepth[st + index])) && (yy <= fabs(yDepth[st + index + 1])))
 			{
-				if ((fabs((NyarrayPtr[st + index]) - (NyarrayPtr[st + index + 1])) < 0.1) && ((maty[index] == 0) && (maty[index + 1] == 1)))
+				/*
+				if ((fabs((NzarrayPtr[st + index]) - (NzarrayPtr[st + index + 1])) < 0.1))
+				{
+					if ((maty[index] == 0) && (maty[index + 1] == 1) && (num == 2))
+					{
+						*&material_index1[index1] = NyarrayPtr[st + index];
+						//printf("same material assigned which is %d \n", *&material_index1[index1]);
+						counter++; break;
+					}
+					else if ((maty[index] == 0) && (maty[index + 1] == 1) && (num > 2))
+					{
+						*&material_index1[index1] = 5;
+					}
+
+				}
+				 */
+				if ((num <= 2) && ((maty[index] == 0) && (maty[index + 1] == 1)))
 				{
 					*&material_index1[index1] = NyarrayPtr[st + index];
-					//printf("same material assigned which is %d \n", *&material_index1[index1]);
 					counter++; break;
+
 				}
 				
-				else if (fabs((NyarrayPtr[st + index]) - (NyarrayPtr[st + index + 1])) > 0.1)
+				else if (num > 2)
 				{
-					if ((maty[index] == 0) && (maty[index + 1] == 0))
-					{
-						*&material_index1[index1] = (NyarrayPtr[st + index]);
-						counter++; break;
-					}
-					else if ((maty[index] == 1) && (maty[index + 1] == 1))
-					{
-						*&material_index1[index1] = (NyarrayPtr[st+ index + 1]);
-						counter++; break;
-					}
-					
-					else if (((maty[index]) == 0) && (maty[index + 1] == 1))
-					{
-						*&material_index1[index1] = (NyarrayPtr[st + index]);
-						counter++; break;
+					*&material_index1[index1] =5;
+					break;
 
-					}
-					/*
-					else if (((maty[index]) == 1) && (maty[index + 1] == 0))
-					{
-						*&material_index1[index1] = (NyarrayPtr[st + index +1]);
-						counter++; break;
-
-					}
-					*/
-					
 				}
-				
+				else
+				{
+					*&material_index1[index1] = 0;
+					break;
+				}
+
+
+
+			//	//if ((fabs((NyarrayPtr[st + index]) - (NyarrayPtr[st + index + 1])) < 0.1) && ((maty[index] == 0) && (maty[index + 1] == 1)))
+			//	//{
+			//	//	*&material_index1[index1] = 5;// NyarrayPtr[st + index];
+			//	//	//printf("same material assigned which is %d \n", *&material_index1[index1]);
+			//	//	counter++; break;
+			//	//}
+			//	//
+			//	else if (fabs((NyarrayPtr[st + index]) - (NyarrayPtr[st + index + 1])) > 0.1)
+			//	{
+
+			//		//Case for Intersecting Cylinders  1
+			//		if ((maty[index] == 0) && (maty[index + 1] == 0))
+			//		{
+			//			
+			//			/*if ((fabs(yDepth[st + index] - yDepth[st + index + 1]) < 0.27))
+			//			{
+			//				*&material_index1[index1] = 5;
+			//			}
+			//			else*/ if (NyarrayPtr[st + index] == 1.00)
+			//			{
+			//				*&material_index1[index1] = 1;
+			//				counter++; break;
+			//			}
+			//			else if (NyarrayPtr[st + index] == 2.00)
+			//			{
+			//				*&material_index1[index1] = 2;
+			//				counter++; break;
+			//			}
+			//			//counter++; break;
+			//		}
+			//		else if ((maty[index] == 1) && (maty[index + 1] == 1))
+			//		{
+			//			*&material_index1[index1] = (NyarrayPtr[st + index + 1]);
+			//			counter++; break;
+			//		}
+			//		else if ((maty[index] == 0) && (maty[index + 1] == 1))
+			//		{
+			//			*&material_index1[index1] = 5;
+			//		}
+			///*
+			//		if ((maty[index] == 0) && (maty[index + 1] == 0))
+			////		{
+			////			*&material_index1[index1] = (NyarrayPtr[st + index]);
+			////			counter++; break;
+			////		} 
+			////		if ((maty[index] == 1) && (maty[index + 1] == 1))
+			////		{
+			////			*&material_index1[index1] = (NyarrayPtr[st+ index + 1]);
+			////			counter++; break;
+			////		}
+			////		/*
+			////		else if (((maty[index]) == 0) && (maty[index + 1] == 1))
+			////		{
+			////			*&material_index1[index1] = (NyarrayPtr[st + index+1]);
+			////			counter++; break;
+
+			////		}*/
+			////		/*
+			////		else if (((maty[index]) == 1) && (maty[index + 1] == 0))
+			////		{
+			////			*&material_index1[index1] = (NyarrayPtr[st + index +1]);
+			////			counter++; break;
+
+			////		}
+			////		*/
+
+			//	}
+
 			}
+
+			//added for circle Intersection
+			if ((yy > fabs(yDepth[st + num])))
+			{
+				*&material_index1[index1] = 0.0000;
+			}
+			//added for circle Intersection
+
+			
+
+
 		}
 	}
 	if (counter > 0)
@@ -6886,7 +7073,7 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 
 		zz = pz - origin.z;
 		// this code will only be excuted if theres an intersecting material
-		//if ((NxarrayPtr[st] != NxarrayPtr[st + 1]) && (num > 2))
+		//if ((NzarrayPtr[st] != NzarrayPtr[st + 1]) && (num > 2))
 		{
 			for (mat_it = 0; mat_it < num; mat_it++)
 			{
@@ -6904,56 +7091,130 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 					}
 				}
 			}
-			//printf("the material is %d %d %d %d \n", matz[0], matz[1], matz[2], matz[3]);
-			//printf("the material is %f %f %f %f %f %f \n", NxarrayPtr[0], NxarrayPtr[1], NxarrayPtr[2], NxarrayPtr[3], NxarrayPtr[4], NxarrayPtr[5]);
+
+
+			/*if ((num > 2))
+			{
+				if (NzarrayPtr[st + 1] == NzarrayPtr[st + 2])
+				{
+					printf("the status in z is %d %d %d %d \n", matz[0], matz[1], matz[2], matz[3]);
+					printf("the material in z %f %f %f %f \n", NzarrayPtr[st + 0], NzarrayPtr[st + 1], NzarrayPtr[st + 2], NzarrayPtr[st + 3]);
+				}
+
+			}*/
+
 
 		}
 		for (index = 0; index < num; index++)
 		{
-			if (zz < fabs(zDepth[st + index])) 
+			if (zz < fabs(zDepth[st + index]))
 			{
 				*&material_index1[index1] = 0.000;
 				break;
 			}
-			
-			
+
+
 			if ((zz >= fabs(zDepth[st + index])) && (zz <= fabs(zDepth[st + index + 1])))
 			{
-				if ((fabs((NzarrayPtr[st + index]) - (NzarrayPtr[st + index + 1]))<0.1) && ((matz[index] == 0) && (matz[index + 1] == 1)))
+
+				if ((fabs((NzarrayPtr[st + index]) - (NzarrayPtr[st + index + 1])) < 0.1))
 				{
-					*&material_index1[index1] = NzarrayPtr[st + index];
-					//printf("same material assigned which is %d \n", *&material_index1[index1]);
-					counter++; break;
+					if ((matz[index] == 0) && (matz[index + 1] == 1) && (num == 2))
+					{
+						*&material_index1[index1] = NzarrayPtr[st + index];
+						counter++; break;
+					}
+					else if ((matz[index] == 0) && (matz[index + 1] == 1) && (num > 2))
+					{
+						*&material_index1[index1] = 5;
+						break;
+						
+					}
+
 				}
-				if (fabs((NzarrayPtr[st + index]) - (NzarrayPtr[st + index + 1])) > 0.1)
+
+		//		/*
+		//		if ((fabs((NzarrayPtr[st + index]) - (NzarrayPtr[st + index + 1])) < 0.1) && ((matz[index] == 0) && (matz[index + 1] == 1)))
+		//		{
+		//			*&material_index1[index1] = NzarrayPtr[st + index];
+		//			//printf("same material assigned which is %d \n", *&material_index1[index1]);
+		//			counter++; break;
+		//		}
+		//		*/
+				else if (fabs((NzarrayPtr[st + index]) - (NzarrayPtr[st + index + 1])) > 0.1)
 				{
 					if ((matz[index] == 0) && (matz[index + 1] == 0))
 					{
-						*&material_index1[index1] = (NzarrayPtr[st + index]);
-						counter++; break;
+
+						/*if ((fabs(zDepth[st + index] - zDepth[st + index + 1]) < 0.27))
+						{
+							*&material_index1[index1] = 5;
+							break;
+						}*/
+						if (NzarrayPtr[st + index] == 1.00)
+						{
+							*&material_index1[index1] = 1;
+							counter++; break;
+						}
+						else if (NzarrayPtr[st + index] == 2.00)
+						{
+							*&material_index1[index1] = 2;
+							counter++; break;
+						}
+						
+						
+						//counter++; break;
 					}
 					else if ((matz[index] == 1) && (matz[index + 1] == 1))
 					{
 						*&material_index1[index1] = (NzarrayPtr[st + index + 1]);
 						counter++; break;
 					}
-					
-					else if ((matz[index] == 0) && ( matz[index + 1] == 1 ))
+					else if ((matz[index] == 0) && (matz[index + 1] == 1))
 					{
-						*&material_index1[index1] = (NzarrayPtr[st + index]);
-						counter++; break;
+						*&material_index1[index1] = 5;
+						break;
+						
+					}					
+					
+		//			/*
+		//			if ((matz[index] == 0) && (matz[index + 1] == 0))
+		//			{
+		//				*&material_index1[index1] = (NzarrayPtr[st + index]);
+		//				counter++; break;
+		//			}
+		//			
+		//			if ((matz[index] == 1) && (matz[index + 1] == 1))
+		//			{
+		//				*&material_index1[index1] = 5;
+		//				counter++; break;
+		//			}
+		//			/*
+		//			else if ((matz[index] == 0) && ( matz[index + 1] == 1 ))
+		//			{
+		//				*&material_index1[index1] = (NzarrayPtr[st + index+1]);
+		//				counter++; break;
 
-					}
-					
-				/*	else if (((matz[index]) == 1) && (matz[index + 1] == 0))
-					{
-						*&material_index1[index1] = (NzarrayPtr[st + index + 1]);
-						counter++; break;
-					}*/
-					
-					
+		//			}*/
+		//			
+		//		/*	else if (((matz[index]) == 1) && (matz[index + 1] == 0))
+		//			{
+		//				*&material_index1[index1] = (NzarrayPtr[st + index + 1]);
+		//				counter++; break;
+		//			}*/
+		//			
+		//			
 				}
 			}
+
+			//added for circle Intersection
+			if ((zz > fabs(zDepth[st + num])))
+			{
+				*&material_index1[index1] = 0.0000;
+				
+
+			}
+			//added for circle Intersection
 		}
 	}
 
@@ -6961,7 +7222,7 @@ __device__ bool _detectInOutPoint(int index1, float px, float py, float pz,
 	{
 		return true;
 	}
-	*&material_index1[index1] = 0.000;
+	//*&material_index1[index1] = 0.000;// for rect only
 	return false;
 
 }

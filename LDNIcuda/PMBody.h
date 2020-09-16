@@ -157,6 +157,9 @@ public:
 	unsigned int GetIndexNo() {return index;}; 
 	void SetIndexNo( unsigned int _index) {index = _index;};
 
+	unsigned int GetCircleInterMat() { return mat; };
+	void SetCircleInterMat(unsigned int _mat) { mat = _mat; };
+
 	GLKObList& GetVSAEdgeList() {return VSAEdgeList;};
 	GLKObList& GetVSANodeList() {return VSANodeList;};
 
@@ -170,6 +173,8 @@ private:
 	GLKObList VSAEdgeList;
 	GLKObList VSANodeList;
 	unsigned int index;
+	unsigned int mat; // material of the contour to be used in the slicer.cpp for developing the polygons of material A/B/A+B
+
 };
 
 
@@ -446,6 +451,9 @@ public:
 	void setImageOrigin(double imgorix, double imgoriy) { imageOrigin[0] = imgorix; imageOrigin[1] = imgoriy; };
 	void setSampleWidth(float s) { sampleWidth = s;};
 	//float getRange() {return m_range;}
+
+	void processGcode(std::vector<int>meshin_layer,double rotBoundingBox[]);
+
 
 	int GetContourNum() {return VSAMeshNum;};
 	bool m_drawImage;

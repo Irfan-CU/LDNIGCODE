@@ -49,6 +49,7 @@ public:
 	int LDNIpolygonnumber;
 	int id;
 	int part_mat;
+	int part_print_property;// this tells whethers this is infill polygon or boundary
 
 	void setPartMat( int partMat) 
 	{
@@ -312,7 +313,22 @@ public:
 	AABB3D machine_size; //!< The bounding box with the width, height and depth of the printer.
 	coord_tIrfan layer_thickness;
 	AABB3D bounding_box;
+
+	int model_scaling; //Scaling size for the input CAD geometry
 	
+	void set_scale(int scale_factor)
+	{
+		this->model_scaling = 100 / scale_factor;
+	}
+	int get_scale()
+	{
+		return this->model_scaling;
+		
+	}
+
+
+
+
 	std::vector<int> extruders;
 	std::vector<WipeScriptConfig> wipe_config_per_extruder;
 	std::vector<RetractionConfig> retraction_config_per_extruder; //!< Retraction config per extruder.
@@ -402,6 +418,8 @@ public:
 	 * \return a Polygon representing the usable area of the print bed.
 	 */
 	Polygon getMachineBorder(bool adhesion_offset = false) const;
+
+	
 
 private:
 	/*!

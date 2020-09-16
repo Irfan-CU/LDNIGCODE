@@ -92,13 +92,16 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 	TreeSupport tree_support_generator(storage);
 	tree_support_generator.generateSupportAreas(storage);
 	
-	//processOutlineGaps(storage);
+	//processOutlineGaps(storage);//										 the outline 
 	processPerimeterGaps(storage);
 	
 	
-	processDerivedWallsSkinInfill(storage);
 	
-	AreaSupport::generateSupportInfillFeatures(storage);
+	processDerivedWallsSkinInfill(storage);
+
+	printf("Done with DerivedWallsSkinInfill \n");
+
+	//AreaSupport::generateSupportInfillFeatures(storage);
 }
 
 void FffPolygonGenerator::processPerimeterGaps(SliceDataStorage& storage)
@@ -140,11 +143,6 @@ void FffPolygonGenerator::processPerimeterGaps(SliceDataStorage& storage)
 					part.perimeter_gaps.removeSmallAreas(2 * INT2MM(wall_line_width_0) * INT2MM(wall_line_width_0)); // remove small outline gaps to reduce blobs on outside of model
 				}
 
-				// gap between inner wall and skin/infill
-				
-
-				// add perimeter gaps for skin insets
-			
 				for (SkinPart& skin_part : part.skin_parts)
 				{
 					skin_part.SkinPart_mat = part.getpartMat();
@@ -234,21 +232,23 @@ void FffPolygonGenerator::computePrintHeightStatistics(SliceDataStorage& storage
 bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, SliceDataStorage& storage, int total_layers, std::vector<int>& meshin_layer, double rotBoundingBox[]) // slices the model
 {
 	
-	storage.model_min.x = MM2INT(rotBoundingBox[0] * 30);
-	storage.model_min.y = MM2INT(rotBoundingBox[4] * 30);
-	storage.model_min.z = MM2INT(rotBoundingBox[2] * 30);
-	storage.model_max.x = MM2INT(rotBoundingBox[1] * 30);
-	storage.model_max.y = MM2INT(rotBoundingBox[5] * 30);
-	storage.model_max.z = MM2INT(rotBoundingBox[3] * 30);
+	int scale = storage.get_scale(); // scaling for the input CAD gemotry scaling is different in X and Z;
+
+	storage.model_min.x = MM2INT(rotBoundingBox[0] * scale);
+	storage.model_min.y = MM2INT(rotBoundingBox[4] * scale);
+	storage.model_min.z = MM2INT(rotBoundingBox[2] * 18);
+	storage.model_max.x = MM2INT(rotBoundingBox[1] * scale);
+	storage.model_max.y = MM2INT(rotBoundingBox[5] * scale);
+	storage.model_max.z = MM2INT(rotBoundingBox[3] * 18);
 
 	storage.model_size = storage.model_max - storage.model_min;
-
+	
 	int slice_layer_count = total_layers;
 	storage.Layers.resize(slice_layer_count);
 
 	coord_tIrfan layer_thickness;
 	
-	(layer_thickness) = (storage.model_max.z - slice_layer_count) / (slice_layer_count - 1);
+	(layer_thickness) = (storage.model_max.z - storage.model_min.z) / (slice_layer_count);
 
 	storage.setlayer_thickness(layer_thickness);
 
@@ -273,12 +273,13 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 	for (unsigned int mesh_idx = 0; mesh_idx < 1; mesh_idx++) //only one mesh
 	{
 		
+		
 		Slicer* slicer = new Slicer(storage, meshlist, c_mesh, layer_thickness, slice_layer_count, use_variable_layer_heights, meshin_layer);
 
 		slicerList.push_back(slicer);
 		
+		
 	}
-
 	generateMultipleVolumesOverlap(slicerList);
 	
 	storage.print_layer_count = 0;
@@ -313,7 +314,7 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 		{
 			createLayerParts(storage, slicer);
 		}
-
+		printf("Done with parts formation");
 		// Do not add and process support _modifier_ meshes further, and ONLY skip support _modifiers_. They have been
 		// processed in AreaSupport::handleSupportModifierMesh(), but other helper meshes such as infill meshes are
 		// processed in a later stage, except for support mesh itself, so an exception is made for that.
@@ -347,6 +348,7 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 		}
 		
 		delete slicerList[meshIdx];
+	
 
 	}  
 
@@ -395,26 +397,7 @@ void FffPolygonGenerator::processBasicWallsSkinInfill(SliceDataStorage& storage,
 	mesh_inset_skin_progress_estimator->nextStage(skin_estimator);
 
 	bool process_infill = true;// mesh.settings.get<coord_t>("infill_line_distance") > 0;
-	/*
-	if (!process_infill)
-	{ // do process infill anyway if it's modified by modifier meshes
-		const Scene& scene = Application::getInstance().current_slice->scene;
-		for (size_t other_mesh_order_idx = mesh_order_idx + 1; other_mesh_order_idx < mesh_order.size(); ++other_mesh_order_idx)
-		{
-			const size_t other_mesh_idx = mesh_order[other_mesh_order_idx];
-			SliceMeshStorage& other_mesh = storage.meshes[other_mesh_idx];
-			if (other_mesh.settings.get<bool>("infill_mesh"))
-			{
-				AABB3D aabb = scene.current_mesh_group->meshes[mesh_idx].getAABB();
-				AABB3D other_aabb = scene.current_mesh_group->meshes[other_mesh_idx].getAABB();
-				if (aabb.hit(other_aabb))
-				{
-					process_infill = true;
-				}
-			}
-		}
-	}
-	*/
+	
 	// skin & infill
 
 	//const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;

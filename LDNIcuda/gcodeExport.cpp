@@ -212,7 +212,7 @@ void GCodeExport::startExtruder(const size_t new_extruder)
 		*output_stream << "T" << new_extruder << new_line;
 	}
 	current_extruder = new_extruder;
-	assert(getCurrentExtrudedVolume() == 0.0);
+	//assert(getCurrentExtrudedVolume() == 0.0);
 	resetExtrusionValue(); // zero the E value on the new extruder, just to be sure
 
 	//Change the Z position so it gets re-written again. We do not know if the switch code modified the Z position.
@@ -380,7 +380,10 @@ void GCodeExport::writeExtrusion(const int x, const int y, const int z, const do
 	}
 	
 	extruder_attr[current_extruder].last_e_value_after_wipe += extrusion_per_mm * diff.vSizeMM();
-	double new_e_value = current_e_value + extrusion_per_mm * diff.vSizeMM();
+	double new_e_value;
+	new_e_value = current_e_value + extrusion_per_mm * diff.vSizeMM();
+	
+	
 	//printf("the values of the extrusiona are %f %f %f \n", current_e_value, extrusion_per_mm, diff.vSizeMM());
 	*output_stream << "G1";
 	writeFXYZE(speed, x, y, z, new_e_value,feature);
@@ -479,9 +482,10 @@ void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, cons
 	
 	curaIrfan::PointIrfan gcode_pos = getGcodePos(x, y, current_extruder);
 	total_bounding_box.include(Point3(gcode_pos.X, gcode_pos.Y, z));
-
-	*output_stream << " X" << MMtoStream{ (gcode_pos.X - extruder_offset) + 100000} << " Y" << MMtoStream{ gcode_pos.Y + 100000};
-	
+	int UM3_offset_x = 20000;
+	int UM3_offset_y = 100000;
+	*output_stream << " X" << MMtoStream{ (gcode_pos.X - extruder_offset) + UM3_offset_x } << " Y" << MMtoStream{ gcode_pos.Y + UM3_offset_y };		   // offset to adjust the print iside the UM3 frame it needs to be changed for the different parts.
+	//*output_stream << " X" << MMtoStream{gcode_pos.X} << " Y" << MMtoStream{gcode_pos.Y};
 	if (z != currentPosition.z)
 	{
 		*output_stream << " Z" << MMtoStream{ z };
@@ -550,6 +554,12 @@ double GCodeExport::getTotalFilamentUsed(size_t extruder_nr)
 }
 void   GCodeExport::writeTemperatureCommand(const size_t extruder, const double& temperature, const bool wait)
 {
+
+	if ((!wait || extruder_attr[extruder].waited_for_temperature) && extruder_attr[extruder].currentTemperature == temperature)
+	{
+		return;
+	}
+	
 	*output_stream << "M109";
 	extruder_attr[extruder].waited_for_temperature = true;
 
@@ -560,32 +570,52 @@ void   GCodeExport::writeTemperatureCommand(const size_t extruder, const double&
 #ifdef ASSERT_INSANE_OUTPUT
 	assert(temperature >= 0);
 #endif // ASSERT_INSANE_OUTPUT
-	*output_stream << " S200" << new_line;
+	*output_stream << " S" << PrecisionedDouble{ 1,temperature} << new_line;
 
-	extruder_attr[extruder].currentTemperature = 200;
+	extruder_attr[extruder].currentTemperature = temperature;
 }
 
 void GCodeExport::writePrimeTrain(const double& travel_speed, coord_tIrfan layer_thicknees)
 {
+	bool prime_blob = true;
 
-	if (layer_nr==0)//extruder_settings.get<bool>("prime_blob_enable"))
-	{ // only move to prime position if we do a blob/poop
-		// ideally the prime position would be respected whether we do a blob or not,
-		// but the frontend currently doesn't support a value function of an extruder setting depending on an fdmprinter setting,
-		// which is needed to automatically ignore the prime position for the printer when blob is disabled
-		coord_tIrfan extruder_prime_pos_x = MM2INT (9);
-		coord_tIrfan extruder_prime_pos_y = MM2INT (6);
-		coord_tIrfan extruder_prime_pos_z = MM2INT (2);
+	if (extruder_attr[current_extruder].is_primed)
+	{ // extruder is already primed once!
+		return;
+	}
+	if (prime_blob)
 
-		//extruder_settings.get<coord_t>("extruder_prime_pos_x");
-		Point3 prime_pos(extruder_prime_pos_x, extruder_prime_pos_y, extruder_prime_pos_z);
-		writeTravel(prime_pos, travel_speed, layer_thicknees);
+	{
+		if (layer_nr == 0)//extruder_settings.get<bool>("prime_blob_enable"))
+		{ // only move to prime position if we do a blob/poop
+			// ideally the prime position would be respected whether we do a blob or not,
+			// but the frontend currently doesn't support a value function of an extruder setting depending on an fdmprinter setting,
+			// which is needed to automatically ignore the prime position for the printer when blob is disabled
+			coord_tIrfan extruder_prime_pos_x = MM2INT(9);
+			coord_tIrfan extruder_prime_pos_y = MM2INT(6);
+			coord_tIrfan extruder_prime_pos_z = MM2INT(2);
+
+			//extruder_settings.get<coord_t>("extruder_prime_pos_x");
+			Point3 prime_pos(extruder_prime_pos_x, extruder_prime_pos_y, extruder_prime_pos_z);
+			writeTravel(prime_pos, travel_speed, layer_thicknees);
+		}
+
+	}
+    bool should_correct_z = false;
+   	std::string command = "G280";
+	if (!prime_blob)
+	{
+		command += " S1";  // use S1 to disable prime blob
+		should_correct_z = true;	
+	}
+	*output_stream << command << new_line;
+	if (should_correct_z)
+	{
+		*output_stream << "G0 Z" << MMtoStream{ getPositionZ() } << new_line;
 	}
 
-	bool should_correct_z = false;
-	std::string command = "G280";
-	*output_stream << command << new_line;
 	extruder_attr[current_extruder].is_primed = true;
+	
 }
 void GCodeExport::writeTravel(const Point3& p, const double& speed, coord_tIrfan layer_thicnkess)
 {
@@ -612,10 +642,19 @@ void GCodeExport::writeTravel(const coord_tIrfan& x, const coord_tIrfan& y, cons
 	assert(Point3(x, y, z) != no_point3);
 	assert((Point3(x, y, z) - currentPosition).vSize() < MM2INT(1000)); // no crazy positions (this code should not be compiled for release)
 #endif //ASSERT_INSANE_OUTPUT
-
+	
 	const PrintFeatureType travel_move_type = extruder_attr[current_extruder].retraction_e_amount_current ? PrintFeatureType::MoveRetraction : PrintFeatureType::MoveCombing;
 	*output_stream << "G0";
-	
+     
+	if (current_extruder == 1)
+	{
+		extruder_offset = 18000;
+	}
+	else if (current_extruder == 0)
+	{
+		extruder_offset = 0;
+	}
+
 	writeFXYZE(speed, x, y, z1, current_e_value, travel_move_type);
 	//printf("done with fxfyfz \n");
 
@@ -743,9 +782,9 @@ std::string GCodeExport::getFileHeader(const std::vector<bool>& extruder_is_used
 
 	prefix << ";START_OF_HEADER" << new_line;
 	prefix << ";HEADER_VERSION:0.1" << new_line;
-	prefix << ";FLAVOR:GRIFFIN:" << new_line;
+	prefix << ";FLAVOR:Griffin" << new_line;
 	prefix << ";GENERATOR.NAME:Cura_SteamEngine" << new_line;
-	prefix << ";GENERATOR.VERSION: 2.01 " << new_line;
+	prefix << ";GENERATOR.VERSION: 4.4.1 " << new_line;
 	prefix << ";GENERATOR.BUILD_DATE:" << Date::getDate().toStringDashed() << new_line;
 	prefix << ";;TARGET_MACHINE.NAME:Ultimaker 3" << new_line;
 	extruder_attr[1].initial_temp = 205;
@@ -771,13 +810,15 @@ std::string GCodeExport::getFileHeader(const std::vector<bool>& extruder_is_used
 	prefix << ";BUILD_VOLUME.TEMPERATURE:28" << new_line;
 	prefix << ";PRINT.GROUPS:1" << new_line;
 
-	if (total_bounding_box.min.x > total_bounding_box.max.x) //We haven't encountered any movement (yet). This probably means we're command-line slicing.
-	{
-		//Put some small default in there.
-		total_bounding_box.min = Point3(0, 0, 0);
-		total_bounding_box.max = Point3(10, 10, 10);
-	}
-	prefix << ";PRINT.SIZE.MIN.X:" << INT2MM(total_bounding_box.min.x) << new_line;
+	total_bounding_box = AABB3D();
+	//if (total_bounding_box.min.x > total_bounding_box.max.x) //We haven't encountered any movement (yet). This probably means we're command-line slicing.
+	//{
+	//	//Put some small default in there.
+	//	total_bounding_box.min = Point3(0, 0, 0);
+	//	total_bounding_box.max = Point3(10, 10, 10);
+	//}
+	AABB3D aab;
+	prefix << ";PRINT.SIZE.MIN.X:" << INT2MM(aab.min.x) << new_line;
 	prefix << ";PRINT.SIZE.MIN.Y:" << INT2MM(total_bounding_box.min.y) << new_line;
 	prefix << ";PRINT.SIZE.MIN.Z:" << INT2MM(total_bounding_box.min.z) << new_line;
 	prefix << ";PRINT.SIZE.MAX.X:" << INT2MM(total_bounding_box.max.x) << new_line;
@@ -785,6 +826,7 @@ std::string GCodeExport::getFileHeader(const std::vector<bool>& extruder_is_used
 	prefix << ";PRINT.SIZE.MAX.Z:" << INT2MM(total_bounding_box.max.z) << new_line;
 	prefix << ";END_OF_HEADER" << new_line;
 	prefix << ";Generated with Cura_SteamEngine 4.2.1";
+	printf("the x max is %d \n", INT2MM(aab.max.x));
 	//printf("the code is @ line 547 of gcode export .cpp \n");
 	return prefix.str();
 }
@@ -867,20 +909,23 @@ void GCodeExport::insertWipeScript(const WipeScriptConfig& wipe_config, coord_tI
 
 void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& retraction_config_old_extruder, coord_tIrfan perform_z_hop /*= 0*/)
 {
+	if (current_extruder == new_extruder)
+	{
+		return;
+	}
+	
 	bool retraction_enable = true;
+	
 	if ((current_extruder == 0) && (new_extruder == 1))
 	{
 		extruder_offset = 18000;
 	}
 	else if ((current_extruder == 1) && (new_extruder == 0))
 	{
-		extruder_offset = 000;
+		extruder_offset = 0;
 	}
 
-	if (current_extruder == new_extruder)
-	{
-		return;
-	}
+	
 	
 	constexpr bool force = true;
 	constexpr bool extruder_switch = true;
