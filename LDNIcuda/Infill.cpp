@@ -58,13 +58,27 @@ void Infill::_generate(Polygons& result_polygons, Polygons& result_lines)
 	}
 
 	outline_offset -= infill_line_width / 2; // the infill line zig zag connections must lie next to the border, not on it
+	switch (pattern)
+	{
+	case EFillMethod::LINES:
+		generateLineInfill(result_lines, line_distance, fill_angle, 0);
+		break;
+	case EFillMethod::TRIANGLES:
+		generatetriangleinfill(result_lines);
+		break;
 
-	generatetriangleinfill(result_lines); 
+	}
+	
 	
 	//printf("@@before connecting infill linzes size inside the infill is %d \n", result_lines.size());
 
-	result_lines.clear();
-	connectLines(result_lines);
+	if (pattern != EFillMethod::LINES)
+	{
+		result_lines.clear();
+
+		connectLines(result_lines);
+	}
+	
 	//printf("@@the connected infill linzes size inside the infill is %d \n", result_lines.size());
 	crossings_on_line.clear();
 	
@@ -116,21 +130,23 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 
 	coord_tIrfan shift = extra_shift + this->shift;
 
+	if (outline_offset != 0 && perimeter_gaps)
+	{
+		const Polygons gaps_outline = in_outline.offset(outline_offset + infill_line_width / 2 + perimeter_gaps_extra_offset);
+		perimeter_gaps->add(in_outline.difference(gaps_outline));
+	}
+
 	Polygons outline = in_outline.offset(outline_offset + infill_overlap);
 
 	if (outline.size() == 0)
 	{
 		return;
 	}
-	//TODO: Currently we find the outline every time for each rotation.
-	//We should compute it only once and rotate that accordingly.
-	//We'll also have the guarantee that they have the same size every time.
-	//Currently we assume that the above operations are all rotation-invariant,
-	//which they aren't if vertices fall on the same coordinate due to rounding.
+	
 	crossings_on_line.resize(outline.size()); //One for each polygon.
 
 	outline.applyMatrix(rotation_matrix);
-
+	
 	if (shift < 0)
 	{
 		shift = line_distance - (-shift) % line_distance;
@@ -139,24 +155,15 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	{
 		shift = shift % line_distance;
 	}
-
+	
 	AABB boundary(outline);
-	for (int i = 0; i < outline.size(); i++)
-	{
-		ConstPolygonRef polyon = outline[i];
-		for (int j = 0; j < polyon.size(); j++)
-		{
-			curaIrfan::PointIrfan check = polyon[j];
-			//printf("the check is %f  %f \n ", INT2MM(check.X), INT2MM(check.Y));
-		}
-	}
-	//printf(" the boundary max in %d and max is %d and line distance is %d \n", boundary.min.X, boundary.max.Y, line_distance);
+	
 	int scanline_min_idx = computeScanSegmentIdx(boundary.min.X - shift, line_distance);
-	//printf("the boundary dimesions are %f %f  %f \n ",INT2MM(boundary.min.X),INT2MM(boundary.max.X),INT2MM(line_distance));
+	
 	int line_count = computeScanSegmentIdx(boundary.max.X - shift, line_distance) + 1 - scanline_min_idx;
-	//printf("the line count is %d zn", line_count);
 
-	std::vector<std::vector<coord_tIrfan>> cut_list; // mapping from scanline to all intersections with polygon segments
+
+	std::vector<std::vector<coord_tIrfan>> cut_list; 
 
 	for (int scanline_idx = 0; scanline_idx < line_count; scanline_idx++)
 	{
@@ -179,8 +186,6 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	std::vector<std::vector<Crossing>> crossings_per_scanline; //For each scanline, a list of crossings.
 	const int min_scanline_index = computeScanSegmentIdx(boundary.min.X - shift, line_distance) + 1;
 	const int max_scanline_index = computeScanSegmentIdx(boundary.max.X - shift, line_distance) + 1;
-
-	//printf("the min scaline idx is %d nad max is %d \n", min_scanline_index, max_scanline_index);
 	
 	crossings_per_scanline.resize(max_scanline_index - min_scanline_index);
 	
@@ -272,6 +277,7 @@ void Infill::generateLinearBasedInfill(const int outline_offset, Polygons& resul
 	//printf("the cutlist size is %d \n", cut_list.size());
 
 	addLineInfill(result, rotation_matrix, scanline_min_idx, line_distance, boundary, cut_list, shift);
+	
 }
 
 /*
@@ -567,6 +573,7 @@ void Infill::connectLines(Polygons& result_lines)
 
 			for (InfillLineSegment* crossing : crossings_on_line[polygon_index][vertex_index])
 			{
+				
 				if (!previous_crossing) //If we're not yet drawing, then we have been trying to find the next vertex. We found it! Let's start drawing.
 				{
 					previous_crossing = crossing;

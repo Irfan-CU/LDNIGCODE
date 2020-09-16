@@ -26,6 +26,7 @@ public:
 	Polygons perimeter_gaps; //!< The gaps between the extra skin walls and gaps between the outer skin wall and the inner part inset
 	Polygons inner_infill; //!< The inner infill of the skin with which the area within the innermost inset is filled
 	Polygons roofing_fill; //!< The inner infill which has air directly above
+	int SkinPart_mat;
 };
 
 /*!
@@ -38,6 +39,7 @@ class SliceLayerPart
 public:
 	AABB boundaryBox;       //!< The boundaryBox is an axis-aligned bounardy box which is used to quickly check for possible collision between different parts on different layers. It's an optimalization used during skin calculations.
 	PolygonsPart outline;       //!< The outline is the first member that is filled, and it's filled with polygons that match a cross section of the 3D model. The first polygon is the outer boundary polygon and the rest are holes.
+	PolygonsPart outline_zigzag;
 	Polygons print_outline; //!< An approximation to the outline of what's actually printed, based on the outer wall. Too small parts will be omitted compared to the outline.
 	std::vector<Polygons> insets;         //!< The insets are generated with. The insets are also known as perimeters or the walls.
 	Polygons perimeter_gaps; //!< The gaps between consecutive walls and between the inner wall and outer skin inset
@@ -47,6 +49,7 @@ public:
 	int LDNIpolygonnumber;
 	int id;
 	int part_mat;
+	int part_print_property;// this tells whethers this is infill polygon or boundary
 
 	void setPartMat( int partMat) 
 	{
@@ -153,6 +156,7 @@ public:
 	coord_tIrfan printZ;     //!< The height at which this layer needs to be printed. Can differ from sliceZ due to the raft.
 	coord_tIrfan thickness;  //!< The thickness of this layer. Can be different when using variable layer heights.
 	std::vector<SliceLayerPart> parts;  //!< An array of LayerParts which contain the actual data. The parts are printed one at a time to minimize travel outside of the 3D model.
+	std::vector<SliceLayerPart> parts_zigzag; //parts for the zigzag pattern
 	std::vector<int> mat_parts;
 	Polygons polygons;
 	Polygons openPolyLines; //!< A list of lines which were never hooked up into a 2D polygon. (Currently unused in normal operation)
@@ -309,7 +313,22 @@ public:
 	AABB3D machine_size; //!< The bounding box with the width, height and depth of the printer.
 	coord_tIrfan layer_thickness;
 	AABB3D bounding_box;
+
+	int model_scaling; //Scaling size for the input CAD geometry
 	
+	void set_scale(int scale_factor)
+	{
+		this->model_scaling = 100 / scale_factor;
+	}
+	int get_scale()
+	{
+		return this->model_scaling;
+		
+	}
+
+
+
+
 	std::vector<int> extruders;
 	std::vector<WipeScriptConfig> wipe_config_per_extruder;
 	std::vector<RetractionConfig> retraction_config_per_extruder; //!< Retraction config per extruder.
@@ -399,6 +418,8 @@ public:
 	 * \return a Polygon representing the usable area of the print bed.
 	 */
 	Polygon getMachineBorder(bool adhesion_offset = false) const;
+
+	
 
 private:
 	/*!

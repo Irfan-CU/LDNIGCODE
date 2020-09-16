@@ -37,10 +37,10 @@
 	LayerPlan* LayerPlanBuffer::processBuffer(int layernum, coord_tIrfan layer_thickness)
 	{
 		
-		//printf("indide Process Buffer and buffer size is  %d\n",buffer.size());
+		
 		if (buffer.empty())
 		{
-			//printf("Is buffer empty for the layer %d layer\n",layernum);
+			
 			return nullptr;
 		}
 		processFanSpeedLayerTime();
@@ -51,14 +51,14 @@
 		}
 		if (buffer.size() > 0)
 		{
-			insertTempCommands(); // insert preheat commands of the just completed layer plan (not the newly emplaced one)
+			insertTempCommands(); 
 		}
 		if (buffer.size() > buffer_size)
 		{
 			LayerPlan* ret = buffer.front();
-			//printf("the buffer frint is done \n");
+			
 			buffer.pop_front();
-			//printf("the pop_front  is done \n");
+			
 			return ret;
 		}
 		return nullptr;
@@ -68,10 +68,10 @@
 	
 	void LayerPlanBuffer::flush()
 	{
-		 //If there was still g-code in a layer, flush that as a separate layer. Don't want to group them together accidentally.
+		
 		if (buffer.size() > 0)
 		{
-			insertTempCommands(); // insert preheat commands of the very last layer
+			insertTempCommands(); 
 		}
 		while (!buffer.empty())
 		{
@@ -89,7 +89,7 @@
 
 		if (!new_layer_destination_state)
 		{
-			printf("Layer %d is empty (or it has empty extruder plans). Temperature control and cross layer travel moves might suffer!\n", newest_layer->layer_nr);
+			
 			return;
 		}
 
@@ -99,11 +99,9 @@
 		assert(newest_layer->extruder_plans.front().paths.size() > 0);
 		assert(newest_layer->extruder_plans.front().paths[0].points.size() == 1);
 		assert(newest_layer->extruder_plans.front().paths[0].points[0] == first_location_new_layer);
-		// if the last planned position in the previous layer isn't the same as the first location of the new layer, travel to the new location
+		
 		if (!prev_layer->last_planned_position || *prev_layer->last_planned_position != first_location_new_layer)
 		{
-			//const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
-			//const Settings& extruder_settings = Application::getInstance().current_slice->scene.extruders[prev_layer->extruder_plans.back().extruder_nr].settings;
 			prev_layer->setIsInside(new_layer_destination_state->second);
 			const bool retract_at_layer_change = false;
 			bool travel_retract_before_outer_wall = true;

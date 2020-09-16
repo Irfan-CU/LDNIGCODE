@@ -1250,8 +1250,10 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 		
 		for (int it = 0; it < mesh->total_materials.size(); it++)
 		{
+			printf("the material is %s ad it is %d \n", mesh->total_materials[it],it);
 			if (tmp.compare(mesh->total_materials[it])==0)
 			{
+				
 				glVertex4i(ver[0] - 1, ver[1] - 1, ver[2] - 1, it+1);
 			}
 		}
@@ -1496,11 +1498,12 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 			CUDA_SAFE_CALL( cudaBindTextureToArray(tex2DFloat4In, in_array) );
 			//--------------------------------------------------------------------------------------------------------
 			//	fill the sampleArray on device
+			krLDNISampling_CopySamples << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (devNxArrayPtr, devNyArrayPtr, devDepthArrayPtr, n, arrsize, width, gWidth, nRes, devIndexArrayPtr);
 			
-			krLDNISampling_CopySamples<<<BLOCKS_PER_GRID,THREADS_PER_BLOCK>>>(devNxArrayPtr, devNyArrayPtr, devDepthArrayPtr, n, arrsize, width, gWidth, nRes, devIndexArrayPtr);
+			
 			CUDA_SAFE_CALL( cudaGraphicsUnmapResources( 1, &sampleTex_resource, NULL ) );
 			if (n==n_max) break;
-
+			
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 			glStencilFunc(GL_GREATER, n+1, 0xff);
 			glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
@@ -2606,7 +2609,9 @@ __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
 			
 			devNxArrayPtr[arrindex]=rgb.w;		// material index;	
 			devNyArrayPtr[arrindex]=rgb.y;		// y-component of normal
-			//devMaterialInOut[arrindex] = 0.0000;
+			
+			
+			
 			/*
 			for (int i = devIndexArrayPtr[index]; i <= devIndexArrayPtr[index + 1]; i++)
 			{

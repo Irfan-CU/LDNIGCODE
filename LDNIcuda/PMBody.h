@@ -109,8 +109,18 @@ public:
 	VSANode * GetEndPoint() {return pEndPoint;};
 	void SetEndPoint( VSANode * _pEndPointIrfan = NULL ){pEndPoint = _pEndPointIrfan;};
 
-	void SetEdgeMaterial(int MaterialIndex) { MaterialIndexEdge = MaterialIndex;  };
-	int  GetEdgeMaterial() { return MaterialIndexEdge; };
+	void SetprevEdgeMaterial(int MaterialIndex) { prevMatOnEdge = MaterialIndex; };
+	int  GetprevEdgeMaterial() { return prevMatOnEdge; };
+
+	void SetEdgeMaterial(int MaterialIndex) { MatOnEdge = MaterialIndex;  };
+	int  GetEdgeMaterial() { return MatOnEdge; };
+
+	void SetnextEdgeMaterial(int MaterialIndex) { nextMatOnEdge = MaterialIndex; };
+	int  GetnextEdgeMaterial() { return nextMatOnEdge; };
+
+
+
+
 
 	void CalLength();
 	double GetLength() {return length; };
@@ -129,7 +139,9 @@ private:
 	VSANode * pStartPoint;		
 	VSANode * pEndPoint;
 	
-	int MaterialIndexEdge;
+	int prevMatOnEdge;
+	int MatOnEdge;
+	int nextMatOnEdge;
 	double length;
 	unsigned int index;
 	unsigned int prev_edge_index;
@@ -145,6 +157,9 @@ public:
 	unsigned int GetIndexNo() {return index;}; 
 	void SetIndexNo( unsigned int _index) {index = _index;};
 
+	unsigned int GetCircleInterMat() { return mat; };
+	void SetCircleInterMat(unsigned int _mat) { mat = _mat; };
+
 	GLKObList& GetVSAEdgeList() {return VSAEdgeList;};
 	GLKObList& GetVSANodeList() {return VSANodeList;};
 
@@ -158,6 +173,8 @@ private:
 	GLKObList VSAEdgeList;
 	GLKObList VSANodeList;
 	unsigned int index;
+	unsigned int mat; // material of the contour to be used in the slicer.cpp for developing the polygons of material A/B/A+B
+
 };
 
 
@@ -407,7 +424,7 @@ public:
 
 
 	//void ConvertContourToVSAMesh(float* st_stick, float* ed_stick, int* stickID, int stickNum);
-	void BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int * cpuStickMaterial);
+	void BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int* prevStikMat, int* StickMat, int* nextStickMat);
 	void ArrayToImage(bool *nodes, int imageSize[]);
 	void WriteBMP(const char * filename, GLubyte * data, int m_SizeX, int m_SizeY);
 	void ArrayToImage(bool *outNodes, bool *InNodes, int imageSize[], int base, bool bSave, bool bDisplay);
@@ -434,6 +451,9 @@ public:
 	void setImageOrigin(double imgorix, double imgoriy) { imageOrigin[0] = imgorix; imageOrigin[1] = imgoriy; };
 	void setSampleWidth(float s) { sampleWidth = s;};
 	//float getRange() {return m_range;}
+
+	void processGcode(std::vector<int>meshin_layer,double rotBoundingBox[]);
+
 
 	int GetContourNum() {return VSAMeshNum;};
 	bool m_drawImage;

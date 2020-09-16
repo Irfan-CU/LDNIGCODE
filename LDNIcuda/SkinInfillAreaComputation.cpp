@@ -17,11 +17,11 @@
 
 	coord_tIrfan SkinInfillAreaComputation::getSkinLineWidth(const SliceDataStorage& storage, const int& layer_nr)
 	{
-		coord_tIrfan skin_line_width = MM2INT(0.35);// esh.settings.get<coord_tIrfan>("skin_line_width");
+		coord_tIrfan skin_line_width = MM2INT(0.4);// esh.settings.get<coord_tIrfan>("skin_line_width");
 		if (layer_nr == 0)
 		{
 			//const ExtruderTrain& train_skin = mesh.settings.get<ExtruderTrain&>("top_bottom_extruder_nr");
-			skin_line_width *= Ratio(120/100);// train_skin.settings.get<Ratio>("initial_layer_line_width_factor");
+			skin_line_width *= Ratio(100);// train_skin.settings.get<Ratio>("initial_layer_line_width_factor");
 		}
 		return skin_line_width;
 	}
@@ -67,8 +67,8 @@
 	SkinInfillAreaComputation::SkinInfillAreaComputation(const int& layer_nr, SliceDataStorage& storage, bool process_infill)
 		: layer_nr(layer_nr)
 		, storage(storage)
-		, bottom_layer_count(4)
-		, top_layer_count(0)
+		, bottom_layer_count(0)//6
+		, top_layer_count(0)//4
 		, wall_line_count(3)
 		, skin_line_width(getSkinLineWidth(storage, layer_nr))
 		, wall_line_width_0(getWallLineWidth0(storage, layer_nr))
@@ -76,7 +76,7 @@
 		, innermost_wall_line_width(wall_line_width_x)
 		, infill_skin_overlap(getInfillSkinOverlap(storage, layer_nr, innermost_wall_line_width))
 		, skin_inset_count(1)
-		, no_small_gaps_heuristic(true)
+		, no_small_gaps_heuristic(false)
 		, process_infill(process_infill)
 		, top_reference_wall_expansion(MM2INT(1))//mesh.settings.get<coord_tIrfan>("top_skin_preshrink"))
 		, bottom_reference_wall_expansion(MM2INT(1))//mesh.settings.get<coord_tIrfan>("bottom_skin_preshrink"))
@@ -154,13 +154,11 @@
 		generateSkinAndInfillAreas();
 
 		SliceLayer* layer = &storage.Layers[layer_nr];
-		//printf("the parts size is %d \n", layer->parts.size());
+		
 		for (unsigned int part_nr = 0; part_nr < layer->parts.size(); part_nr++)
 		{
 			SliceLayerPart& part = layer->parts[part_nr];
 			generateSkinInsetsAndInnerSkinInfill(&part);
-
-			//generateRoofing(part);
 		}
 	}
 
@@ -185,14 +183,14 @@
 
 		for (unsigned int part_nr = 0; part_nr < layer.parts.size(); part_nr++)
 		{
-			//printf("the infill at line 184 is %d and wall line count is %d \n", wall_line_count,layer.parts.size());
+			
 			SliceLayerPart& part = layer.parts[part_nr];
-			//printf("the parts.insets.size() is %d and wall line count is %d \n", part.insets.size(), wall_line_count);
+			
 			if (part.insets.size() < wall_line_count)
 			{
-				continue; // the last wall is not present, the part should only get inter perimeter gaps, but no skin or infill.
+				continue;
 			}
-			//printf("\n generateSkinAndInfillAreas the part no is %d \n", part_nr);
+			
 			generateSkinAndInfillAreas(part);
 		}
 	}
@@ -206,7 +204,11 @@
 	void SkinInfillAreaComputation::generateSkinAndInfillAreas(SliceLayerPart& part)
 	{
 		
+		printf("the parts insets sizes zre %d %d %d \n",part.insets[0].size(), part.insets[1].size(), part.insets[2].size());
 		Polygons original_outline = part.insets.back().offset(-innermost_wall_line_width / 2);
+		
+		
+		
 		Polygons upskin;
 		if (top_layer_count > 0)
 		{
@@ -217,17 +219,18 @@
 		{
 			downskin = Polygons(original_outline);
 		}
-
+		
 		calculateBottomSkin(part, downskin);
 
 		calculateTopSkin(part, upskin);
 		
 	    applySkinExpansion(original_outline, upskin, downskin);
+		
 
-		// now combine the resized upskin and downskin
+		
 		Polygons skin = upskin.unionPolygons(downskin);
 
-		//printf("\n ****** upskin polygons and downskin polygons and  skin union has %d and %d and %d respecttively \n", upskin.size(), downskin.size(), skin.size());
+		
 
 		skin.removeSmallAreas(MIN_AREA_SIZE);
 
@@ -236,14 +239,14 @@
 			// or when other infill meshes want to modify this infill
 		//	printf("inside the process_infill @ line 224 of Skina nd Infill area Computation\n");
 			generateInfill(part,skin);
-		//	printf("part.skin_parts.back().outline is  @ line 224 of %d \n", part.infill_area.area());
+	
 		}
 		
 		for (PolygonsPart& skin_area_part : skin.splitIntoParts())
 		{
 			part.skin_parts.emplace_back();
 			part.skin_parts.back().outline = skin_area_part;
-		//printf("skin area part is %d and outline point counts are %d and layer nr is %d \n", skin_area_part.size(), part.skin_parts.back().outline.pointCount(),layer_nr);
+		
 		}
 		
 	}
@@ -316,7 +319,7 @@
 		coord_tIrfan bottom_outset = bottom_skin_expand_distance;
 
 		// mesh.settings.get<coord_tIrfan>("min_skin_width_for_expansion") / 2;
-		coord_tIrfan top_min_width_int = MM2INT(2.24);	 // check for the settings
+		coord_tIrfan top_min_width_int =0.00;	 // check for the settings hardcoding the settings without the MM2INT converter 2.24
 		coord_tIrfan bottom_min_width = top_min_width_int;
 
 		// Compensate for the pre-shrink applied because of the Skin Removal Width.
@@ -359,9 +362,10 @@
 	 */
 	void SkinInfillAreaComputation::generateSkinInsetsAndInnerSkinInfill(SliceLayerPart* part)
 	{
-		//printf("*****part skin parts size is %d", part->skin_parts.size());
+		
 		for (SkinPart& skin_part : part->skin_parts)
 		{
+		
 			generateSkinInsets(skin_part);
 			generateInnerSkinInfill(skin_part);
 		}
@@ -375,7 +379,7 @@
 	 */
 	void SkinInfillAreaComputation::generateSkinInsets(SkinPart& skin_part)
 	{
-		//printf("the skin_inset_count is %d \n",skin_inset_count);
+		
 		for (size_t inset_idx = 0; inset_idx < skin_inset_count; inset_idx++)
 		{
 			skin_part.insets.push_back(Polygons());
@@ -391,7 +395,7 @@
 			}
 
 			// optimize polygons: remove unnecessary verts
-			//skin_part.insets[inset_idx].simplify();
+			skin_part.insets[inset_idx].simplify();
 			if (skin_part.insets[inset_idx].size() < 1)
 			{
 				skin_part.insets.pop_back();
@@ -400,58 +404,44 @@
 		}
 	}
 
-	/*
-	 * This function is executed in a parallel region based on layer_nr.
-	 * When modifying make sure any changes does not introduce data races.
-	 *
-	 * this function may only read/write the skin and infill from the *current* layer.
-	 */
+	
 	void SkinInfillAreaComputation::generateInnerSkinInfill(SkinPart& skin_part)
 	{
 		if (skin_part.insets.empty())
 		{
-			//printf("skin part is empty \n");
 			skin_part.inner_infill = skin_part.outline;
 			return;
 		}
 		const Polygons& innermost_inset = skin_part.insets.back();
 		skin_part.inner_infill = innermost_inset.offset(-skin_line_width / 2);
-		//printf("skin_part.inner_infill size is %d \n", skin_part.inner_infill.size());
+		
 	}
 
-	/*
-	 * This function is executed in a parallel region based on layer_nr.
-	 * When modifying make sure any changes does not introduce data races.
-	 *
-	 * generateInfill read mesh.layers[n].parts[*].{insets,skin_parts,boundingBox} and write mesh.layers[n].parts[*].infill_area
-	 */
 	void SkinInfillAreaComputation::generateInfill(SliceLayerPart& part, const Polygons& skin)
 	{
 		
 		if (part.insets.size() < wall_line_count)
 		{
-			return; // the last wall is not present, the part should only get inter perimeter gaps, but no infill.
+			return; 
 		}
-		const size_t wall_line_count = 3;// mesh.settings.get<size_t>("wall_line_count");
-		//double infill_line_distance = 0.42;// mesh.settings.get<coord_tIrfan>("infill_line_distance");
-		const coord_tIrfan infill_line_distance = MM2INT(6.3);
+		const size_t wall_line_count = 3;
+		
+		const coord_tIrfan infill_line_distance = MM2INT(1.3);
 		coord_tIrfan offset_from_inner_wall = -infill_skin_overlap;
-		//printf("the infill skin overlap is %d \n", -infill_skin_overlap);
+		
+		
 		if (wall_line_count > 0)
-		{ // calculate offset_from_inner_wall
-			coord_tIrfan extra_perimeter_offset = MM2INT(0); // to align concentric polygons across layers
+		{
+			coord_tIrfan extra_perimeter_offset = 0;
 			offset_from_inner_wall += extra_perimeter_offset - innermost_wall_line_width / 2;
 		}
-		//printf("the innermost wall_line width is %d and offset is %d \n", innermost_wall_line_width, offset_from_inner_wall);
 		
 		Polygons infill = part.insets.back().offset(offset_from_inner_wall);
-		//printf("****before skin difference the infill size for the part is %d and point count is %d \n", infill.size(), part.infill_area.pointCount());
-		//infill = infill.difference(skin);
-		//printf("the infill size is %d \n points in parts are %d \n", infill.size(),part.insets.back().pointCount());
-		infill.removeSmallAreas(MIN_AREA_SIZE);
+		infill = infill.difference(skin);
+		
+		//infill.removeSmallAreas(MIN_AREA_SIZE);  //removed for circular intersectio case as the intersection area is very small area;
 		part.infill_area = infill.offset(infill_skin_overlap);
 		
-		//printf("****the infill size for the part is %d and point count is %d and the layer is %d\n",infill.size(),part.infill_area.pointCount(),layer_nr);
 	}
 
 	/*
@@ -546,23 +536,18 @@
 	
 	void SkinInfillAreaComputation::generateGradualInfill(SliceDataStorage& storage)
 	{
-		// no early-out for this function; it needs to initialize the [infill_area_per_combine_per_density]
-		float layer_skip_count = 8; // skip every so many layers as to ignore small gaps in the model making computation more easy
 		
-		//if (!mesh.settings.get<bool>("skin_no_small_gaps_heuristic"))
-		
-		//	layer_skip_count = 1;
-		
-			// mesh.settings.get<coord_tIrfan>("gradual_infill_step_height");
+		float layer_skip_count = 1; 
+
 		const coord_tIrfan gradual_infill_step_height = MM2INT(1.5);
 		const size_t gradual_infill_step_layer_count = round_divide(gradual_infill_step_height,storage.getlayer_thickness());
 
-		float n_skip_steps_per_gradual_step = std::max(1.0f, std::ceil(gradual_infill_step_layer_count / layer_skip_count)); // only decrease layer_skip_count to make it a divisor of gradual_infill_step_layer_count
+		float n_skip_steps_per_gradual_step = std::max(1.0f, std::ceil(gradual_infill_step_layer_count / layer_skip_count)); 
 		layer_skip_count = gradual_infill_step_layer_count / n_skip_steps_per_gradual_step;
-		const size_t max_infill_steps = 0;// mesh.settings.get<size_t>("gradual_infill_steps");
+		const size_t max_infill_steps = 0;
 
-		const int min_layer = 0;//mesh.settings.get<size_t>("bottom_layers");
-		const int max_layer = storage.Layers.size()-1-0;// mesh.layers.size() - 1 - mesh.settings.get<size_t>("top_layers");
+		const int min_layer = 0;//6;// 6 for the bottom layers
+		const int max_layer = storage.Layers.size() - 1;// storage.Layers.size() - 1 - 4;  //4
 		
 		for (int layer_idx = 0; layer_idx < static_cast<int>(storage.Layers.size()); layer_idx++)
 		{ // loop also over layers which don't contain infill cause of bottom_ and top_layer to initialize their infill_area_per_combine_per_density
@@ -574,15 +559,16 @@
 				
 				const Polygons& infill_area = part.getOwnInfillArea();
 			
-
+				
 				if (infill_area.size() == 0 || layer_idx < min_layer || layer_idx > max_layer)
-				{ // initialize infill_area_per_combine_per_density empty
-					part.infill_area_per_combine_per_density.emplace_back(); // create a new infill_area_per_combine		//100%dense
+				{ 
+					part.infill_area_per_combine_per_density.emplace_back(); 
 					part.infill_area_per_combine_per_density.back().emplace_back(); // put empty infill area in the newly constructed infill_area_per_combine
 					//printf("doing part.infill_area_per_combine_per_density.back().emplace_back() @ line 548 of skin infillAreaComputation\n");
-																					// note: no need to copy part.infill_area, cause it's the empty vector anyway
+					printf("The layer numer is %d for the gradual infill in the bottom layer processing and the size is %d \n",layer_idx, part.infill_area_per_combine_per_density[0][0].size());// note: no need to copy part.infill_area, cause it's the empty vector anyway
 					continue;
 				}
+				
 				Polygons less_dense_infill = infill_area; // one step less dense with each infill_step
 				for (size_t infill_step = 0; infill_step < max_infill_steps; infill_step++)
 				{
@@ -624,7 +610,9 @@
 				//printf("the infill_area_per_combine_current_density part %d and the layer is %d", infill_area_per_combine_current_density.size(),layer_idx);
 				part.infill_area_own = nullptr; // clear infill_area_own, it's not needed any more.
 				assert(part.infill_area_per_combine_per_density.size() != 0 && "infill_area_per_combine_per_density is now initialized");
+				printf("this layer has outline size %d and infill size is %d \n", part.infill_area_per_combine_per_density[0][0].size(),infill_area.size());
 			}
+			
 		}
 	}
 
@@ -634,23 +622,23 @@
 		//printf("inside the combine\n");
 		
 		const coord_tIrfan layer_height = storage.Layers[0].thickness;
-		const coord_tIrfan infill_sparse_thickness = MM2INT(0.2);
+		const coord_tIrfan infill_sparse_thickness = MM2INT(0.1);
 		//printf("inside the combine\n");
 		const size_t amount = std::max(1U, round_divide(infill_sparse_thickness, std::max(layer_height, coord_tIrfan(1))));
-		printf("the amount is %d \n", amount);
+		
 		if (amount <= 1) //If we must combine 1 layer, nothing needs to be combined. Combining 0 layers is invalid.
 		{
 			return;
 		}
-		printf("inside the combine\n");
+		
 		/* We need to round down the layer index we start at to the nearest
 		divisible index. Otherwise we get some parts that have infill at divisible
 		layers and some at non-divisible layers. Those layers would then miss each
 		other.*/ 	
-		int min_layer = (5 + amount) - 1;
+		int min_layer = (6 + amount) - 1;
 		min_layer -= min_layer % amount; //Round upwards to the nearest layer divisible by infill_sparse_combine.
 		//printf("the min_layer is %d", min_layer);
-		int max_layer = static_cast<int>(storage.Layers.size()) - 1 - 0;
+		int max_layer = static_cast<int>(storage.Layers.size()) - 1 - 4;
 		max_layer -= max_layer % amount; //Round downwards to the nearest layer divisible by infill_sparse_combine.
 		for (int layer_idx = min_layer; layer_idx <= max_layer; layer_idx += amount) //Skip every few layers, but extrude more.
 		{
@@ -712,6 +700,3 @@
 		
 	}
 	
-
-
-//namespace cura

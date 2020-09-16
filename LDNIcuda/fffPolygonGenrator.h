@@ -97,7 +97,7 @@ private:
 	 *
 	 * \param[in,out] storage fetches the perimeter information (see SliceLayerPart::insets and SkinPart::insets) and generates the other perimeter_gaps in SliceLayerPart and SkinPart
 	 */
-	//void processPerimeterGaps(SliceDataStorage& storage);
+	void processPerimeterGaps(SliceDataStorage& storage);
 
 	/*!
 	 * Process the mesh to be an infill mesh: limit all outlines to within the infill of normal meshes and subtract their volume from the infill of those meshes

@@ -481,7 +481,7 @@ void PMBody::_buildContourList()
 
 					else
 					{
-						j = 8;
+						j = 11;
 						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
 						glColor3f(rgb[0], rgb[1], rgb[2]);
 					}
@@ -1735,7 +1735,7 @@ double ContourMesh::PerformVSA2D(VSAMesh *vmesh, int iter, double paradistterror
 //}
  /////////////////////////////////////
 
-void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int * cpuStickMaterial)
+void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int* prevStickMat, int* StickMat, int* nextStickMat)
 {
 	VSAMesh *vmesh;
 	
@@ -1763,7 +1763,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	// so that use patchNum to count how many contour per slice	
 	int l = 0;
 	std::vector<int>meshin_layer;
-    meshin_layer.resize(iRes[1]+1,0);
+    meshin_layer.resize(iRes[1],0);
 	for (i = 0; i < iRes[1]; i++)
 	{
 	
@@ -1976,7 +1976,9 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 					localcount++;
 
 					lastnode = nextnode;
-					vedge->SetEdgeMaterial(cpuStickMaterial[index]);
+					vedge->SetprevEdgeMaterial(prevStickMat[index]);
+					vedge->SetEdgeMaterial(StickMat[index]);
+					vedge->SetnextEdgeMaterial(nextStickMat[index]);
 					index = stickID[index];
 					
 					
@@ -2025,12 +2027,12 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 		for (Pos2 = vmesh->GetVSAEdgeList().GetHeadPosition(); Pos2 != NULL; )
 		{
 			vedge = (VSAEdge *)(vmesh->GetVSAEdgeList().GetNext(Pos2));
-
 			vedge->GetStartPoint()->GetCoord3D(xx, yy, zz);
 			vedge->GetEndPoint()->GetCoord3D(aa, bb, cc);
 
+			if (vedge->GetEdgeMaterial() != 5)
 			{
-				//printf("the ending point is %f,%f,%f\n",aa,bb,cc);
+				vmesh->SetCircleInterMat(vedge->GetEdgeMaterial());
 			}
 
 
@@ -2067,204 +2069,44 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	if (response == 'Y' || response == 'y')
 	{
 		int count1 = VSAMeshList.GetCount();
-
-		//	if (count1 > 300)
-		{
-			Application *application;
-			unsigned int mesh_idx, edge_index = 0;
-			VSAMesh *mesh1;
-			VSAEdge  *edge;
-			ContourMesh *cmesh;
-			VSAMesh  Mesho;
-			VSAEdge  edgeo;
-			ContourMesh c_mesh;
-			VSAEdge *edge1;
-			GLKPOSITION Pos_1;
-			GLKPOSITION Pos_2;
-			SliceDataStorage storage;
-			//SliceLayerPart layerpart;
-			Mesh* mesh;
-			SlicerSegment segment;
-			//Polygons genrated_result_lines;
-			FffPolygonGenerator polygongenrator;
-			
-
-
-			
-
-			FffGcodeWriter gcode;
-
-			storage.Layers.clear();
-
-			storage.Layers.resize(iRes[1]);
-			std::vector<PolygonsPart> new_parts;
-			new_parts.clear();
-
-			bool slice_model = polygongenrator.sliceModel(VSAMeshList, c_mesh, storage, iRes[1], meshin_layer, rotBoundingBox);
-			if (slice_model)
-			{
-				
-				polygongenrator.slices2polygons(storage);
-			}
-
-			const char* filename = "cura_after";
-			bool file_open = gcode.setTargetFile(filename);
-			bool start = true;
-			gcode.writeGCode(storage, start);
-		}
-	}
-
-		//Open the comment till here to genrate the Gcode.
-	
-	/*
-	for (int layerno = 0; layerno < 1; layerno++)
-	{
-		storage.Layers[layerno].printZ = initial_layer_thicknessint +(layer_thicknessint * layerno);   //layers in sliceDataStorage
-										
-		//printf("Yeah I am here on line 1904 of the code and layer thickness is %f \n", storage.Layers[layerno].printZ);
-		if (layerno == 0)
-		{
-			
-			storage.Layers[layerno].thickness = initial_layer_thicknessint;
-			
-			//printf("Yeah I am here on line 1907 of the code and layer thickness is %d \n", storage.Layers[layerno].thickness);
-			//storage.Layers[layerno].raft = true;
-		}
-		else
-		{
-			
-			storage.Layers[layerno].thickness = layer_thicknessint;
-		}
+		processGcode(meshin_layer,rotBoundingBox);
 		
 	}
-	printf("Yeah I am here on line 1922 of the code %d \n", mesh_idx);
-	//slicer.layers[0].z = initial_layer_thicknessint / 2;     //layers in slicer layer
-	
-	SliceLayer& layer = storage.Layers[0];
-	for (Pos_1 = VSAMeshList.GetHeadPosition(); Pos_1 != NULL;)
-	{
-		int edge = 1;  int i = 1;
-		mesh1 = (VSAMesh *)(VSAMeshList.GetNext(Pos_1));
-		mesh_idx = mesh1->GetIndexNo();	 //polygon number
-		//printf("Yeah I am here on line 1931 of the code %d \n",mesh_idx);
-		
-		
-		for (Pos_2 = mesh1->GetVSAEdgeList().GetHeadPosition(); Pos_2 != NULL; )
-		{
-		//printf("Yeah I am here on line 1933 of the code %d \n", mesh_idx);
-			edge1 = (VSAEdge *)(mesh1->GetVSAEdgeList().GetNext(Pos_2));
-			//printf("Yeah I am here on line 1935 of the code %d \n", mesh_idx);
-			edge1->GetStartPoint()->GetCoord3D(xx, yy, zz);
-			edge1->GetEndPoint()->GetCoord3D(aa, bb, cc);
-			
-			
-			const coord_tIrfan xx_int = MM2INT(xx * 1000000);
-			const coord_tIrfan aa_int = MM2INT(aa * 1000000);
-			const coord_tIrfan zz_int = MM2INT(zz * 1000000);
-			const coord_tIrfan cc_int = MM2INT(cc * 1000000);
-	
-			curaIrfan::PointIrfan st(xx_int, zz_int);
-			curaIrfan::PointIrfan ed(aa_int, cc_int);
-
-			segment.start.X = xx_int;
-			segment.start.Y = zz_int;
-			segment.end.X = aa_int;
-			segment.end.Y = cc_int;
-			//slicer.layers[0].segments.push_back(segment);
-			//slicer.layers[0].segments.pus
-			if (edge == 1)
-			{
-				poly.add(segment.end);
-				poly.add(segment.start);   //41 of slicer.cpp
-				
-		   // printf("the added segment start X is %d start Y is %d and end X is %d and end Y is %d \n", xx_int,zz_int,aa_int,cc_int);
-				
-
-			}
-			else
-			{
-				poly.add(segment.start);
-			//printf("the added segment start X is %d start Y is %d \n", xx_int, zz_int);
-			}
-			//poly.add(segment.start);   //41 of slicer.cpp
-			//printf("the edge is %d and edge index is %d \n", edge,edge1->GetIndexNo());
-			edge++;
-			
-			//printf("the polygon size is add is %d /n",poly.size());
-		}
-		
-		printf("the polygon size is add is %d \n", poly.size());
-		polygons.add(poly);	//52 of slicer.cpp
-		//slicerlayer.infillpolygons[i].add(poly);
-		Polygons new_outline = polygons; //fffpolygon genrator line  674
-		PolygonsPart outline_part_here;
-		outline_part_here.add(new_outline);
-		new_parts.push_back(outline_part_here);
-		
-		
-	}
-	printf("the polygins size is %d \n",polygons.size());
-	//printf("the in_outline size is %d \n", slicerlayer.infillpolygons[i].size());
-	std::vector<PolygonsPart> result;
-	const bool union_layers = true;
-	//printf("Yeah I am here on line 1972 of the code %d \n");
-	//result = slicerlayer.infillpolygons[1].splitIntoParts(union_layers);
-	printf("Yeah I am here on line 1972 of the code %d \n");
-	/*
-	for (unsigned int i = 0; i < result.size(); i++)
-	{
-		layer.parts.emplace_back();
-		layer.parts[i].outline = result[i];
-		layer.parts[i].boundaryBox.calculate(layer.parts[i].outline);
-		//printf("the size of the parts are %d \n", layer.parts[i].outline.outerPolygon().size());
-	}
-	 
-
-	//printf("the polygons size is %d \n", polygons.size());
-	
-	//printf("the check value is %d and %d \n", vmesh->meshin_layer[0], new_parts.size());
-	
-	int meshitr = 0;
-	
-
-	for (int layerno = 0; layerno < 1; layerno++)
-	{
-		SliceLayer& layer = storage.Layers[layerno];
-		layer.parts.clear();
-		printf("The program is @ line 1983 with i %d \n", meshitr++);
-		for (PolygonsPart& Part:new_parts)
-		{
-			layer.parts.emplace_back();
-			layer.parts.back().outline = Part;
-			printf("The program is @ line 1998 with i %d \n", meshitr++);
-			layer.parts.back().boundaryBox.calculate(Part);
-
-		}
-		
-	}
-
-	
-	
-	//Necessary Memory allocations and initializations
-	//slicer.Starter(initial_layer_thicknessint, slice_layer_count);
-	
-	layerpart.insets.resize(3);
-	storage.extruders.resize(2, 0);
-	storage.retraction_config_per_extruder.reserve(2);
-	storage.extruder_switch_retraction_config_per_extruder.reserve(2);
-	FffPolygonGenerator polygon_gen;
-	polygon_gen.slices2polygons(storage, 0);
-	
-	*/
 
 	printf("Finished build-up.\n");
-	
-	
-	
 	free(patchStack);
 	free(patchID);
 
 }
+
+void ContourMesh::processGcode(std::vector<int>meshin_layer, double rotBoundingBox[])
+{
+	
+	ContourMesh c_mesh;
+	SliceDataStorage storage;
+	FffPolygonGenerator polygongenrator;
+    FffGcodeWriter gcode;
+
+	storage.Layers.clear();
+
+	storage.Layers.resize(iRes[1]);
+	
+	int scale = 1;
+	storage.set_scale(scale);
+	bool slice_model = polygongenrator.sliceModel(VSAMeshList, c_mesh, storage, iRes[1], meshin_layer, rotBoundingBox);
+	if (slice_model)
+	{
+		polygongenrator.slices2polygons(storage);
+	}
+
+	const char* filename = "cura_after";
+	bool file_open = gcode.setTargetFile(filename);
+	bool start = true;
+	gcode.writeGCode(storage, start);
+
+}
+
+
 /*
 namespace curaIrfan
 {

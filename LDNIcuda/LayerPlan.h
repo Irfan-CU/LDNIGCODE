@@ -33,6 +33,7 @@
 		friend class LayerPlanBuffer; // TODO: LayerPlanBuffer handles paths directly
 	protected:
 		std::vector<GCodePath> paths; //!< The paths planned for this extruder
+		std::vector<GCodePath> arranged_paths;
 		std::list<NozzleTempInsert> inserts; //!< The nozzle temperature command inserts, to be inserted in between paths
 
 		double heated_pre_travel_time; //!< The time at the start of this ExtruderPlan during which the head travels and has a temperature of initial_print_temperature
@@ -326,7 +327,7 @@
 		
 		void addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePathConfig& config, const Polygons& polygons, int layernum,int mat, SpaceFillType space_fill_type, bool enable_travel_optimization = false, int wipe_dist = 0, float flow_ratio = 1.0, std::optional<curaIrfan::PointIrfan> near_start_location = std::optional<curaIrfan::PointIrfan>(), double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
 	        
-		void addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathConfig& config, curaIrfan::PointIrfan p, int layernum, int mat, SpaceFillType space_fill_type, const Ratio& flow = 1.0, bool spiralize = false, Ratio speed_factor = 1.0, double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
+		void addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathConfig& config, curaIrfan::PointIrfan p, int extreuder, int mat, SpaceFillType space_fill_type, const Ratio& flow = 1.0, bool spiralize = false, Ratio speed_factor = 1.0, double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
 	 	
 		bool getSkirtBrimIsPlanned(unsigned int extruder_nr) const
 		{
