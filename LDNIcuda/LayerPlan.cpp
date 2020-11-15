@@ -281,7 +281,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 	for (size_t extruder_plan_idx = 0; extruder_plan_idx < extruder_plans.size(); extruder_plan_idx++)
 	{
 		ExtruderPlan& extruder_plan = extruder_plans[extruder_plan_idx];
-		printf("the exrtruder plan size is %d \n", extruder_plans.size());
+		
 		const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[extruder_plan.extruder_nr];
 		coord_tIrfan z_hop_height = retraction_config.zHop;
 

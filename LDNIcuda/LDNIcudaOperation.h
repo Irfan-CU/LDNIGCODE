@@ -43,11 +43,85 @@
 
 class LDNIcpuSolid;
 class LDNIcudaSolid;
+class LDMIProcessor;
 class QuadTrglMesh;
 class ContourMesh;
 class GLKObList;
+class LDMIContourMesh;
 
 
+class LDMIcudaOperation {
+public:
+
+	void MallocMemory(int imageSize) {
+		
+		m_lDMIContourMesh = NULL;
+		stickIDcheck = (int**)(malloc(4 * sizeof(int*)));
+		prevStickIDcheck = (int**)(malloc(4 * sizeof(int*)));
+		stickDircheck = (int2**)(malloc(4 * sizeof(int2*)));
+		stickStartcheck = (float2**)(malloc(4 * sizeof(float2*)));
+		stickEndcheck = (float2**)(malloc(4 * sizeof(float2*)));
+
+	};
+	void freeMemory()
+	{
+		if (m_lDMIContourMesh != NULL) {
+			m_lDMIContourMesh = NULL;
+			free(m_lDMIContourMesh);
+		};
+		if (stickIDcheck != NULL)
+		{
+			stickIDcheck = NULL;
+			free(stickIDcheck);
+		}
+		if (prevStickIDcheck != NULL)
+		{
+			prevStickIDcheck = NULL;
+			free(prevStickIDcheck);
+		}
+		if (stickDircheck != NULL)
+		{
+			stickDircheck = NULL;
+			free(stickDircheck);
+		}
+		if (stickStartcheck != NULL)
+		{
+			stickStartcheck = NULL;
+			free(stickStartcheck);
+		}
+		if (stickEndcheck != NULL)
+		{
+			stickEndcheck = NULL;
+			free(stickEndcheck);
+		}
+
+
+	}
+	
+
+
+	int **GetstickIDcheck() { return stickIDcheck; };
+	
+	int **GetPrevStickIDcheck() { return prevStickIDcheck; };
+	int2 **GetstickDircheck() { return stickDircheck; };
+	float2 **GetstickStartcheck() { return stickStartcheck; };
+	float2 **GetstickEndcheck() { return stickEndcheck; };
+
+	LDMIContourMesh *m_lDMIContourMesh;
+
+
+private:
+
+	//std::vector<int*>stickIDcheckreg;
+	
+	int **stickIDcheck;
+	int2 **stickDircheck;
+	float2 **stickStartcheck;
+	float2 **stickEndcheck;
+	int** prevStickIDcheck;
+	
+
+};
 
 class LDNIcudaOperation	
 {
@@ -63,6 +137,7 @@ public:
 	static bool BooleanOperation(QuadTrglMesh *meshA, QuadTrglMesh *meshB, int res, short nOperationType, LDNIcudaSolid* &solid, LDNIcudaSolid* &Savedsolid);
 	//static bool BooleanOperation(LDNIcudaSolid* &solidA, LDNIcudaSolid* &solidB, short nOperationType);
 	static bool BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &solid, float boundingBox[], int res);
+	static bool BRepToLDMISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &solid, LDMIProcessor *&ldmiProcessor, float boundingBox[], int res);
 	static void LDNIToBRepReconstruction(LDNIcudaSolid* solid, QuadTrglMesh* &mesh, int nMeshRes, bool bWithIntersectionPrevention);
 
 	static void SolidOffsetting(LDNIcudaSolid* inputSolid, LDNIcudaSolid* &newSolid, float offset);
@@ -78,19 +153,18 @@ public:
 
 
 	static float LDNIFDMContouring_CompRotationBoundingBox(LDNIcudaSolid* solid, double rotBoundingBox[], double clipPlanNm[]);
-	static void LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[], 
+	static void LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid,LDMIProcessor *ldmiProcessor , LDMIcudaOperation *&ldmiCudaOperation, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[],
 												float angle, float thickness, double clipPlanNm[], float nSampleWidth, bool *&gridNodes,
-												float2 *&stickStart, float2 *&stickStart1, float2 *&stickStart2, float2 *&stickStart3, float2 *&stickEnd, unsigned int *&stickIndex, int *&noinfill_node, 
-												int infillnodecount, float *&infillnode_xposition, float *&infillnode_zposition, float *&infillnode_yposition, int *&stickID, int *&prevStickID,  int2 *&stickDir, 
-												int *&stickMaterial, int *&stickMaterial1, int *&stickMaterial2, int *&stickMaterial3 , unsigned int *&material_index1, 
-												unsigned int *&material_index2, unsigned int *&material_index3, QuadTrglMesh *qmesh, unsigned int*&material_status);
+												float2 *&stickStart, float2 *&stickEnd, unsigned int *&stickIndex, 
+												int *&stickID ,int *&prevStickID,  int2 *&stickDir, 
+												unsigned int *&material_index,	QuadTrglMesh *qmesh, unsigned int*&material_status);
 	//static void LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[],
 	//												float angle, float thickness, double clipPlanNm[], float nSampleWidth, float2 *stickStart, 
 	//												float2 *stickEnd, int *stickID);
 	/*static void LDNIFDMContouring_Infill(int imageSize[]);  */
 
-	static void LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[],
-													  float nSampleWidth, float2 *stickStart, float2 *stickEnd, int *stickID, int2 *stickDir, int *stickMaterial, int*stickMaterial1, int*stickMateria2, int*stickMateria3, unsigned int *&material_index1, bool bOutPutSGM = false);
+	static void LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* solid, ContourMesh *c_mesh, LDMIcudaOperation *ldmiCudaOperation, double rotBoundingBox[], int imageSize[],
+													  float nSampleWidth, float2 *stickStart, float2 *stickEnd, int *stickID, int2 *stickDir, unsigned int *&material_index1, bool bOutPutSGM = false);
 													
 	static void LDNIFDMContouring_SupportContourGeneration(LDNIcudaSolid* solid, ContourMesh *c_mesh, bool *gridNodes, double rotBoundingBox[], double clipPlaneNm[], double thickness, double nSampleWidth, double distortRatio, int imageSize[], bool bOutPutSGM = false);
 	static void LDNIFDMContouring_BuildDistanceMap(bool *gridNodes, int layerID, int imageSize[], short2 *&disMapA, short2 *&disMapB, int disTexSize);
@@ -100,8 +174,11 @@ public:
 							float nSampleWidth, bool *suptNodes, float2 *&stickStart, float2 *&stickEnd, unsigned int *&stickIndex, int *&stickID, int *&prevStickID,  int2 *&stickDir);
 	
 	
+	static void LDMIFDMContouring_BuildSearchStickIndex(LDMIcudaOperation *ldmiCudaOperation , int *stickNum);
+	
 	static void LDNIFDMContouring_BuildSearchStickIndex(int *&stickID, int *prevStickId, int stickNum);
-	static void LDNIFDMContouring_Generation(LDNIcudaSolid* solid, ContourMesh *c_mesh, QuadTrglMesh *mesh, float nSampleWidth);
+	static void LDNIFDMContouring_Generation(LDNIcudaSolid* solid, LDMIProcessor *ldmiprocessor, ContourMesh *c_mesh, QuadTrglMesh *mesh, float nSampleWidth);
+	
 	static void LDNIFDMContouring_GenerationwithSupporting(LDNIcudaSolid* solid, ContourMesh *c_mesh, ContourMesh *supt_mesh, float nSampleWidth);
 
 
@@ -175,7 +252,7 @@ private:
 
 	//-----------------------------------------------------------------------------------------------------
 	//	Functions for sampling a B-rep into LNDIcpuSolid
-	static void _decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int displayListIndex);
+	static void _decomposeLDNIByFBOPBO(LDNIcudaSolid *solid,LDMIProcessor *ldmiProcessor, int displayListIndex);
 	static void _decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, GLuint vbo, GLuint vboI, int instanceCount, int indexCount);
 	static void _decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, GLuint* vbo, GLuint* vboI, int mesh_count, float Cent[], unsigned int g_programObj, int indexCount[]);
 	static unsigned char* _readShaderFile( const char *fileName );
@@ -203,6 +280,8 @@ private:
 	 */
 
 };
+
+
 
 
 class  Layers

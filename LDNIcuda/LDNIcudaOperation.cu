@@ -112,7 +112,7 @@ extern __global__ void krLDNINormalReconstruction_PerSample(unsigned int* xIndex
 
 extern __global__ void krLDNISampling_SortSamples(float *devNxArrayPtr, float *devNyArrayPtr, float *devDepthArrayPtr, 
 												  int arrsize, unsigned int *devIndexArrayPtr);
-extern __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr, float *devNyArrayPtr, float *devDepthArrayPtr, 
+extern __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr, float *devNyArrayPtr, float *devDepthArrayPtr,char* devMatArray, 
 												  int n, int arrsize, float width, float sampleWidth, int res, 
 												  unsigned int *devIndexArrayPtr);
 extern __global__ void krLDNISampling_CopyIndexAndFindMax(unsigned char *devStencilBufferPtr, unsigned int *devIndexArrayPtr, 
@@ -1073,8 +1073,244 @@ void LDNIcudaOperation::_compBoundingCube(QuadTrglMesh *meshA, QuadTrglMesh *mes
 	boundingBox[4]=zz-ww;	boundingBox[5]=zz+ww;
 	
 }
+bool LDNIcudaOperation::BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &solid, float boundingBox[], int res)
+{
+	const bool bCube = true; // declatration of varialbles
 
-bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &solid, float boundingBox[], int res)
+	float origin[3], gWidth;		long time = clock(), totalTime = clock();
+	int i, nodeNum;
+	char fileadd[256];
+
+	//----------------------------------------------------------------------------------------
+	//	Preparation
+	if ((boundingBox[0] == boundingBox[1]) && (boundingBox[2] == boundingBox[3]) && (boundingBox[4] == boundingBox[5])) {
+		mesh->CompBoundingBox(boundingBox);
+
+		if (bCube) {
+			float xx = (boundingBox[0] + boundingBox[1])*0.5f;
+			float yy = (boundingBox[2] + boundingBox[3])*0.5f;
+			float zz = (boundingBox[4] + boundingBox[5])*0.5f;
+			float ww = boundingBox[1] - boundingBox[0];
+			if ((boundingBox[3] - boundingBox[2]) > ww) ww = boundingBox[3] - boundingBox[2];
+			if ((boundingBox[5] - boundingBox[4]) > ww) ww = boundingBox[5] - boundingBox[4];
+
+			ww = ww * 0.55 + ww / (float)(res - 1)*2.0;
+
+			boundingBox[0] = xx - ww;	boundingBox[1] = xx + ww;
+			boundingBox[2] = yy - ww;	boundingBox[3] = yy + ww;
+			boundingBox[4] = zz - ww;	boundingBox[5] = zz + ww;
+		}
+	}
+
+	//---------------------------------------------------------------------------------
+
+	
+	solid = new LDNIcudaSolid;
+	solid->MallocMemory(res);
+	gWidth = (boundingBox[1] - boundingBox[0]) / (float)res;
+	solid->SetSampleWidth(gWidth);
+	origin[0] = boundingBox[0] + gWidth * 0.5f;
+	origin[1] = boundingBox[2] + gWidth * 0.5f;
+	origin[2] = boundingBox[4] + gWidth * 0.5f;
+	solid->SetOrigin(origin[0], origin[1], origin[2]);
+
+	//---------------------------------------------------------------------------------
+	//	For using OpenGL Shading Language to implement the sampling procedure
+	if (glewInit() != GLEW_OK) { printf("glewInit failed. Exiting...\n");	return false; }
+	if (glewIsSupported("GL_VERSION_4_0")) { printf("\nReady for OpenGL 4.0\n"); }
+	else { printf("OpenGL 2.0 not supported\n"); return false; }
+	//-----------------------------------------------------------------------------------------
+	int dispListIndex;		GLhandleARB g_programObj, g_vertexShader, g_GeometryShader, g_FragShader;
+	GLenum InPrimType = GL_POINTS, OutPrimType = GL_TRIANGLES;		int OutVertexNum = 3;
+	GLuint vertexTexture;
+	const char *VshaderString[1], *GshaderString[1], *FshaderString[1];
+	GLint bCompiled = 0, bLinked = 0;
+	char str[4096] = "";		int xF, yF;
+	//-----------------------------------------------------------------------------------------
+	//	Step 1: Setup the shaders 
+	memset(fileadd, 0, 256 * sizeof(char));
+	strcat(fileadd, "sampleLDNIVertexShader.vert");
+	g_vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+	unsigned char *ShaderAssembly = _readShaderFile(fileadd);
+	VshaderString[0] = (char*)ShaderAssembly;
+	glShaderSourceARB(g_vertexShader, 1, VshaderString, NULL);
+	glCompileShaderARB(g_vertexShader);
+	delete ShaderAssembly;
+	glGetObjectParameterivARB(g_vertexShader, GL_OBJECT_COMPILE_STATUS_ARB, &bCompiled);
+	if (bCompiled == false) {
+		glGetInfoLogARB(g_vertexShader, sizeof(str), NULL, str);
+		printf("Warning: Vertex Shader Compile Error\n\n");	return false;
+	}
+	//-----------------------------------------------------------------------------
+	memset(fileadd, 0, 256 * sizeof(char));
+	strcat(fileadd, "sampleLDNIGeometryShader.geo");
+	g_GeometryShader = glCreateShaderObjectARB(GL_GEOMETRY_SHADER_EXT);		   // create a shader and returns an integer to reference the shader
+	ShaderAssembly = _readShaderFile(fileadd);
+	GshaderString[0] = (char*)ShaderAssembly;
+	glShaderSourceARB(g_GeometryShader, 1, GshaderString, NULL);
+	glCompileShaderARB(g_GeometryShader);
+	delete ShaderAssembly;
+	glGetObjectParameterivARB(g_GeometryShader, GL_OBJECT_COMPILE_STATUS_ARB, &bCompiled);
+	if (bCompiled == false) {
+		glGetInfoLogARB(g_GeometryShader, sizeof(str), NULL, str);
+		printf("Warning: Geo Shader Compile Error\n\n");		return false;
+	}
+	//-----------------------------------------------------------------------------
+	memset(fileadd, 0, 256 * sizeof(char));
+	strcat(fileadd, "sampleLDNIFragmentShader.frag");
+	g_FragShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
+	ShaderAssembly = _readShaderFile(fileadd);
+	FshaderString[0] = (char*)ShaderAssembly;
+	glShaderSourceARB(g_FragShader, 1, FshaderString, NULL);
+	glCompileShaderARB(g_FragShader);
+	delete ShaderAssembly;
+	glGetObjectParameterivARB(g_FragShader, GL_OBJECT_COMPILE_STATUS_ARB, &bCompiled);
+	if (bCompiled == false) {
+		glGetInfoLogARB(g_FragShader, sizeof(str), NULL, str);
+		printf("Warning: Vertex Shader Compile Error\n\n");	return false;
+	}
+	//-----------------------------------------------------------------------------
+	g_programObj = glCreateProgramObjectARB();
+	if (glGetError() != GL_NO_ERROR) printf("Error: OpenGL!\n\n");
+	glAttachObjectARB(g_programObj, g_vertexShader);		if (glGetError() != GL_NO_ERROR) printf("Error: attach Vertex Shader!\n\n");
+	glAttachObjectARB(g_programObj, g_GeometryShader);	if (glGetError() != GL_NO_ERROR) printf("Error: attach Geometry Shader!\n\n");
+	glAttachObjectARB(g_programObj, g_FragShader);		if (glGetError() != GL_NO_ERROR) printf("Error: attach Fragment Shader!\n\n");
+	//-----------------------------------------------------------------------------
+	//	Configuration setting for geometry shader
+	glProgramParameteriEXT(g_programObj, GL_GEOMETRY_INPUT_TYPE_EXT, InPrimType);
+	glProgramParameteriEXT(g_programObj, GL_GEOMETRY_OUTPUT_TYPE_EXT, OutPrimType);
+	glProgramParameteriEXT(g_programObj, GL_GEOMETRY_VERTICES_OUT_EXT, OutVertexNum); 	  //call plane equation in the geomtery shder defines the plane and calculate the normal for the plane
+	glLinkProgramARB(g_programObj);
+	glGetObjectParameterivARB(g_programObj, GL_OBJECT_LINK_STATUS_ARB, &bLinked);
+	if (bLinked == false) {
+		glGetInfoLogARB(g_programObj, sizeof(str), NULL, str);
+		printf("Linking Fail: %s\n", str);	return false;
+	}
+
+	//-----------------------------------------------------------------------------------------
+	//	Step 2:  creating texture for vertex array and binding 
+	long texBindingTime = clock();
+	glGetError();	// for clean-up the error generated before
+	nodeNum = mesh->GetNodeNumber();	_texCalProduct(nodeNum, xF, yF);
+	printf("nodeNum is %d \n", nodeNum);
+	int temp;
+	for (temp = 1; temp < xF; temp *= 2) {}
+	xF = temp;	//if (xF<64) xF=64;
+	yF = (int)(nodeNum / xF) + 1; if (yF < 64) yF = 64;
+
+	printf("Texture Size: xF=%d yF=%d\n", xF, yF);
+	float* verTex = (float*)malloc(xF*yF * 3 * sizeof(float));
+	memset(verTex, 0, xF*yF * 3 * sizeof(float));
+	memcpy(verTex, mesh->GetNodeArrayPtr(), nodeNum * 3 * sizeof(float));
+
+	glEnable(GL_TEXTURE_RECTANGLE_ARB);
+	glGenTextures(1, &vertexTexture);
+	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, vertexTexture);
+	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB32F_ARB, xF, yF, 0, GL_RGB, GL_FLOAT, verTex);	   // vertex is the data Specifies a pointer to the image data in memory to be read by shaders .	 node positions in rgb
+	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
+	free(verTex);
+	if (glGetError() != GL_NO_ERROR) printf("Error: GL_TEXTURE_RECTANGLE_ARB texture binding!\n\n");
+	texBindingTime = clock() - texBindingTime;
+	printf("\nTime for binding texture onto the graphics memory - %ld (ms)\n\n", texBindingTime);
+
+	//-----------------------------------------------------------------------------------------
+	//	Step 3:  building GL-list for activating the geometry shader
+	unsigned int ver[4];
+	float pos_node_check[3];
+	GLint UVLoc;
+	int faceNum = mesh->GetFaceNumber();
+	dispListIndex = glGenLists(1);
+
+	glNewList(dispListIndex, GL_COMPILE);
+
+	glBegin(GL_POINTS);
+
+
+	//---------------------for OBJ Processing--------------------------------//
+	//for (i = 0; i < faceNum; i++) {
+	//	mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
+	//	glVertex3i(ver[0] - 1, ver[1] - 1, ver[2] - 1);
+	//	if (mesh->IsQuadFace(i + 1)) { glVertex3i(ver[0] - 1, ver[2] - 1, ver[3] - 1); }	// one more triangle
+	//}
+	//glEnd();
+	//glEndList();
+	//---------------------for OBJ Processing--------------------------------//
+
+
+
+	//---------------------for AMF Processing--------------------------------//
+
+
+	
+	for (i = 0; i < faceNum; i++)
+	{
+		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
+		std::string tmp = mesh->face_material_names[i];
+
+		for (int it = 0; it < mesh->total_materials.size(); it++)
+		{
+
+			if (tmp.compare(mesh->total_materials[it]) == 0)
+			{
+
+				glVertex4i(ver[0] - 1, ver[1] - 1, ver[2] - 1, it + 1);
+			}
+		}
+
+	}
+
+	glEnd();
+	glEndList();
+	//---------------------for AMF Processing--------------------------------//
+
+	//-----------------------------------------------------------------------------------------
+	//	Step 4:  using program objects and the texture
+	GLint id0, id1;	float centerPos[3];
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, vertexTexture);		 //takes the texture here 
+	glUseProgramObjectARB(g_programObj);
+	id0 = glGetUniformLocationARB(g_programObj, "sizeNx");	 // sizeNX is id0=XF
+	glUniform1iARB(id0, xF);
+	printf("the ido is %d \n", id0); // XF is id0;
+	centerPos[0] = (boundingBox[0] + boundingBox[1])*0.5f;
+	centerPos[1] = (boundingBox[2] + boundingBox[3])*0.5f;
+	centerPos[2] = (boundingBox[4] + boundingBox[5])*0.5f;
+	id1 = glGetUniformLocationARB(g_programObj, "Cent");		  // center is the center of the bounding box;
+	glUniform3fARB(id1, centerPos[0], centerPos[1], centerPos[2]);
+	if (glGetError() != GL_NO_ERROR) printf("Error: vertex texture binding!\n\n");
+	printf("Create shader texture\n");
+	//-----------------------------------------------------------------------------------------
+	//	Step 5:  sampling
+	printf("GLList ID: %d\n", dispListIndex);
+	time = clock() - time;	printf("GL-List building time (including uploading texture) is %ld (ms)\n", time);
+	//_decomposeLDNIByFBOPBO(solid, dispListIndex);
+
+	//-----------------------------------------------------------------------------------------
+	//	Step 6:  free the memory
+	time = clock();
+	//-----------------------------------------------------------------------------------------
+	glDeleteLists(dispListIndex, 1);
+	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
+	glDisable(GL_TEXTURE_RECTANGLE_ARB);
+	glDeleteTextures(1, &vertexTexture);
+	glUseProgramObjectARB(0);
+	glDeleteObjectARB(g_vertexShader);
+	glDeleteObjectARB(g_GeometryShader);
+	glDeleteObjectARB(g_FragShader);
+	glDeleteObjectARB(g_programObj);
+	//------------------------------------------------------------------------
+	printf("\nMemory clean-up time is %ld (ms)\n", clock() - time);
+	printf("--------------------------------------------------------------\n");
+	printf("Total time for sampling is %ld (ms)\n\n", clock() - totalTime);
+
+	return true;
+}
+
+bool LDNIcudaOperation::  BRepToLDMISampling(QuadTrglMesh *mesh, LDNIcudaSolid* &solid, LDMIProcessor *&ldmiProcessor, float boundingBox[], int res)
 {
 	const bool bCube=true; // declatration of varialbles
 	
@@ -1104,6 +1340,9 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	}
 	
 	//---------------------------------------------------------------------------------
+	
+	ldmiProcessor = new LDMIProcessor;
+	ldmiProcessor->MallocMemory(res);
 	solid=new LDNIcudaSolid;
 	solid->MallocMemory(res);
 	gWidth=(boundingBox[1]-boundingBox[0])/(float)res;
@@ -1201,7 +1440,7 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	float* verTex=(float*)malloc(xF*yF*3*sizeof(float));
 	memset(verTex,0,xF*yF*3*sizeof(float));
 	memcpy(verTex,mesh->GetNodeArrayPtr(),nodeNum*3*sizeof(float));
-
+	
 	glEnable(GL_TEXTURE_RECTANGLE_ARB);
 	glGenTextures(1, &vertexTexture);
 	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, vertexTexture);
@@ -1243,6 +1482,8 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 
 	//---------------------for AMF Processing--------------------------------//
 	
+
+	ldmiProcessor->SetTotalMaterials(mesh->total_materials.size());
 	for (i = 0; i < faceNum; i++) 
 	{
 		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);	 
@@ -1250,7 +1491,7 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 		
 		for (int it = 0; it < mesh->total_materials.size(); it++)
 		{
-			printf("the material is %s ad it is %d \n", mesh->total_materials[it],it);
+			
 			if (tmp.compare(mesh->total_materials[it])==0)
 			{
 				
@@ -1284,7 +1525,7 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	//	Step 5:  sampling
 	printf("GLList ID: %d\n",dispListIndex);
 	time=clock()-time;	printf("GL-List building time (including uploading texture) is %ld (ms)\n",time);
-	_decomposeLDNIByFBOPBO(solid,dispListIndex);
+	_decomposeLDNIByFBOPBO(solid,ldmiProcessor, dispListIndex);
 	
 	//-----------------------------------------------------------------------------------------
 	//	Step 6:  free the memory
@@ -1307,7 +1548,7 @@ bool LDNIcudaOperation::  BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	return true;
 }
 
-void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int displayListIndex)
+void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, LDMIProcessor *ldmiProcessor, int displayListIndex)
 {
 	unsigned int n_max,i,n;
 	float gWidth,origin[3];
@@ -1487,6 +1728,7 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 		float* devNyArrayPtr=solid->GetSampleNyArrayPtr(nAxis);
 		float* devDepthArrayPtr=solid->GetSampleDepthArrayPtr(nAxis);
 		float *devMaterialInOut = solid->GetMaterialInOUt(nAxis);
+		char  *devMatArray = ldmiProcessor->GetdevMatArray(nAxis);
 		//int* devmaterial_normal = solid->GetMaterial_Normal(nAxis);
 		//int* devmaterial_array = solid->GetMaterialArray(nAxis);
 		//int* dev_material_status = solid->GetMaterial_Status(nAxis);
@@ -1498,7 +1740,7 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, int display
 			CUDA_SAFE_CALL( cudaBindTextureToArray(tex2DFloat4In, in_array) );
 			//--------------------------------------------------------------------------------------------------------
 			//	fill the sampleArray on device
-			krLDNISampling_CopySamples << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (devNxArrayPtr, devNyArrayPtr, devDepthArrayPtr, n, arrsize, width, gWidth, nRes, devIndexArrayPtr);
+			krLDNISampling_CopySamples << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (devNxArrayPtr, devNyArrayPtr, devDepthArrayPtr,devMatArray, n, arrsize, width, gWidth, nRes, devIndexArrayPtr);
 			
 			
 			CUDA_SAFE_CALL( cudaGraphicsUnmapResources( 1, &sampleTex_resource, NULL ) );
@@ -2587,7 +2829,7 @@ __global__ void krLDNISampling_SortSamples(float *devNxArrayPtr, float *devNyArr
 }
 
 __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
-	float *devNyArrayPtr, float *devDepthArrayPtr,
+	float *devNyArrayPtr, float *devDepthArrayPtr, char *devMatArray,
 	int n, int arrsize, float width, float sampleWidth, int res,
 	unsigned int *devIndexArrayPtr)
 {
@@ -2610,6 +2852,28 @@ __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
 			devNxArrayPtr[arrindex]=rgb.w;		// material index;	
 			devNyArrayPtr[arrindex]=rgb.y;		// y-component of normal
 			
+			if (rgb.w == 1.00)
+			{
+				devMatArray[arrindex] = 'a';
+			}
+			if (rgb.w == 2.00)
+			{
+				devMatArray[arrindex] = 'b';
+			}
+
+			if (rgb.w == 3.00)
+			{
+				devMatArray[arrindex] = 'c';
+			}
+			if (rgb.w == 4.00)
+			{
+				devMatArray[arrindex] = 'd';
+			}
+			if (rgb.w == 5.00)
+			{
+				devMatArray[arrindex] = 'e';
+			}
+
 			
 			
 			/*
@@ -3135,6 +3399,7 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, GLuint vbo,
 		float* devNxArrayPtr=solid->GetSampleNxArrayPtr(nAxis);
 		float* devNyArrayPtr=solid->GetSampleNyArrayPtr(nAxis);
 		float* devDepthArrayPtr=solid->GetSampleDepthArrayPtr(nAxis);
+		
 		//float* devMaterialInOUt = solid->GetMaterialInOUt(nAxis);
 		
 		tempTime=clock();
@@ -3145,8 +3410,8 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, GLuint vbo,
 			CUDA_SAFE_CALL( cudaBindTextureToArray(tex2DFloat4In, in_array) );
 			//--------------------------------------------------------------------------------------------------------
 			//	fill the sampleArray on device
-			krLDNISampling_CopySamples<<<BLOCKS_PER_GRID,THREADS_PER_BLOCK>>>(devNxArrayPtr, devNyArrayPtr, 
-				devDepthArrayPtr, n, arrsize, width, gWidth, nRes, devIndexArrayPtr);
+			/*krLDNISampling_CopySamples<<<BLOCKS_PER_GRID,THREADS_PER_BLOCK>>>(devNxArrayPtr, devNyArrayPtr, 
+				devDepthArrayPtr,dev n, arrsize, width, gWidth, nRes, devIndexArrayPtr);*/
 			CUDA_SAFE_CALL( cudaGraphicsUnmapResources( 1, &sampleTex_resource, NULL ) );
 			if (n==n_max) break;
 

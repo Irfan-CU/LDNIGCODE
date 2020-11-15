@@ -410,11 +410,11 @@ void LDNISolidBody::BuildGLList(bool bWithArrow)
 			//--------------------------------------------------------------------------------------
 			//	traversal of samples in the LDNIcpuSolid
 			for (int nAxis = 0; nAxis <3 ; nAxis++) {
-				switch (nAxis) {
+				/*switch (nAxis) {
 				case 0: {glColor3f(1.0, 0.0, 0.0);   }break;
 				case 1: {glColor3f(0.0, 1.0, 0.0);   }break;
 				case 2: {glColor3f(0.0, 0.0, 1.0);   }break;
-				}
+				}*/
 				m_cudaSolid->CopyIndexArrayToHost(nAxis, indexArray);
 				if (indexArray[res*res] > 0) {
 					m_cudaSolid->CopySampleArrayToHost(nAxis, depthArray, nxArray, nyArray);
@@ -427,7 +427,28 @@ void LDNISolidBody::BuildGLList(bool bWithArrow)
 								case 1: {xx = ox + ww * (float)j;	yy = oy + fabs(depthArray[k]);	zz = oz + ww * (float)i;   }break;
 								case 2: {xx = ox + ww * (float)i;	yy = oy + ww * (float)j;	zz = oz + fabs(depthArray[k]);   }break;
 								}
+								
+								// for representing normal as materials uisng RGB colors
+								
+								if ((abs(nxArray[k]) == 1.0))
+								{
+									glColor3f(1.0, 0.0, 0.0);
+								}
+								else if (abs(nxArray[k]) == 2.0)
+								{
+									glColor3f(0.0, 1.0, 0.0);
+								}
+								else if (abs(nxArray[k]) == 3.0)
+								{
+									glColor3f(0.0, 0.0, 1.0);
+								}
+								else
+								{
+									glColor3f(0.0, 0.5, 1.0);
+								}
+
 								glVertex3f(xx, yy, zz);
+
 								nz = 1.0f - nxArray[k] * nxArray[k] - nyArray[k] * nyArray[k];
 								if (nz < 0.0) nz = 0.0;		if (nz > 1.0) nz = 1.0;
 								nz = sqrt(nz);

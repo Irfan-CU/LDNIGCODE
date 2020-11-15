@@ -119,4 +119,23 @@ private:
 	GLuint m_vboPosition;	GLuint m_vboNormal;		int m_vertexNum;	bool m_cudaRegistered;
 };
 
+// new file should be created for clean code
+
+class LDMIProcessor;
+
+class LDMISolidBody
+{
+public:
+	LDMISolidBody() {
+		m_ldmiProcessor = NULL;
+	};
+
+	virtual ~LDMISolidBody() {
+		if (m_ldmiProcessor != NULL) delete m_ldmiProcessor;
+	};
+
+
+	LDMIProcessor *m_ldmiProcessor;
+};
+
 #endif

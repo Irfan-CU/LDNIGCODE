@@ -145,4 +145,40 @@ private:
 	float bbox[6]; //Debbie 17/9
 };
 
+class LDMIProcessor
+{
+	
+public:
+	
+	LDMIProcessor() { tot_material = 0; };
+	virtual ~LDMIProcessor() {};
+	
+	void MallocMemory(int res);
+
+	void SetTotalMaterials(int tot_materials)
+	{
+		tot_material = tot_materials;
+	}
+
+	int GetTotalMaterials()
+	{
+		return tot_material;
+	}
+
+	int totalPossibleMatComb();
+	
+	char* GetdevMatArray(int nAxis) { return dev_MatArray[nAxis]; };
+	//void SetdevMatArray(int nAxis, char* ptr) { devMatArray[nAxis] = ptr; };
+
+   
+private:
+	int tot_material;
+	char *dev_MatArray[3];
+
+};
+
+
+
+
+
 #endif

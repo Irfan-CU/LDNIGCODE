@@ -109,17 +109,10 @@ public:
 	VSANode * GetEndPoint() {return pEndPoint;};
 	void SetEndPoint( VSANode * _pEndPointIrfan = NULL ){pEndPoint = _pEndPointIrfan;};
 
-	void SetprevEdgeMaterial(int MaterialIndex) { prevMatOnEdge = MaterialIndex; };
-	int  GetprevEdgeMaterial() { return prevMatOnEdge; };
+	
 
 	void SetEdgeMaterial(int MaterialIndex) { MatOnEdge = MaterialIndex;  };
 	int  GetEdgeMaterial() { return MatOnEdge; };
-
-	void SetnextEdgeMaterial(int MaterialIndex) { nextMatOnEdge = MaterialIndex; };
-	int  GetnextEdgeMaterial() { return nextMatOnEdge; };
-
-
-
 
 
 	void CalLength();
@@ -408,14 +401,14 @@ public:
 	void ClearAll();
 	virtual float getRange() {return 10.0;}
 	void MallocMemory(unsigned int* ContourNum, int imageSize[], int stickNum);
-	
+	void StickCheckMallocMemory(int totalMaterials) { totalStickNumCheck=(int*)malloc(totalMaterials * sizeof(int)); };
 	
 	float* GetStartNodeArrayPtr() {return m_StnodeTable;};
 	float* GetEndNodeArrayPtr() {return m_EdnodeTable;};
-	int* GetContourNumPtr() {return  m_ContourNum;};
+	int** GetContourNumPtr() {return  m_ContourNum;};
 	GLKObList& GetVSAMeshList() {return VSAMeshList;};
 	
-	void ContourMesh::MaterialPlanning(float* st_stick, float* ed_stick, int* mat_stick, int material_id, int size);
+	//void ContourMesh::MaterialPlanning(float* st_stick, float* ed_stick, int* mat_stick, int material_id, int size);
 	
 	void ArrayToContour(float* st_stick, float* ed_stick, unsigned int* id_stick);
 	void ArrayToContour(float* st_stick, float* ed_stick, double imgOri[], int* stickID, float imgWidth);
@@ -424,7 +417,7 @@ public:
 
 
 	//void ConvertContourToVSAMesh(float* st_stick, float* ed_stick, int* stickID, int stickNum);
-	void BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int* prevStikMat, int* StickMat, int* nextStickMat);
+	void BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int mat);
 	void ArrayToImage(bool *nodes, int imageSize[]);
 	void WriteBMP(const char * filename, GLubyte * data, int m_SizeX, int m_SizeY);
 	void ArrayToImage(bool *outNodes, bool *InNodes, int imageSize[], int base, bool bSave, bool bDisplay);
@@ -439,7 +432,8 @@ public:
 	void SetThickness(float t) {thickness = t;};
 	float GetThickness() {return thickness;};
 	int GetTotalStickNum() {return totalstickNum;}
-	int GetLayerStickNum(int layer) {return m_ContourNum[layer];}
+	int *GetTotalStickNumCheck() { return totalStickNumCheck; };// free this memeory as well
+	int *GetLayerStickNum(int layer) {return m_ContourNum[layer];}
 	void SetOrigin(float a, float b, float c) {origin[0] = a; origin[1] = b; origin[2] = c;};
 	void SetMeshId(short i) {meshID = i;};
 	short GetMeshId() {return meshID;};
@@ -481,11 +475,12 @@ public:
 	//----SGM code by KaChun----//
 
 private:
-	int* m_ContourNum;
+	int **m_ContourNum;
 	float *m_StnodeTable;	
 	float *m_EdnodeTable;	
 	short meshID;
 	int totalstickNum;
+	int *totalStickNumCheck;
 	bool bUpdate;
 	float origin[3];
 	float m_range;
@@ -495,6 +490,24 @@ private:
 
 	//unsigned int *m_faceTable;	//	Note that: the index starts from '1'
 	
+};
+
+
+class LDMIContourMesh :public GLKEntity
+{
+public:
+
+	LDMIContourMesh(void);
+	virtual ~LDMIContourMesh(void);
+	void MallocMemory(int totalMaterials);
+	
+
+	GLKObList *getVSAMeshContours() { return VSAMeshList; };
+
+
+
+private:
+	GLKObList *VSAMeshList;
 };
 
 class PMBody : public GLKEntity

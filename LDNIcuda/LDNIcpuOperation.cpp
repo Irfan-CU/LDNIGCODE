@@ -249,13 +249,15 @@ bool LDNIcpuOperation::BRepToLDNISampling(QuadTrglMesh *mesh, LDNIcpuSolid* &sol
 		
 		i3 = (int)(ver[2]) - 1;		i3 += i3 / xF;
 		
+		
+		
 		glVertex3i(i1,i2,i3);
 
 		if (layer->max_height < i2)
 		{
 			layer->max_height = i2;
 		}
-
+		
 
 		pos_aft[0] = (float) i1 / 100;
 		pos_aft[1] = (float) i2 / 100;

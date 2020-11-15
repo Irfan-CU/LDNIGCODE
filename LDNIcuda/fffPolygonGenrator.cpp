@@ -85,7 +85,7 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 		return;
 	}
 	
-	printf("Print Layer count: %i\n", storage.print_layer_count);
+
 
 	AreaSupport::generateOverhangAreas(storage);
 	AreaSupport::generateSupportAreas(storage);
@@ -99,7 +99,7 @@ void FffPolygonGenerator::slices2polygons(SliceDataStorage& storage)
 	
 	processDerivedWallsSkinInfill(storage);
 
-	printf("Done with DerivedWallsSkinInfill \n");
+
 
 	//AreaSupport::generateSupportInfillFeatures(storage);
 }
@@ -243,12 +243,12 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 
 	storage.model_size = storage.model_max - storage.model_min;
 	
-	int slice_layer_count = total_layers;
-	storage.Layers.resize(slice_layer_count);
+	
+	storage.Layers.resize(total_layers);
 
 	coord_tIrfan layer_thickness;
 	
-	(layer_thickness) = (storage.model_max.z - storage.model_min.z) / (slice_layer_count);
+	(layer_thickness) = (storage.model_max.z - storage.model_min.z) / (total_layers);
 
 	storage.setlayer_thickness(layer_thickness);
 
@@ -258,11 +258,11 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 		return false;
 	}
 
-	slice_layer_count = total_layers; 
 	
-	if (slice_layer_count <= 0)
+	
+	if (total_layers <= 0)
 	{
-		printf("###Error slice_layer_count height %i is disallowed.\n", slice_layer_count);
+		printf("###Error slice_layer_count height %i is disallowed.\n", total_layers);
 		return false; // This is NOT an error state!
 	}
 	
@@ -274,7 +274,7 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 	{
 		
 		
-		Slicer* slicer = new Slicer(storage, meshlist, c_mesh, layer_thickness, slice_layer_count, use_variable_layer_heights, meshin_layer);
+		Slicer* slicer = new Slicer(storage, meshlist, c_mesh, layer_thickness, total_layers, use_variable_layer_heights, meshin_layer);
 
 		slicerList.push_back(slicer);
 		

@@ -34,7 +34,7 @@ varying out float material_Index;
 void main( void )
 {
 	int ix,iy;
-
+	//https://stackoverflow.com/questions/6430154/what-is-the-relationship-between-gl-color-and-gl-frontcolor-in-both-vertex-and-f#:~:text=gl_Color%20means%20different%20things%20in,attribute%20passed%20by%20the%20user.&text=In%20the%20fragment%20shader%2C%20gl_Color,of%20the%20triangle%20being%20rendered.
 	iy=gl_Vertex.x/sizeNx;		ix=gl_Vertex.x-iy*sizeNx;
 	gl_Position.xyz = texture2DRect(vertexTexture,vec2(ix,iy)).rgb-Cent;
 	gl_Position.w =1.0;
@@ -48,6 +48,7 @@ void main( void )
 	gl_BackColor.w  = 1.0;
 	
 	gl_PointSize=1.0;
+	
 
 material_Index= gl_Vertex.w;    
 

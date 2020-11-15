@@ -65,6 +65,7 @@
 		Polygons polygons_boundary;
 		Polygons polygons_Circle_interA;//these polygos are for 
 		Polygons polygons_Circle_interB;//these polygos are for 
+		Polygons polygons_Circle_interC;//these polygos are for 
 		bool inteference_zigzag;//bool for the zig-zag boundary at the interference
 			
 	};
