@@ -461,7 +461,7 @@ void PMBody::_buildContourList()
 
 					else if (edge->GetEdgeMaterial() == 4.00000)
 					{
-						j = 12;
+						j = 9;
 						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
 						glColor3f(rgb[0], rgb[1], rgb[2]);
 					}
@@ -485,6 +485,7 @@ void PMBody::_buildContourList()
 						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
 						glColor3f(rgb[0], rgb[1], rgb[2]);
 					}
+
 					
 					edge->GetStartPoint()->GetCoord3D(xx, yy, zz);
 				    glVertex3d(xx, yy, zz);
@@ -652,7 +653,7 @@ void PMBody::_changeValueToColor(int nType, float & nRed, float & nGreen, float 
 			{0, 231, 0},//Green
 			{100, 149, 237}//cornflower blue 
 		};
-
+		
 		nRed = color[nType][0] / 255.0f;
 		nGreen = color[nType][1] / 255.0f;
 		nBlue = color[nType][2] / 255.0f;
@@ -1285,7 +1286,6 @@ bool QuadTrglMesh::InputAMFFile(char *filename)
 
 	for (int k = 0; k < Total_Material_AMFModel.size(); k++)
 	{
-		
 		total_materials.push_back(Total_Material_AMFModel[k]);
 	}
 	
@@ -1509,6 +1509,11 @@ void ContourMesh::ClearAll()
 	{
 		glDeleteTextures(iRes[1],tex);
 	}
+
+	if (totalStickNumCheck != NULL) {
+		totalStickNumCheck = NULL;
+		free(totalStickNumCheck);
+	}
 	
 }
 
@@ -1518,10 +1523,16 @@ void ContourMesh::MallocMemory(unsigned int* ContourNum, int imageSize[], int st
 {
 	int i;
 
-	m_ContourNum = (int*)malloc(imageSize[1]*sizeof(int));
+	m_ContourNum = (int**)malloc(imageSize[1] *sizeof(int*));
+	for (i = 0; i < imageSize[1]; i++)
+	{
+		m_ContourNum[i] = (int*)malloc(4 * sizeof(int));//this[0]is refereed to the numbe rof material in the model
+	}
+
 	for(i=0; i < imageSize[1]; i++)
 	{
-		m_ContourNum[i] = ContourNum[i+1]-ContourNum[i];
+		int *temp = m_ContourNum[i];
+		temp[0] = ContourNum[i+1]-ContourNum[i];
 	}
 
 	iRes[0] = imageSize[0];	iRes[1] = imageSize[1];	iRes[2] = imageSize[2];
@@ -1735,7 +1746,7 @@ double ContourMesh::PerformVSA2D(VSAMesh *vmesh, int iter, double paradistterror
 //}
  /////////////////////////////////////
 
-void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int* prevStickMat, int* StickMat, int* nextStickMat)
+void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int mat)
 {
 	VSAMesh *vmesh;
 	
@@ -1764,24 +1775,26 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	int l = 0;
 	std::vector<int>meshin_layer;
     meshin_layer.resize(iRes[1],0);
+	
 	for (i = 0; i < iRes[1]; i++)
 	{
-	
+		
+		int *m_ContourNumNew = GetLayerStickNum(i);
 		patchNum = 0;
 		
-		if (m_ContourNum[i] > 0)  //sticks in each layer
+		if (m_ContourNumNew[0] > 0)  //sticks in each layer
 		{	 
 			
 			do
 			{
 				count = 0;
 				
-				for (j = st; j < st + m_ContourNum[i]; j++)		
+				for (j = st; j < st + m_ContourNumNew[0]; j++)
 				{	
 					id = stickID[j];   // id of the stick belonging to the layer
 					
 									   //printf("\n Layer is %d",i);
-					//printf("\n contour number is %d", m_ContourNum[i]);
+					//printf("\n contour number is %d", m_ContourNumNew[i]);
 					//printf("\n patch id is %d", patchID[id]);
 					if (patchID[j] < patchID[id])	  //patchID[j] = totoal number of sticks 12950 + 1;
 					{
@@ -1828,8 +1841,8 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 			
 			
 
-			thrust::host_vector<short> A(m_ContourNum[i]);
-			thrust::copy(patchID + st, patchID + st + m_ContourNum[i], A.begin()); //copy a segment of patchID array to A
+			thrust::host_vector<short> A(m_ContourNumNew[0]);
+			thrust::copy(patchID + st, patchID + st + m_ContourNumNew[0], A.begin()); //copy a segment of patchID array to A
 			thrust::sort(A.begin(), A.end()); // sort A
 			thrust::host_vector<short>::iterator iter = thrust::unique(A.begin(), A.end()); // Move unique elements to the front of a range 
 		  	prev = A[0];
@@ -1838,7 +1851,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 			patchIndex++;
 			int a; 
 			
-			for (a = 1; a < m_ContourNum[i]; a++)
+			for (a = 1; a < m_ContourNumNew[0]; a++)
 			{
 				
 				//printf("\n\n\n A[a] is %d at a %d\n\n\n ", A[a], a);
@@ -1857,7 +1870,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 			ContourNum[i] = a;  //store how many contour for each slice
 			
 								//printf("Contours in layer %d are %d \n",i,ContourNum[i]);
-			st = st + m_ContourNum[i];
+			st = st + m_ContourNumNew[0];
 			//printf("the number of contours on a layer %d %d \n", i, patchNum);
 			
 			//printf("the number of patch index on a layer %d %d \n", i, patchIndex); //how many unique elements exists in A[a]
@@ -1884,6 +1897,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	VSANode *vnode;
 
 	double aa, bb, cc;
+
 	
 	
 	//std::vector<vector<float > >infillbbpos;		 
@@ -1891,10 +1905,10 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	for (i = 0; i <iRes[1]; i++)
 	{
 		int contour_count = 0;
-		
+		int *m_ContourNumNew = GetLayerStickNum(i);
 		//infillbbpos[i][0] = infillbbpos[i][2] = 1.0e+16;
 		//infillbbpos[i][1] = infillbbpos[i][3] = -1.0e+16;
-		if (m_ContourNum[i] > 0)
+		if (m_ContourNumNew[0] > 0)
 			//printf("the contour number is %d %d \n",i,  m_ContourNum[i]);
 		{	
 			localcount = 0;
@@ -1907,9 +1921,9 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 				
 				//first = 0;
 				//this loop is for looping through whole sticks and putting them in the respective contours
-				for (j = 0; j < m_ContourNum[i]; j++)
+				for (j = 0; j < m_ContourNumNew[0]; j++)
 				{
-					//printf("the number of stick are %d and the countours in the layer are %d \n", m_ContourNum[i], ContourNum[i]);
+					//printf("the number of stick are %d and the countours in the layer are %d \n", m_ContourNumNew[i], ContourNum[i]);
 					/*if (st_stick[2 * st + 2 * j] < infillbbpos[i][0])	     infillbbpos[i][0] = st_stick[2 * st + 2 * j];
 					if (st_stick[2 * st + 2 * j] > infillbbpos[i][1])	     infillbbpos[i][1] = st_stick[2 * st + 2 * j];
 					if (st_stick[2 * st + 2 * j + 1] < infillbbpos[i][2])	 infillbbpos[i][2] = st_stick[2 * st + 2 * j + 1];
@@ -1927,7 +1941,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 						
 						//printf("The patch stack is %d and patch ID is %d and the layer is %d \n", patchID[st+j], patchStack[k],i);
 						//printf("The starting position of the stick is xx %f yy %f and zz %f\n", xx, zz, yy);
-						//printf("The countournum is %d \n", m_ContourNum[j]);
+						//printf("The countournum is %d \n", m_ContourNumNew[j]);
 						
 					//	printf("the values of j is %d \n", j);
 
@@ -1976,9 +1990,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 					localcount++;
 
 					lastnode = nextnode;
-					vedge->SetprevEdgeMaterial(prevStickMat[index]);
-					vedge->SetEdgeMaterial(StickMat[index]);
-					vedge->SetnextEdgeMaterial(nextStickMat[index]);
+					vedge->SetEdgeMaterial(mat);
 					index = stickID[index];
 					
 					
@@ -1999,17 +2011,15 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 
 				}
 				VSAMeshList.AddTail(vmesh);
-				//printf("%d - no of node:%d\n",i,vmesh->GetVSANodeList().GetCount());
 				count++;
 				contour_count++;
-				//printf("Yeah I am here on line 1812 of the code and i %d and contour_count %d is \n",i,contour_count);
 				meshin_layer[i]= contour_count;
 			}
 
 			num += ContourNum[i];
 		}
 		
-		st += m_ContourNum[i];
+		st += m_ContourNumNew[0];
 	
 		//to get the polygons in each layer
 	}
@@ -2029,12 +2039,6 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 			vedge = (VSAEdge *)(vmesh->GetVSAEdgeList().GetNext(Pos2));
 			vedge->GetStartPoint()->GetCoord3D(xx, yy, zz);
 			vedge->GetEndPoint()->GetCoord3D(aa, bb, cc);
-
-			if (vedge->GetEdgeMaterial() != 5)
-			{
-				vmesh->SetCircleInterMat(vedge->GetEdgeMaterial());
-			}
-
 
 			vnode = vedge->GetStartPoint();
 			
@@ -2062,15 +2066,13 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 		}
 		//calculating angels between different sticks 
 	}
-	
-	printf("Do you want to Process Gcode for this AMF file \n");
 	char response;
+	printf("Do you want to Process Gcode for this AMF file \n");
 	std::cin >> response;
+	
 	if (response == 'Y' || response == 'y')
 	{
-		int count1 = VSAMeshList.GetCount();
 		processGcode(meshin_layer,rotBoundingBox);
-		
 	}
 
 	printf("Finished build-up.\n");
@@ -2093,6 +2095,9 @@ void ContourMesh::processGcode(std::vector<int>meshin_layer, double rotBoundingB
 	
 	int scale = 1;
 	storage.set_scale(scale);
+	//Dont Pass C_Mesh
+	//Instead of mesh in layer vector just pass int of layer numbers
+
 	bool slice_model = polygongenrator.sliceModel(VSAMeshList, c_mesh, storage, iRes[1], meshin_layer, rotBoundingBox);
 	if (slice_model)
 	{
@@ -2106,193 +2111,6 @@ void ContourMesh::processGcode(std::vector<int>meshin_layer, double rotBoundingB
 
 }
 
-
-/*
-namespace curaIrfan
-{
-
-	coord_tIrfan x, y, z, a, b, c;
-	unsigned int mesh_idx,edge_index=0;
-	Polygon poly;
-	Slicer* lay;
-	VSAMesh *vmesh;
-	VSAEdge *vedge;
-	
-	
-	
-	void Gcode::fdmgenrate_gcode()
-	{
-		makepolygons_from_LDNIcontours();
-		
-		Polygons gnerated_result_lines;
-
-		Infill *in;
-		
-		in->generate(gnerated_result_lines);
-
-	}
-	
-	lay->layers.resize[iRes[1]];
-	
-	
-	void Gcode::makepolygons_from_LDNIcontours()
-	{
-		GLKPOSITION Pos;
-		GLKPOSITION Pos2;
-		
-		
-		
-		for (Pos = VSAMeshList.GetHeadPosition(); Pos != NULL;)
-		{
-			int no_of_layers = 1;
-			ContourMesh*contours;
-			int contour_count = 0;
-			if (contour_count > contours->ContourNum[no_of_layers])
-			{
-				no_of_layers++;
-			}
-
-			vmesh = (VSAMesh *)(VSAMeshList.GetNext(Pos));
-			mesh_idx = vmesh->GetIndexNo();	 //polygon number 
-			contour_count++;
-
-			for (Pos2 = vmesh->GetVSAEdgeList().GetHeadPosition(); Pos2 != NULL; )
-			{
-
-				// points of the edge to be added to make the outlines
-				double xx, yy, zz, aa, bb, cc;
-
-				vedge = (VSAEdge *)(vmesh->GetVSAEdgeList().GetNext(Pos2));
-
-				vedge->GetStartPoint()->GetCoord3D(xx, yy, zz);
-				vedge->GetEndPoint()->GetCoord3D(aa, bb, cc);
-				edge_index = vedge->GetIndexNo();
-
-				x = xx;
-				y = zz;
-				a = aa;
-				b = cc;
-				Slicer::Slicer(x, y, a, b, no_of_layers, edge_index);
-				Slicer::Slicer_remaining();
-				
-			}
-		}
-			
-	}
-	Polygons result_lines;
-	Slicer::generate(result_lines);
-
-	
-} //namespace cura
-
- */
- //////==========================================LayerParts=============================================//////////
-
-
-
-
-
-
-
-
- ///////==========================================Raft=============================================//////////
-/*
-
-void Raft::generate(SliceDataStorage& storage)
-{
-	assert(storage.raftOutline.size() == 0 && "Raft polygon isn't generated yet, so should be empty!");
-	//const Settings& settings = Application::getInstance().current_slice->scene.current_mesh_group->settings.get<ExtruderTrain&>("adhesion_extruder_nr").settings;
-	//const coord_t distance = settings.get<coord_t>("raft_margin");
-	constexpr bool include_support = true;
-	constexpr bool include_prime_tower = true;
-	storage.raftOutline = storage.getLayerOutlines(0, include_support, include_prime_tower).offset(distance, ClipperLib::jtRound);
-	const coord_t shield_line_width_layer0 = settings.get<coord_t>("skirt_brim_line_width");
-	if (storage.draft_protection_shield.size() > 0)
-	{
-		Polygons draft_shield_raft = storage.draft_protection_shield.offset(shield_line_width_layer0) // start half a line width outside shield
-			.difference(storage.draft_protection_shield.offset(-distance - shield_line_width_layer0 / 2, ClipperLib::jtRound)); // end distance inside shield
-		storage.raftOutline = storage.raftOutline.unionPolygons(draft_shield_raft);
-	}
-	if (storage.oozeShield.size() > 0 && storage.oozeShield[0].size() > 0)
-	{
-		const Polygons& ooze_shield = storage.oozeShield[0];
-		Polygons ooze_shield_raft = ooze_shield.offset(shield_line_width_layer0) // start half a line width outside shield
-			.difference(ooze_shield.offset(-distance - shield_line_width_layer0 / 2, ClipperLib::jtRound)); // end distance inside shield
-		storage.raftOutline = storage.raftOutline.unionPolygons(ooze_shield_raft);
-	}
-	const coord_t smoothing = settings.get<coord_t>("raft_smoothing");
-	storage.raftOutline = storage.raftOutline.offset(smoothing, ClipperLib::jtRound).offset(-smoothing, ClipperLib::jtRound); // remove small holes and smooth inward corners
-}
-
-coord_tIrfan Raft::getTotalThickness()
-{
-	const ExtruderTrain& train = Application::getInstance().current_slice->scene.current_mesh_group->settings.get<ExtruderTrain&>("adhesion_extruder_nr");
-	return train.settings.get<coord_t>("raft_base_thickness")
-		+ train.settings.get<coord_t>("raft_interface_thickness")
-		+ train.settings.get<size_t>("raft_surface_layers") * train.settings.get<coord_t>("raft_surface_thickness");
-}
-
-coord_tIrfan Raft::getZdiffBetweenRaftAndLayer1()
-{
-	const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
-	const ExtruderTrain& train = mesh_group_settings.get<ExtruderTrain&>("adhesion_extruder_nr");
-	if (mesh_group_settings.get<EPlatformAdhesion>("adhesion_type") != EPlatformAdhesion::RAFT)
-	{
-		return 0;
-	}
-	const coord_t airgap = std::max(coord_t(0), train.settings.get<coord_t>("raft_airgap"));
-	const coord_t layer_0_overlap = mesh_group_settings.get<coord_t>("layer_0_z_overlap");
-
-	const coord_t layer_height_0 = mesh_group_settings.get<coord_t>("layer_height_0");
-
-	const coord_t z_diff_raft_to_bottom_of_layer_1 = std::max(coord_t(0), airgap + layer_height_0 - layer_0_overlap);
-	return z_diff_raft_to_bottom_of_layer_1;
-}
-
-size_t Raft::getFillerLayerCount()
-{
-	const coord_t normal_layer_height = Application::getInstance().current_slice->scene.current_mesh_group->settings.get<coord_t>("layer_height");
-	return round_divide(getZdiffBetweenRaftAndLayer1(), normal_layer_height);
-}
-
-coord_tIrfanRaft::getFillerLayerHeight()
-{
-	const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
-	if (mesh_group_settings.get<EPlatformAdhesion>("adhesion_type") != EPlatformAdhesion::RAFT)
-	{
-		const coord_t normal_layer_height = mesh_group_settings.get<coord_t>("layer_height");
-		return normal_layer_height;
-	}
-	return round_divide(getZdiffBetweenRaftAndLayer1(), getFillerLayerCount());
-}
-
-
-size_t Raft::getTotalExtraLayers()
-{
-	const ExtruderTrain& train = Application::getInstance().current_slice->scene.current_mesh_group->settings.get<ExtruderTrain&>("adhesion_extruder_nr");
-	if (train.settings.get<EPlatformAdhesion>("adhesion_type") != EPlatformAdhesion::RAFT)
-	{
-		return 0;
-	}
-	return 2 + train.settings.get<size_t>("raft_surface_layers") + getFillerLayerCount();
-}
-
-std::vector<bool> SliceDataStorage::getExtrudersUsed() const
-{
-	std::vector<bool> ret;
-	ret.resize(2, false);
-	for (size_t extruder_nr = 0; extruder_nr < 2; extruder_nr++)
-	{
-		ret[extruder_nr] = true;
-		continue;
-
-	}
-	return ret;
-}
-	
-*/
-
- ///////==========================================ZigZagProcessor=============================================//////////
 void ZigzagConnectorProcessor::registerVertex(const curaIrfan::PointIrfan& vertex)
 {
 	if (is_first_connector)
@@ -2452,32 +2270,6 @@ void NoZigZagConnectorProcessor::registerPolyFinished()
 {
 	//No need to add anything.
 }
-
-
-
- ///////==========================================PolygonFunctions=============================================//////////
-
-
-
-
-
-
-
-
-///////==========================================InfillStart=============================================//////////
-
-
-
-
-
-///////==========================================InfillEnd=============================================//////////
-
-
-
-///////==========================================AABB Start=============================================//////////
-
-
-/////----------------------------------------AABBEND---------------------------------/////
 
 void QuadTrglMesh::calcFaceNormals()
 {		
@@ -2890,9 +2682,10 @@ void ContourMesh::ArrayToContour(float* st_stick, float* ed_stick, double imgOri
 	
 	for(i=0; i<iRes[1]; i++) // iRes[1]=imagesize[1];iRes[1]=141 BinaryImageSize[1] = (int)floor((rotBoundingBox[3]-rotBoundingBox[2])/thickness);
 	{	
-	   	num = m_ContourNum[i];
-		printf("the num here is %d\n", num);
-		double totcont = totcont + m_ContourNum[i];
+		int *m_ContourNumNew = m_ContourNum[i];
+		num = m_ContourNumNew[0];
+		
+		double totcont = totcont + m_ContourNumNew[i];
 				
 		if (num > 0)
 		{
@@ -2920,7 +2713,7 @@ void ContourMesh::ArrayToContour(float* st_stick, float* ed_stick, double imgOri
 					/*printf("print %f %f %f \n", m_stnodeTable[3 * index], m_nodeTable[3 * index + 1], m_EdnodeTable[3 * index + 2]);*/
 					
 				   /*
-					if (m_ContourNum[0] == m_ContourNum[i])
+					if (m_ContourNumNew[0] == m_ContourNumNew[i])
 					{
 						fprintf(fp, "st is %d \n", j);
 						fprintf(fp, "G1 X%0.6f Y%0.6f Z%0.6f \n", m_StnodeTable[3 * index], m_StnodeTable[3 * index + 2], m_StnodeTable[3 * index + 1]);
@@ -3036,144 +2829,141 @@ void ContourMesh::ArrayToContour(float* st_stick, float* ed_stick, double imgOri
 
 }
 
-void ContourMesh::MaterialPlanning(float* st_stick, float* ed_stick, int* mat_stick, int material_id, int current_size)
-{
-	int i, j, st, num, id;
-	float xx, yy, zz, xx1, yy1, zz1, x1, y1, z1, x2, y2, z2, dp[3], dp1[3];
-	float xx_m, yy_m, zz_m, xx1_m, yy1_m, zz1_m;
-
-
-	for (i=0; i < iRes[1]; i++) // iRes[1]=imagesize[1];iRes[1]=141 BinaryImageSize[1] = (int)floor((rotBoundingBox[3]-rotBoundingBox[2])/thickness);
-	{
-		num = m_ContourNum[i];
-		printf("the num here is %d\n", num);
-		//double totcont = totcont + m_ContourNum[i];
-
-		if (num > 0)
-		{
-			for (j = 0; j < num; j++) // basically the stick in a layer
-			{
-				if (material_id == 0)
-				{
-					
-
-					xx = st_stick[2 * st + 2 * j];
-					zz = st_stick[2 * st + 2 * j + 1];
-					yy = (i + 1)*thickness;
-
-					
-					cpuStickStart_x.push_back(xx);
-					cpuStickStart_y.push_back(zz);	
-					cpuStickStart_z.push_back(yy);
-					
-
-					xx1 = ed_stick[2 * st + 2 * j];
-					zz1 = ed_stick[2 * st + 2 * j + 1];
-				
-					
-					cpuStickEnd_x.push_back(xx1);
-					cpuStickEnd_y.push_back(zz1);
-					cpuStickEnd_z.push_back(yy);
-					cpuStickMat.push_back(material_id);
-					
-					
-					
-				}
-
-				else if (material_id == 1)
-				{
-					{
-						int n = 0;
-						//printf("the size for the cpuStickStart_x is %d \n", cpuStickStart_x.size());
-						for (int i1 = 0, k = 0; i < current_size; i += 2, k++)
-						{
-
-							xx = st_stick[2 * st + 2 * j];
-							zz = st_stick[2 * st + 2 * j + 1];
-							yy = (i + 1)*thickness;
-							xx1 = ed_stick[2 * st + 2 * j];
-							zz1 = ed_stick[2 * st + 2 * j + 1];
-							
-							
-
-							for (int j = 0; j < cpuStickStart_x.size(); j += 2)
-							{
-								xx_m = cpuStickStart_x[j];
-								zz_m = cpuStickStart_y[j + 1];
-								yy_m = (i + 1)*thickness;
-								xx1_m = cpuStickEnd_x[j];
-								zz1_m = cpuStickEnd_y[j + 1];
-								
-								//printf("the points 2 are %f  %f  %f  %f and mat is %d and %d \n", xx1, zz1, uu1, yy1, cpuStickMat[j]);
-								//printf("the points 1 are %f  %f  %f  %f and mat is %d and \n", xx, zz, uu, yy, material_id);
-								//printf("the points 2 are %f  %f  %f  %f and mat is %d and \n", xx1, zz1, uu1, yy1, cpuStickMat[k]);
-								if ((fabs(xx - xx_m) < EPSILON) && (fabs(zz - zz_m) < EPSILON) && (fabs(xx1 - xx1_m) < EPSILON) && (fabs(yy - yy_m) < EPSILON))
-								{
-									
-									{
-										float material_idtmp = float(material_id);
-										float cpuStickMattmp = float(cpuStickMat[j]);
-										float newmattmp = (material_idtmp + cpuStickMattmp) / 2;
-										float newmattmpfnl = newmattmp * 10;
-										//printf("the value of the mater should be %f \n", newmattmpfnl);
-										*&mat_stick[k] = int(newmattmpfnl);
-
-
-										//printf("the mater now is %d \n", *&mat_stick[k]);
-										printf("the points 1 are %f  %f  %f  %f and mat is %d and %d \n", xx, zz, xx1, yy, material_id);
-										printf("the points 2 are %f  %f  %f  %f and mat is %d and %d \n", xx_m, zz_m, xx1_m, yy_m, cpuStickMat[k]);
-										//std::cin >> n;
-									}
-
-
-								}
-
-							} //printf("Completed the outer loop anaylysis \n");
-
-						}
-						printf("Completed the outer loop anaylysis %d is \n", n);
-
-						for (int i = 0; i < current_size; i += 2)
-						{
-							xx = st_stick[2 * st + 2 * j];
-							zz = st_stick[2 * st + 2 * j + 1];
-							yy = (i + 1)*thickness;
-							xx1 = ed_stick[2 * st + 2 * j];
-							zz1 = ed_stick[2 * st + 2 * j + 1];
-
-							cpuStickStart_x.push_back(xx);
-							cpuStickStart_y.push_back(zz);
-							cpuStickStart_z.push_back(yy);
-
-							cpuStickEnd_x.push_back(xx1);
-							cpuStickEnd_y.push_back(zz1);
-							cpuStickEnd_z.push_back(yy);
-							cpuStickMat.push_back(material_id);
-						}
-					}
-				}
-
-
-
-
-
-
-
-			}
-
-
-		}
-		st += num;
-		
-
-	}
-	
-	
-}
-
-
-
-
+//void ContourMesh::MaterialPlanning(float* st_stick, float* ed_stick, int* mat_stick, int material_id, int current_size)
+//{
+//	int i, j, st, num, id;
+//	float xx, yy, zz, xx1, yy1, zz1, x1, y1, z1, x2, y2, z2, dp[3], dp1[3];
+//	float xx_m, yy_m, zz_m, xx1_m, yy1_m, zz1_m;
+//
+//
+//	for (i=0; i < iRes[1]; i++) // iRes[1]=imagesize[1];iRes[1]=141 BinaryImageSize[1] = (int)floor((rotBoundingBox[3]-rotBoundingBox[2])/thickness);
+//	{
+//		num = m_ContourNum[i];
+//		printf("the num here is %d\n", num);
+//		//double totcont = totcont + m_ContourNum[i];
+//
+//		if (num > 0)
+//		{
+//			for (j = 0; j < num; j++) // basically the stick in a layer
+//			{
+//				if (material_id == 0)
+//				{
+//					
+//
+//					xx = st_stick[2 * st + 2 * j];
+//					zz = st_stick[2 * st + 2 * j + 1];
+//					yy = (i + 1)*thickness;
+//
+//					
+//					cpuStickStart_x.push_back(xx);
+//					cpuStickStart_y.push_back(zz);	
+//					cpuStickStart_z.push_back(yy);
+//					
+//
+//					xx1 = ed_stick[2 * st + 2 * j];
+//					zz1 = ed_stick[2 * st + 2 * j + 1];
+//				
+//					
+//					cpuStickEnd_x.push_back(xx1);
+//					cpuStickEnd_y.push_back(zz1);
+//					cpuStickEnd_z.push_back(yy);
+//					cpuStickMat.push_back(material_id);
+//					
+//					
+//					
+//				}
+//
+//				else if (material_id == 1)
+//				{
+//					{
+//						int n = 0;
+//						//printf("the size for the cpuStickStart_x is %d \n", cpuStickStart_x.size());
+//						for (int i1 = 0, k = 0; i < current_size; i += 2, k++)
+//						{
+//
+//							xx = st_stick[2 * st + 2 * j];
+//							zz = st_stick[2 * st + 2 * j + 1];
+//							yy = (i + 1)*thickness;
+//							xx1 = ed_stick[2 * st + 2 * j];
+//							zz1 = ed_stick[2 * st + 2 * j + 1];
+//							
+//							
+//
+//							for (int j = 0; j < cpuStickStart_x.size(); j += 2)
+//							{
+//								xx_m = cpuStickStart_x[j];
+//								zz_m = cpuStickStart_y[j + 1];
+//								yy_m = (i + 1)*thickness;
+//								xx1_m = cpuStickEnd_x[j];
+//								zz1_m = cpuStickEnd_y[j + 1];
+//								
+//								//printf("the points 2 are %f  %f  %f  %f and mat is %d and %d \n", xx1, zz1, uu1, yy1, cpuStickMat[j]);
+//								//printf("the points 1 are %f  %f  %f  %f and mat is %d and \n", xx, zz, uu, yy, material_id);
+//								//printf("the points 2 are %f  %f  %f  %f and mat is %d and \n", xx1, zz1, uu1, yy1, cpuStickMat[k]);
+//								if ((fabs(xx - xx_m) < EPSILON) && (fabs(zz - zz_m) < EPSILON) && (fabs(xx1 - xx1_m) < EPSILON) && (fabs(yy - yy_m) < EPSILON))
+//								{
+//									
+//									{
+//										float material_idtmp = float(material_id);
+//										float cpuStickMattmp = float(cpuStickMat[j]);
+//										float newmattmp = (material_idtmp + cpuStickMattmp) / 2;
+//										float newmattmpfnl = newmattmp * 10;
+//										//printf("the value of the mater should be %f \n", newmattmpfnl);
+//										*&mat_stick[k] = int(newmattmpfnl);
+//
+//
+//										//printf("the mater now is %d \n", *&mat_stick[k]);
+//										printf("the points 1 are %f  %f  %f  %f and mat is %d and %d \n", xx, zz, xx1, yy, material_id);
+//										printf("the points 2 are %f  %f  %f  %f and mat is %d and %d \n", xx_m, zz_m, xx1_m, yy_m, cpuStickMat[k]);
+//										//std::cin >> n;
+//									}
+//
+//
+//								}
+//
+//							} //printf("Completed the outer loop anaylysis \n");
+//
+//						}
+//						printf("Completed the outer loop anaylysis %d is \n", n);
+//
+//						for (int i = 0; i < current_size; i += 2)
+//						{
+//							xx = st_stick[2 * st + 2 * j];
+//							zz = st_stick[2 * st + 2 * j + 1];
+//							yy = (i + 1)*thickness;
+//							xx1 = ed_stick[2 * st + 2 * j];
+//							zz1 = ed_stick[2 * st + 2 * j + 1];
+//
+//							cpuStickStart_x.push_back(xx);
+//							cpuStickStart_y.push_back(zz);
+//							cpuStickStart_z.push_back(yy);
+//
+//							cpuStickEnd_x.push_back(xx1);
+//							cpuStickEnd_y.push_back(zz1);
+//							cpuStickEnd_z.push_back(yy);
+//							cpuStickMat.push_back(material_id);
+//						}
+//					}
+//				}
+//
+//
+//
+//
+//
+//
+//
+//			}
+//
+//
+//		}
+//		st += num;
+//		
+//
+//	}
+//	
+//	
+//}
+   
 void ContourMesh::ArrayToContour(float* st_stick, float* ed_stick, unsigned int* id_stick)
 {
 	int i, j, st, num;
@@ -3183,10 +2973,10 @@ void ContourMesh::ArrayToContour(float* st_stick, float* ed_stick, unsigned int*
 	for(i=0; i<120; i++)
 	{
 		
-
+		int *m_ContourNumNew = m_ContourNum[i];
 		st = id_stick[i];
 	
-		num = m_ContourNum[i];
+		num = m_ContourNumNew[i];
 		
 		if (num > 0)
 		{
@@ -5062,3 +4852,24 @@ void VSA::SimplifyMeshBasedOnVSARegions2D()
 
 	v_mesh = newpatch;
 }
+
+LDMIContourMesh::LDMIContourMesh(void)
+{
+	VSAMeshList = NULL;
+}
+
+LDMIContourMesh::~LDMIContourMesh(void)
+{
+	if (VSAMeshList != NULL) VSAMeshList = NULL;
+	
+	free(VSAMeshList);
+}
+
+void LDMIContourMesh::MallocMemory(int total_materials)
+{
+	//VSAMeshList = (GLKEntity*)malloc(total_materials * sizeof(GLKEntity));
+}
+
+
+
+

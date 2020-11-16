@@ -197,10 +197,12 @@ using namespace std;
 		SlicerSegment segment; SlicerLayer	slicerlayer; int mesh_count = 0;
 		bool processed_A = false;   //boolean used to check if the polygon A is processed 
 		bool processed_B = false;   //boolean used to check if the polygon B is processed 
+		bool processed_C = false;   //boolean used to check if the polygon C is processed 
 		Polygon poly_circle_intersection; //polygon for material A+B
 		Polygon poly_circle_boundary; //polygon for outer boundary for the wall
 		Polygon poly_circle_boundaryA;
 		Polygon poly_circle_boundaryB;
+		Polygon poly_circle_boundaryC;
 
 		for (Pos_1 = mesh_list.GetHeadPosition(); Pos_1 != NULL; )
 		{
@@ -214,8 +216,10 @@ using namespace std;
 				// These Polygons are just used for intersection circles case
 				std::vector<int>poly_circle_A_material;
 				std::vector<int>poly_circle_B_material;
+				std::vector<int>poly_circle_C_material;
 				Polygon poly_circle_A;//polygon for material A
 				Polygon poly_circle_B;//polygon for material B
+				Polygon poly_circle_C;//polygon for material B
 				Polygon T_Joint;
 				// These Polygons are just used for intersection circles case
 				double xx1, zz1, aa1, cc1;
@@ -502,7 +506,11 @@ using namespace std;
 					 }
 					 
 					 // Polygon A is made up for the material 1 and material 5
-					 // Polygon B is made up for the material 1 and material 5
+					 // Polygon B is made up for the material 2 and material 5
+					 // Polygon C is made up for the material 3 and material 5
+					 
+					 
+					 
 					 if ((mesh1->GetCircleInterMat() == 2))
 					 {
 						 if (edge == 1)
@@ -529,6 +537,38 @@ using namespace std;
 						
 						 
 					 }
+
+					 if ((mesh1->GetCircleInterMat() == 3))
+					 {
+						 if (edge == 1)
+						 {
+							 poly_circle_C.add(segment.end);
+							 poly_circle_C_material.push_back(edg_mat);
+							 poly_circle_C.add(segment.start);
+							 poly_circle_C_material.push_back(edg_mat);
+						 }
+						 else if (edge != 1)
+						 {
+							 poly_circle_C.add(segment.start);
+							 poly_circle_C_material.push_back(edg_mat);
+						 }
+
+						 if (edg_mat == 5)
+						 {
+
+							 poly_circle_intersection.add(segment.end);
+							 poly_circle_intersection.add(segment.start);
+							 inter_circle = true;
+						 }
+						 processed_C = true;
+
+
+					 }
+
+
+
+
+
 					
 
 					 // Polygon B is made up for the material 1 and material 5
@@ -600,31 +640,35 @@ using namespace std;
 			
 				if (!poly_circle_B.empty())
 				{
-					
-					
-					T_Joint_B = poly.T_joint(poly_circle_B,poly_circle_B_material, shift);
-					layers[layer_nr].polygons_Circle_interB.add(T_Joint_B);
-					T_Joint_B.clear();
-					
+					//T_Joint_B = poly.T_joint(poly_circle_B,poly_circle_B_material, shift);
+					layers[layer_nr].polygons_Circle_interB.add(poly_circle_B);
+					//T_Joint_B.clear();
 				}
-				
-				
-				
-				
+
 				Polygon T_Joint_A;
 				if (!poly_circle_A.empty())
 				{
 					shift = 0;
-					T_Joint_A = poly.T_joint(poly_circle_A, poly_circle_A_material,shift);
-
-					
-					layers[layer_nr].polygons_Circle_interA.add(T_Joint_A);
-					T_Joint_A.clear();
+					//T_Joint_A = poly.T_joint(poly_circle_A, poly_circle_A_material,shift);
+				   	layers[layer_nr].polygons_Circle_interA.add(poly_circle_A);
+					//T_Joint_A.clear();
 					//layers[layer_nr].polygons_Circle_interA.add(poly_circle_A);
 					//layers[layer_nr].polygons_Circle_interA.add(T_Joint);
 					//layers[layer_nr].polygons_Circle_interA.setId(mesh_count);//mesh count or polygon id actually doent matter its here for the future use and scaling the code
 					//layers[layer_nr].polygons_Circle_interA.polygons_matid.push_back(3);
 				}
+				if (!poly_circle_C.empty())
+				{
+					shift = 0;
+					//T_Joint_A = poly.T_joint(poly_circle_A, poly_circle_A_material,shift);
+					layers[layer_nr].polygons_Circle_interC.add(poly_circle_C);
+					//T_Joint_A.clear();
+					//layers[layer_nr].polygons_Circle_interA.add(poly_circle_A);
+					//layers[layer_nr].polygons_Circle_interA.add(T_Joint);
+					//layers[layer_nr].polygons_Circle_interA.setId(mesh_count);//mesh count or polygon id actually doent matter its here for the future use and scaling the code
+					//layers[layer_nr].polygons_Circle_interA.polygons_matid.push_back(3);
+				}
+
 				Polygon T_Joint_inter;
 
 				mesh_count++;
@@ -797,20 +841,24 @@ using namespace std;
 
 					*/
 
-
-
-
 					layers[layer_nr].polygons_Circle_inter.add(poly_circle_intersection);	
 					//layers[layer_nr].polygons_Circle_inter.add(T_Joint_inter);
 					poly_circle_intersection.clear();
-					
+					//std::cout<<"the polygons in the layer are %d \n",layers[layer_nr].
 					layer_nr++;
-					
 					mesh_count = 0;	
+					layers[layer_nr].polygons_Circle_inter.add(poly_circle_intersection);
+					
+					if (layer_nr == 5)
+					{
+						break;
+					}
+					
 				}
 				
 			
 		}
+		
 		
 		
 	}

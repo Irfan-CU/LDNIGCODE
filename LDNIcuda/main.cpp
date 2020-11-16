@@ -123,6 +123,8 @@
 #define _MENU_CUDA_FDMCONTOURSUPT		10418
 #define _MENU_CUDA_SLACONTOURSUPT		10419
 
+#define _MENU_CUDA_LDMISAMPLINGFROMBREP		10420
+
 #define _MAX_INFO 5
 
 GLK _pGLK;
@@ -1054,16 +1056,95 @@ void menuFuncLDNISampling(bool bCUDA)
 
 	LDNIcpuSolid *solid;	// pointers to class
 	LDNIcudaSolid *cudaSolid; // pointers to class
+	LDMIProcessor *ldmiProcessor; //pointer for access to heap in runtime and needs to be deleted
 	float bndBox[6];				 
 	bndBox[0] = bndBox[1] = bndBox[2] = bndBox[3] = bndBox[4] = bndBox[5] = 0;	  // array initilaization to zero-
 	QuadTrglMesh *mesh = (QuadTrglMesh *)(_pDataBoard.m_polyMeshBody->GetMeshList().GetHead());
 	long time = clock();  // long variable type can store a single 64-bit signed integer
+	
 	if (bCUDA) {
 		//		LDNIcpuOperation::BRepToLDNISampling(mesh,solid,bndBox,nRes);
 		//		LDNIcudaOperation::CopyCPUSolidToCUDASolid(solid,cudaSolid);
 		//		delete solid;
 		LDNIcudaOperation::BRepToLDNISampling(mesh, cudaSolid, bndBox, nRes);
 	
+	}
+	else {
+		LDNIcpuOperation::BRepToLDNISampling(mesh, solid, bndBox, nRes);
+	}
+	printf("--------------------------------------------\n");
+	printf("Total Sampling Time: %ld (ms)\n", clock() - time); time = clock();
+	printf("--------------------------------------------\n\n");
+	
+	if (_pDataBoard.m_solidLDNIBody) _pGLK.DelDisplayObj(_pDataBoard.m_solidLDNIBody);
+
+	_pDataBoard.m_polyMeshBody->GetMeshList().RemoveHead();		delete mesh;
+	if (_pDataBoard.m_polyMeshBody->GetMeshList().IsEmpty()) {
+		_pGLK.DelDisplayObj(_pDataBoard.m_polyMeshBody);
+		_pDataBoard.m_polyMeshBody = NULL;
+	}
+	else {
+		if (_pGLK.GetShading()) _pDataBoard.m_polyMeshBody->BuildGLList(true);
+		if (_pGLK.GetMesh()) _pDataBoard.m_polyMeshBody->BuildGLList(false);
+	}
+
+	LDNISolidBody *solidBody = new LDNISolidBody;
+	if (bCUDA)
+		solidBody->m_cudaSolid = cudaSolid;
+	else
+		solidBody->m_solid = solid;
+	
+	solidBody->CompRange();
+	time = clock();
+	solidBody->BuildGLList(_pDataBoard.m_bLDNISampleNormalDisplay);
+	printf("Build point GL List Time (ms): %ld\n", clock() - time); time = clock();
+	printf("--------------------------------------------\n");  
+	_pDataBoard.m_solidLDNIBody = solidBody;
+	_pGLK.AddDisplayObj(solidBody, true);
+
+	printf("Refresh time (ms): %ld\n", clock() - time); time = clock();
+
+}
+
+
+void menuFuncLDMISampling(bool bCUDA)
+{
+	printf("inside LDMI functions\n");
+	
+	if (!(_pDataBoard.m_polyMeshBody)) { printf("Solid check:None mesh found!\n"); return; }
+
+	int nRes;	char inputStr[200];
+	printf("\nPlease specify the resolution for sampling: ");
+	scanf("%s", inputStr);	printf("\n");	sscanf(inputStr, "%d", &nRes);
+	//nRes = 1024;
+	if (nRes <= 0) {
+		printf("Incorrect InputL : %d!!!\n", nRes)//	condition for wrong or input reolotion
+			; return;
+	}
+	printf("Sampling Resolution: %d\n", nRes);
+
+	//-----------------------------------------------------------------------------------
+	//	Need to release the memory of displaying a object;
+	//		otherwise, the sampling may be abnormal if the graphics memory is not enough
+	_pDataBoard.m_polyMeshBody->DeleteGLList(true);			 // deleting previous gl list 
+	_pDataBoard.m_polyMeshBody->DeleteGLList(false);		 // deleting previous gl list 
+	if (_pDataBoard.m_solidLDNIBody != NULL)
+		_pDataBoard.m_solidLDNIBody->DeleteVBOGLList();	   // delete 
+	
+	LDNIcpuSolid *solid;	// pointers to class
+	LDNIcudaSolid *cudaSolid; // pointers to class
+	LDMIProcessor *ldmiProcessor; //pointer for access to heap in runtime and needs to be deleted
+	float bndBox[6];
+	bndBox[0] = bndBox[1] = bndBox[2] = bndBox[3] = bndBox[4] = bndBox[5] = 0;	  // array initilaization to zero-
+	QuadTrglMesh *mesh = (QuadTrglMesh *)(_pDataBoard.m_polyMeshBody->GetMeshList().GetHead());
+	long time = clock();  // long variable type can store a single 64-bit signed integer
+
+	if (bCUDA) {
+		//		LDNIcpuOperation::BRepToLDNISampling(mesh,solid,bndBox,nRes);
+		//		LDNIcudaOperation::CopyCPUSolidToCUDASolid(solid,cudaSolid);
+		//		delete solid;
+		LDNIcudaOperation::BRepToLDMISampling(mesh, cudaSolid, ldmiProcessor, bndBox, nRes);
+
 	}
 	else {
 		LDNIcpuOperation::BRepToLDNISampling(mesh, solid, bndBox, nRes);
@@ -1089,12 +1170,18 @@ void menuFuncLDNISampling(bool bCUDA)
 		solidBody->m_cudaSolid = cudaSolid;
 	else
 		solidBody->m_solid = solid;
+
+	LDMISolidBody *ldmiSolidBody = new LDMISolidBody;
+	ldmiSolidBody->m_ldmiProcessor = ldmiProcessor;
+	
+	
 	solidBody->CompRange();
 	time = clock();
 	solidBody->BuildGLList(_pDataBoard.m_bLDNISampleNormalDisplay);
 	printf("Build point GL List Time (ms): %ld\n", clock() - time); time = clock();
-	printf("--------------------------------------------\n");  
+	printf("--------------------------------------------\n");
 	_pDataBoard.m_solidLDNIBody = solidBody;
+	_pDataBoard.m_solidLDMIBody = ldmiSolidBody;
 	_pGLK.AddDisplayObj(solidBody, true);
 
 	printf("Refresh time (ms): %ld\n", clock() - time); time = clock();
@@ -1105,8 +1192,12 @@ void menuFuncFDMContourGeneration()
 {
 	if (_pDataBoard.m_solidLDNIBody==NULL || _pDataBoard.m_solidLDNIBody->m_cudaSolid==NULL) {
 		printf("None cuda-LDNI-solid found!\n");	return;
+	}																														   
+	
+	if (_pDataBoard.m_solidLDMIBody == NULL || _pDataBoard.m_solidLDMIBody->m_ldmiProcessor == NULL)
+	{
+		printf("No LDMI body present in the model \n "); return;
 	}
-
 	if (!(_pDataBoard.m_polyMeshBody)) 
 		_pDataBoard.m_polyMeshBody=new PMBody;
 	else
@@ -1130,7 +1221,8 @@ void menuFuncFDMContourGeneration()
 	printf("The sampling width is :%f \n", samplewidth);		  // sample width is the pixel width 
 	
 	
-	LDNIcudaOperation::LDNIFDMContouring_Generation( _pDataBoard.m_solidLDNIBody->m_cudaSolid, cmesh, qmesh, samplewidth);
+	
+	LDNIcudaOperation::LDNIFDMContouring_Generation(_pDataBoard.m_solidLDNIBody->m_cudaSolid, _pDataBoard.m_solidLDMIBody->m_ldmiProcessor, cmesh, qmesh, samplewidth);
 	
 	
 	printf("After the LDNIFDMContouring_Generation \n");
@@ -1348,6 +1440,7 @@ void menuEvent(int idCommand)
 	case _MENU_LDNI_SAMPLINGFROMBREP:menuFuncLDNISampling(false);
 		break;
 	
+	
 	case _MENU_CUDA_CONTOURING:menuFuncLDNIContouring();
 		break;
 	
@@ -1366,7 +1459,8 @@ void menuEvent(int idCommand)
 		//--------------------------------------------------------------------
 	case _MENU_CUDA_SAMPLINGFROMBREP:menuFuncLDNISampling(true);
 		break;
-
+	case _MENU_CUDA_LDMISAMPLINGFROMBREP:menuFuncLDMISampling(true);
+		break;
 	
 	case _MENU_CUDA_CONVERT2CPUSOLID:menuFuncLDNIandCudaConversion(false);
 		break;
@@ -1431,6 +1525,7 @@ int buildPopupMenu (void)
 	glutAddMenuEntry("Bilateral filtering on Normal", _MENU_LDNI_BILATERAL_NORMALFILTER);
 	glutAddMenuEntry("----",-1);
 	glutAddMenuEntry("CUDA sampling (from B-rep)", _MENU_CUDA_SAMPLINGFROMBREP);
+	glutAddMenuEntry("CUDA LDMISampling (from B-rep)", _MENU_CUDA_LDMISAMPLINGFROMBREP);
 	glutAddMenuEntry("CUDA Boolean operations", _MENU_CUDA_BOOLEANOPERATION);
 	glutAddMenuEntry("CUDA regularization",_MENU_CUDA_REGULARIZATION);
 	glutAddMenuEntry("----",-1);

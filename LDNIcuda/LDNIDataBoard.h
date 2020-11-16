@@ -31,6 +31,7 @@
 
 class PMBody;
 class LDNISolidBody;
+class LDMISolidBody;
 
 class LDNIDataBoard
 {
@@ -40,6 +41,8 @@ public:
 
 	PMBody	*m_polyMeshBody; 
 	LDNISolidBody *m_solidLDNIBody;		bool m_bLDNISampleNormalDisplay;
+	LDMISolidBody *m_solidLDMIBody;
+
 };
 
 #endif

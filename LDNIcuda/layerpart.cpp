@@ -27,12 +27,13 @@ void createLayerWithParts(SliceLayer& storageLayer, SlicerLayer* layer)
 	std::vector<PolygonsPart> result_boundary;//Outer boundary material polygon result
 	std::vector<PolygonsPart> result_inter_circle_A;//A material polygon result
 	std::vector<PolygonsPart> result_inter_circle_B;//B material polygon result
+	std::vector<PolygonsPart> result_inter_circle_C;//B material polygon result
 	std::vector<PolygonsPart> result_circle_inter;//intersection parts result 
 	std::vector<PolygonsPart> result_zigzag;
 	std::vector<PolygonsPart> result_circle;
 	const bool union_layers = true;
 
-	printf("Inside the parts 0 \n");
+	
 
 	if (!layer->polygons_boundary.empty())
 	{
@@ -49,6 +50,13 @@ void createLayerWithParts(SliceLayer& storageLayer, SlicerLayer* layer)
 		result_inter_circle_A = layer->polygons_Circle_interA.splitIntoParts(union_layers);
 
 	}
+
+	if (!layer->polygons_Circle_interC.empty())
+	{
+		result_inter_circle_C = layer->polygons_Circle_interC.splitIntoParts(union_layers);
+
+	}
+
 	if (!layer->polygons_Zigzag.empty())
 	{
 		result_zigzag = layer->polygons_Zigzag.splitIntoParts(union_layers);	  //polygons in slicer list
@@ -59,7 +67,7 @@ void createLayerWithParts(SliceLayer& storageLayer, SlicerLayer* layer)
 		result_circle = layer->polygons_Circle_inter.splitIntoParts(union_layers);	  //polygons in slicer list
 	}
 
-	printf("Inside the parts 1 \n");
+	
 
 	for (unsigned int i = 0; i < result.size(); i++)
 	{
@@ -81,7 +89,7 @@ void createLayerWithParts(SliceLayer& storageLayer, SlicerLayer* layer)
 		*/
 
 	}
-	printf("Inside the parts 2 \n");
+	
 	if (!layer->polygons_Circle_interA.empty())
 	{
 		for (unsigned int i = 0; i < result_inter_circle_A.size(); i++)
@@ -110,7 +118,7 @@ void createLayerWithParts(SliceLayer& storageLayer, SlicerLayer* layer)
 			storageLayer.parts[id].part_print_property = 1;
 		}
 	}
-	printf("Inside the parts 4 \n");
+	
 	if (!layer->polygons_Circle_interB.empty())
 	{
 		for (unsigned int i = 0; i < result_inter_circle_B.size(); i++)
@@ -128,13 +136,31 @@ void createLayerWithParts(SliceLayer& storageLayer, SlicerLayer* layer)
 
 		}
 	}
-	printf("Inside the parts 5 \n");
+
+	if (!layer->polygons_Circle_interC.empty())
+	{
+		for (unsigned int i = 0; i < result_inter_circle_C.size(); i++)
+		{
+
+
+			int id = storageLayer.parts.size();
+			storageLayer.parts.emplace_back();
+			storageLayer.mat_parts.emplace_back(2);
+			storageLayer.parts[id].part_mat = 2;
+			storageLayer.parts[id].outline = result_inter_circle_C[i];
+
+			storageLayer.parts[id].boundaryBox.calculate(storageLayer.parts[id].outline);
+			storageLayer.parts[id].part_print_property = 1;
+
+		}
+	}
+	//printf("the storage layer parts size is %d \n", storageLayer.parts.size());
 
 }
 	void createLayerParts(SliceDataStorage& storage, Slicer* slicer)
 	{
 		const auto total_layers = slicer->layers.size();
-	
+		
 		assert(storage.Layers.size() == total_layers);
 #pragma omp parallel for default(none) shared(storage, slicer) schedule(dynamic)
 		
@@ -143,7 +169,7 @@ void createLayerWithParts(SliceLayer& storageLayer, SlicerLayer* layer)
 			SliceLayer& layer_storage = storage.Layers[layer_nr];
 			SlicerLayer& slice_layer = slicer->layers[layer_nr];
 			createLayerWithParts(layer_storage, &slice_layer);
-			printf("the layer part size is %d \n", layer_storage.parts.size());
+			
 
 			
 		}

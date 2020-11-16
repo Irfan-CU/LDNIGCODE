@@ -34,7 +34,7 @@
 
 LDNIDataBoard::LDNIDataBoard(void)
 {
-	m_polyMeshBody = NULL;	m_solidLDNIBody = NULL;
+	m_polyMeshBody = NULL;	m_solidLDNIBody = NULL;	 m_solidLDMIBody = NULL;
 	m_bLDNISampleNormalDisplay = false;
 }
 

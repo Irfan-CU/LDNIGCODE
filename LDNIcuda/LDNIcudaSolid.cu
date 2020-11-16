@@ -74,6 +74,7 @@ void LDNIcudaSolid::MallocMemory(int res)
 	//	printf("cudaMemset completed\n");
 }
 
+
 void LDNIcudaSolid::FreeMemory()
 {
 	if (m_res == 0) return;
@@ -412,3 +413,36 @@ __global__ void krLDNIcudaSolid_depthSampleAdd(float *depthSamples, float addVal
 		tid += blockDim.x * gridDim.x;
 	}
 }
+
+
+//--------------------------------------LDMI Functioncs---------------------------------------------------------------
+
+
+void LDMIProcessor::MallocMemory(int res)
+{
+	int num;
+	num = res * res;
+	
+	CUDA_SAFE_CALL(cudaMalloc((void**)&(dev_MatArray[0]), (num + 1) * sizeof(unsigned int)));
+	CUDA_SAFE_CALL(cudaMalloc((void**)&(dev_MatArray[1]), (num + 1) * sizeof(unsigned int)));
+	CUDA_SAFE_CALL(cudaMalloc((void**)&(dev_MatArray[2]), (num + 1) * sizeof(unsigned int)));
+	
+	CUDA_SAFE_CALL(cudaMemset((void*)(dev_MatArray[0]), 0, (num + 1) * sizeof(unsigned int)));
+	CUDA_SAFE_CALL(cudaMemset((void*)(dev_MatArray[1]), 0, (num + 1) * sizeof(unsigned int)));
+	CUDA_SAFE_CALL(cudaMemset((void*)(dev_MatArray[2]), 0, (num + 1) * sizeof(unsigned int)));
+
+}
+
+int LDMIProcessor::totalPossibleMatComb()
+	{
+		int matCombination = 1;
+
+		for (int i = 1; i <= tot_material; i++)
+		{
+			matCombination = matCombination * i;
+		}
+
+		return matCombination;
+
+	}
+

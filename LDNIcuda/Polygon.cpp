@@ -753,6 +753,7 @@ void Polygons::addPolyTreeNodeRecursive(const ClipperLib::PolyNode& node)
 
 Polygon Polygon::T_joint(Polygon poly_circle, std::vector<int>poly_circle_material, int shift)
 {
+	return poly_circle;
 	std::vector<int> t_jointPointsX, t_jointPointsY, t_jointPointsmat;
 	int mat5Counter = 0;
 	bool opposite_Tjoint = true;

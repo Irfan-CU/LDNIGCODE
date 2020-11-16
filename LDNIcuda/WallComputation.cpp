@@ -249,7 +249,7 @@
 			{
 					
 					generateInsets(&layer->parts[partNr]);
-					printf("the part insets size is %d %d %d and %d \n", layer->parts[partNr].insets[0].size(), layer->parts[partNr].insets[1].size(), layer->parts[partNr].insets[2].size(),layer->parts[partNr].outline.size());
+					
 				
 			}
 			
