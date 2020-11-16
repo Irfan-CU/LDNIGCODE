@@ -1,4 +1,4 @@
-# LDNIGCODE
+# LDMIGCODE
 FDM Toolpath Code Overview:
 
 The most Important Part in this code for generating LDNI FDM Toolpaths is.   
