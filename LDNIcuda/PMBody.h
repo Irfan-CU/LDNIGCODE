@@ -161,12 +161,31 @@ public:
 	void FindNextAndPrevEdgeListByIndex(VSAEdge* stpt_connected_edge, VSAEdge* edpt_connected_edge, unsigned int prev, unsigned int next);
 		 //meshes in one layer 
 	int t_polygons;//total polgonsin the model
-	
+	//---------------------------LDMI functions ----------------------//
+	void setRegionMaterial(char* mat) { materialRegionsExtruders = mat; };
+	char* getRegionMaterial() { return materialRegionsExtruders; };
+
+	void setMeshMaterial(int mesh_mat) { meshMat = mesh_mat; };
+	int getmeshMaterial() { return meshMat; };
+
+	void setMeshLayer(int layer) { Layer = layer; };
+	int getmeshLayer() { return Layer; };
+
+	void setMeshID(int id) { meshID = id; };
+	int getMeshID() { return meshID; };
+
+
 private:
 	GLKObList VSAEdgeList;
 	GLKObList VSANodeList;
 	unsigned int index;
 	unsigned int mat; // material of the contour to be used in the slicer.cpp for developing the polygons of material A/B/A+B
+	char *materialRegionsExtruders;
+	int meshMat;
+	int Layer;
+	int meshID;
+
+
 
 };
 
@@ -395,21 +414,21 @@ public:
 		unsigned char Blue;
 		unsigned char Green;
 		unsigned char Red;
-		
-	}; 
-	
+
+	};
+
 	void ClearAll();
-	virtual float getRange() {return 10.0;}
+	virtual float getRange() { return 10.0; }
 	void MallocMemory(unsigned int* ContourNum, int imageSize[], int stickNum);
-	void StickCheckMallocMemory(int totalMaterials) { totalStickNumCheck=(int*)malloc(totalMaterials * sizeof(int)); };
-	
-	float* GetStartNodeArrayPtr() {return m_StnodeTable;};
-	float* GetEndNodeArrayPtr() {return m_EdnodeTable;};
-	int** GetContourNumPtr() {return  m_ContourNum;};
-	GLKObList& GetVSAMeshList() {return VSAMeshList;};
-	
+	void StickCheckMallocMemory(int totalMaterials) { totalStickNumCheck = (int*)malloc(totalMaterials * sizeof(int)); };
+
+	float* GetStartNodeArrayPtr() { return m_StnodeTable; };
+	float* GetEndNodeArrayPtr() { return m_EdnodeTable; };
+	int** GetContourNumPtr() { return  m_ContourNum; };
+	GLKObList& GetVSAMeshList() { return VSAMeshList; };
+
 	//void ContourMesh::MaterialPlanning(float* st_stick, float* ed_stick, int* mat_stick, int material_id, int size);
-	
+
 	void ArrayToContour(float* st_stick, float* ed_stick, unsigned int* id_stick);
 	void ArrayToContour(float* st_stick, float* ed_stick, double imgOri[], int* stickID, float imgWidth);
 	//void ContourMaterialInfo(float* st_stick, float* ed_stick, double imgOri[], int* stickID, float imgWidth, int TotNoOfMaterials);
@@ -417,36 +436,52 @@ public:
 
 
 	//void ConvertContourToVSAMesh(float* st_stick, float* ed_stick, int* stickID, int stickNum);
-	void BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int mat);
+	void BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int mat, int meshID);
+	void ContourLDMIArrangement(double rotBoundingBox[]);
 	void ArrayToImage(bool *nodes, int imageSize[]);
 	void WriteBMP(const char * filename, GLubyte * data, int m_SizeX, int m_SizeY);
 	void ArrayToImage(bool *outNodes, bool *InNodes, int imageSize[], int base, bool bSave, bool bDisplay);
-	
+
 
 	//void PerformVSA2D(int* stickDir);
 	void PerformVSA3D();
 	double PerformVSA2D(VSAMesh* vmesh, int iter, double paradistterror, int simpratio);
 
-	int GetResolution(short i) {return iRes[i];};
+	int GetResolution(short i) { return iRes[i]; };
 
-	void SetThickness(float t) {thickness = t;};
-	float GetThickness() {return thickness;};
-	int GetTotalStickNum() {return totalstickNum;}
+	void SetThickness(float t) { thickness = t; };
+	float GetThickness() { return thickness; };
+	int GetTotalStickNum() { return totalstickNum; }
 	int *GetTotalStickNumCheck() { return totalStickNumCheck; };// free this memeory as well
-	int *GetLayerStickNum(int layer) {return m_ContourNum[layer];}
-	void SetOrigin(float a, float b, float c) {origin[0] = a; origin[1] = b; origin[2] = c;};
-	void SetMeshId(short i) {meshID = i;};
-	short GetMeshId() {return meshID;};
-	void SetMeshUpdateStatus(bool status) { bUpdate = status;};
-	bool GetMeshUpdateStatus() {return bUpdate;};
-	void setRange(float r) {m_range = r;};
-	void SetImageResolution(int res[]) {iRes[0] = res[0]; iRes[1] = res[1]; iRes[2] = res[2];};
+	int *GetLayerStickNum(int layer) { return m_ContourNum[layer]; }
+	void SetOrigin(float a, float b, float c) { origin[0] = a; origin[1] = b; origin[2] = c; };
+	void SetMeshId(short i) { meshID = i; };
+	short GetMeshId() { return meshID; };
+	void SetMeshUpdateStatus(bool status) { bUpdate = status; };
+	bool GetMeshUpdateStatus() { return bUpdate; };
+	void setRange(float r) { m_range = r; };
+	void SetImageResolution(int res[]) { iRes[0] = res[0]; iRes[1] = res[1]; iRes[2] = res[2]; };
 
 	void setImageOrigin(double imgorix, double imgoriy) { imageOrigin[0] = imgorix; imageOrigin[1] = imgoriy; };
-	void setSampleWidth(float s) { sampleWidth = s;};
+	void setSampleWidth(float s) { sampleWidth = s; };
+
+
+	void setTotalExtruder(int extruders_size) { total_extruder = extruders_size; };
+	unsigned int getTotalExtruder() { return total_extruder; }
+
+	void setTotalmaterialRegions(int material_regions) { total_Material_Regions = material_regions; };
+	int getTotalmaterialRegions() { return total_Material_Regions; }
+	void setPerLayerMaterialRegions(int material_regions) {
+		for (int i =0; i <= iRes[1]; i++)
+		{
+			perLayerMaterial_Regions[i] = material_regions;
+		};
+	}
+
+	int getPerLayerMaterialRegions(int Layer) { return perLayerMaterial_Regions[Layer]; }
 	//float getRange() {return m_range;}
 
-	void processGcode(std::vector<int>meshin_layer,double rotBoundingBox[]);
+	void processGcode(double rotBoundingBox[]);
 
 
 	int GetContourNum() {return VSAMeshNum;};
@@ -462,7 +497,14 @@ public:
 	unsigned int *ContourNum;
 	float thickness;
 	GLKObList VSAMeshList;
-	
+
+	GLKObList NewVSAMeshList;
+
+
+	//GLKObList *LDMIMeshList;
+	//VSAMesh *LDMIVSAMesh = new VSAMesh[151 * 8];
+	//std::vector<GLKObList>LDMIVectMeshLIST;
+
 	std::vector<float>cpuStickStart_x;
 	std::vector<float>cpuStickStart_y;
 	std::vector<float>cpuStickStart_z;
@@ -471,7 +513,8 @@ public:
 	std::vector<float>cpuStickEnd_z;
 	std::vector<int>cpuStickMat;
 	std::vector<float>cpuStickID;
-		
+	char* ContourMesh::Materialdecoder(int encodedMaterial);
+	
 	//----SGM code by KaChun----//
 
 private:
@@ -487,28 +530,21 @@ private:
 	int VSAMeshNum;
 	double imageOrigin[2];
 	float sampleWidth;
+	
+	
+	
+	//LDMI Processing
+	unsigned int total_extruder;
+	int total_Material_Regions;	//Material Regions in all layers
+	int *perLayerMaterial_Regions;	//Material Regions in all layers
+	
+	
+
 
 	//unsigned int *m_faceTable;	//	Note that: the index starts from '1'
 	
 };
 
-
-class LDMIContourMesh :public GLKEntity
-{
-public:
-
-	LDMIContourMesh(void);
-	virtual ~LDMIContourMesh(void);
-	void MallocMemory(int totalMaterials);
-	
-
-	GLKObList *getVSAMeshContours() { return VSAMeshList; };
-
-
-
-private:
-	GLKObList *VSAMeshList;
-};
 
 class PMBody : public GLKEntity
 {

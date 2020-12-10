@@ -120,7 +120,7 @@ Polygons LayerPlan::computeCombBoundaryInside(const size_t max_inset)
 	}
 }
  
-void LayerPlan::addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePathConfig& config, const Polygons& polygons, int layernum, int mat, SpaceFillType space_fill_type,  bool enable_travel_optimization, int wipe_dist, float flow_ratio, std::optional<curaIrfan::PointIrfan> near_start_location, double fan_speed)
+void LayerPlan::addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePathConfig& config, const Polygons& polygons, int layernum,  SpaceFillType space_fill_type,  bool enable_travel_optimization, int wipe_dist, float flow_ratio, std::optional<curaIrfan::PointIrfan> near_start_location, double fan_speed)
 {
 	
 	Polygons boundary;
@@ -146,13 +146,13 @@ void LayerPlan::addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePa
 		
 		layernum = polygons.print_extruder;
 		
-		addExtrusionMove(layer_thickness, config, p1, layernum, mat, space_fill_type, flow_ratio, false, 1.0, fan_speed);
+		addExtrusionMove(layer_thickness, config, p1, layernum, space_fill_type, flow_ratio, false, 1.0, fan_speed);
 	}
 	
 	
 }
 
-void LayerPlan::addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathConfig& config, curaIrfan::PointIrfan p, int layernum,int mat, SpaceFillType space_fill_type, const Ratio& flow, bool spiralize, Ratio speed_factor, double fan_speed)
+void LayerPlan::addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathConfig& config, curaIrfan::PointIrfan p, int layernum, SpaceFillType space_fill_type, const Ratio& flow, bool spiralize, Ratio speed_factor, double fan_speed)
 {
 	
 	GCodePath* path = getLatestPathWithConfig(layer_thickness, config, space_fill_type, flow, spiralize, speed_factor);
@@ -160,8 +160,8 @@ void LayerPlan::addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathCo
 	
 	path->setFanSpeed(fan_speed);
 	last_planned_position = p;
-	
 	path->part_id = layer_parts.size();
+	
 	if (layer_parts_mat.size() != 0)
 	{
 		path->setPathMat(layer_parts_mat.back());
@@ -277,51 +277,13 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 	bool retraction_enable = false;
 	
 	std::string current_mesh = "NONMESH";
-
+	
 	for (size_t extruder_plan_idx = 0; extruder_plan_idx < extruder_plans.size(); extruder_plan_idx++)
 	{
 		ExtruderPlan& extruder_plan = extruder_plans[extruder_plan_idx];
 		
 		const RetractionConfig& retraction_config = storage.retraction_config_per_extruder[extruder_plan.extruder_nr];
 		coord_tIrfan z_hop_height = retraction_config.zHop;
-
-		if (extruder_nr != extruder_plan.extruder_nr)
-		{
-			//int prev_extruder = extruder_nr;
-			//extruder_nr = extruder_plan.extruder_nr;
-
-			//gcode.ResetLastEValueAfterWipe(prev_extruder);
-
-
-			//if (retraction_hop_after_extruder_switch)
-			//{
-			//	z_hop_height = storage.extruder_switch_retraction_config_per_extruder[prev_extruder].zHop;
-			//	gcode.switchExtruder(extruder_nr, storage.extruder_switch_retraction_config_per_extruder[prev_extruder], z_hop_height);
-			//}
-			//else
-			//{
-			//	gcode.switchExtruder(extruder_nr, storage.extruder_switch_retraction_config_per_extruder[prev_extruder]);
-			//}
-			//{ // require printing temperature to be met
-			//	constexpr bool wait = true;
-			//	gcode.writeTemperatureCommand(extruder_nr, extruder_plan.required_start_temperature, wait);
-			//}
-
-			//if (extruder_plan.prev_extruder_standby_temp)
-			//{ // turn off previous extruder
-			//	constexpr bool wait = false;
-			//	float prev_extruder_temp = *extruder_plan.prev_extruder_standby_temp;
-			//	const int prev_layer_nr = (extruder_plan_idx == 0) ? layer_nr - 1 : layer_nr;
-			//	if (prev_layer_nr == storage.max_print_height_per_extruder[prev_extruder])
-			//	{
-			//		prev_extruder_temp = 0; // TODO ? should there be a setting for extruder_off_temperature ?
-			//	}
-			//	gcode.writeTemperatureCommand(prev_extruder, prev_extruder_temp, wait);
-			//}
-
-			//const double extra_prime_amount = MM2INT(0.0);
-			//gcode.addExtraPrimeAmount(extra_prime_amount);
-		}
 
 		if (extruder_plan_idx == 0)
 		{
@@ -336,12 +298,14 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 		gcode.writeFanCommand(extruder_plan.getFanSpeed());
 
 		std::vector<GCodePath>& paths = extruder_plan.paths;
+		
 		std::vector<GCodePath>arranged_pathswalls;
 		std::vector<GCodePath>arranged_pathsskin;
 		std::vector<GCodePath>arranged_pathsA;
 		std::vector<GCodePath>arranged_pathsB;
 		std::vector<GCodePath>arranged_pathsAB_0;
 		std::vector<GCodePath>arranged_pathsAB_1;
+		std::vector<GCodePath>arranged_pathsAB_2;
 		
 
 
@@ -357,11 +321,23 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 			GCodePath& path_unarranged = paths[path_idx];
 
 
+			if ((path_unarranged.getPathMat() == 1))
+			{
+				arranged_pathsA.push_back(path_unarranged);
+			}
+			if ((path_unarranged.getPathMat() == 2)) 
+			{
+			
+				arranged_pathsA.push_back(path_unarranged);
+			
+			
+			}
+		
 			if ((path_unarranged.getPathMat() == 2))
 			{
 				arranged_pathsA.push_back(path_unarranged);
 			}
-			else if ((path_unarranged.getPathMat() == 5) && (path_unarranged.config->type != PrintFeatureType::Infill))
+			/*else if ((path_unarranged.getPathMat() == 5) && (path_unarranged.config->type != PrintFeatureType::Infill))
 			{
 				arranged_pathswalls.push_back(path_unarranged);
 			}
@@ -373,12 +349,17 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 			{
 				arranged_pathsAB_1.push_back(path_unarranged);
 			}
+			else if ((path_unarranged.getPathMat() == 5) && (path_unarranged.getextruder() == 2) && (path_unarranged.config->type == PrintFeatureType::Infill))
+			{
+				
+				arranged_pathsAB_2.push_back(path_unarranged);
+			}
 			else if ((path_unarranged.getPathMat() == 3))
 			{
 				arranged_pathsB.push_back(path_unarranged);
 			}
 
-
+*/
 		}
 		
 		
@@ -573,7 +554,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 
 	
 
-		
+		gcode.current_extruder = 1;
 		
 		for (unsigned int path_idx = 0; path_idx < paths.size(); path_idx++)
 		{
@@ -581,91 +562,123 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 			extruder_plan.handleInserts(path_idx, gcode);
 
 			GCodePath& path= paths[path_idx];
-			
-			if ((path.getPathMat() == 5) && (path.getextruder() == 1) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))
-				{
-					if (gcode.current_extruder == 0)
-					{
-						bool wait = false;
-						ext = 1;
-						gcode.resetExtrusionValue();
-						gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-						gcode.extruder1_extrusion_offset = false;
-						gcode.writeTemperatureCommand(0, 140.0, wait);
-						wait = true;						
-						gcode.writeTemperatureCommand(1, 210.0, wait);
-					}
+		
+				
+				
 
-				}
-
-				else if ((path.getPathMat() == 5) && (path.getextruder() == 0) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))
+				if (path.getextruder() == 3)
 				{
 					if (gcode.current_extruder == 1)
 					{
 						bool wait = false;
-						ext = 0;
-						
-						gcode.resetExtrusionValue();
-						
-						gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
-						gcode.writeTemperatureCommand(1, 140.0, wait);
-						wait = true;
-						gcode.writeTemperatureCommand(0,210.0, wait);
-					}
+						ext = 3;
 
-				}
-
-				//	if (gcode.current_extruder == 1)
-				//	{
-				//		ext = 0;
-				//		gcode.extruder_offset = 000.0;
-				//		//std::ostringstream tmp;
-				//		//tmp << "T" << 1;
-				//		
-				//		gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-				//	
-				//		//continue;
-				//	}
-				//}
-				else if (path.getPathMat() == 3)
-				{
-					if (gcode.current_extruder == 0)
-					{
-						bool wait = false;
-						ext = 1;
-						
 						gcode.resetExtrusionValue();
-						
-						gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-						gcode.extruder1_extrusion_offset = false;
-						gcode.writeTemperatureCommand(0, 140, wait);
-						wait = true;
-						gcode.writeTemperatureCommand(1, 210.0, wait);
-					}
-				}
 
-				else if (path.getPathMat() == 2)
-				{
-					if (gcode.current_extruder == 1)
-					{
-						bool wait = false;
-						ext = 0;
-						
-						gcode.resetExtrusionValue();
-						
-						gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
+						gcode.switchExtruder(3, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
 						gcode.extruder1_extrusion_offset = false;
 						gcode.writeTemperatureCommand(1, 140.0, wait);
 						wait = true;
 						gcode.writeTemperatureCommand(0, 210.0, wait);
 
 					}
+					if (gcode.current_extruder == 2)
+					{
+						bool wait = false;
+						ext = 3;
+
+						gcode.resetExtrusionValue();
+
+						gcode.switchExtruder(3, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
+						gcode.extruder1_extrusion_offset = false;
+						gcode.writeTemperatureCommand(1, 140.0, wait);
+						wait = true;
+						gcode.writeTemperatureCommand(0, 210.0, wait);
+
+					}
+					gcode.current_extruder = 3;
+
+					
+					
 				}
-				/*if (path.perform_prime)
+
+				else if (path.getextruder() == 2)
 				{
-					gcode.writePrimeTrain(120, layer_thicnkess);
-					gcode.writeRetraction(retraction_config);
-				}*/
+					if (gcode.current_extruder == 1)
+					{
+						bool wait = false;
+						ext = 2;
+
+						gcode.resetExtrusionValue();
+
+						gcode.switchExtruder(2, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
+						gcode.extruder1_extrusion_offset = false;
+						gcode.writeTemperatureCommand(1, 140.0, wait);
+						wait = true;
+						gcode.writeTemperatureCommand(0, 210.0, wait);
+
+					}
+				
+					if (gcode.current_extruder == 3)
+					{
+						bool wait = false;
+						ext = 2;
+
+						gcode.resetExtrusionValue();
+
+						gcode.switchExtruder(2, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
+						gcode.extruder1_extrusion_offset = false;
+						gcode.writeTemperatureCommand(1, 140.0, wait);
+						wait = true;
+						gcode.writeTemperatureCommand(0, 210.0, wait);
+
+					}
+					gcode.current_extruder = 2;
+
+
+				}
+
+
+				else if (path.getextruder() == 1)
+				{
+					
+					if (gcode.current_extruder == 2)
+					{
+						bool wait = false;
+						ext = 1;
+
+						gcode.resetExtrusionValue();
+
+						gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
+						gcode.extruder1_extrusion_offset = false;
+						gcode.writeTemperatureCommand(1, 140.0, wait);
+						wait = true;
+						gcode.writeTemperatureCommand(0, 210.0, wait);
+
+					}
+					if (gcode.current_extruder == 3)
+					{
+						bool wait = false;
+						ext = 1;
+
+						gcode.resetExtrusionValue();
+
+						gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
+						gcode.extruder1_extrusion_offset = false;
+						gcode.writeTemperatureCommand(1, 140.0, wait);
+						wait = true;
+						gcode.writeTemperatureCommand(0, 210.0, wait);
+
+					}
+
+					gcode.current_extruder = 1;
+				}
+			
+
+
+
+
+
 				if (!path.retract && path.isTravelPath() && path.points.size() == 1 && path.points[0] == gcode.getPositionXY() && z == gcode.getPositionZ())
 				{
 
@@ -790,760 +803,7 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 		
 		}
 
-		for (unsigned int path_idx = 0; path_idx <0; path_idx++)
-		{
-
-			extruder_plan.handleInserts(path_idx, gcode);
-
-			GCodePath& path = arranged_pathsAB_0[path_idx];
-
-			//if ((path.getPathMat() == 5) && (path.getextruder() == 1) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))
-			//{
-			//	if (gcode.current_extruder == 0)
-			//	{
-			//		ext = 1;
-
-
-			//		gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-			//		gcode.extruder1_extrusion_offset = false;
-
-			//	}
-
-			//}
-
-			//else if ((path.getPathMat() == 5) && (path.getextruder() == 0) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))
-			//{
-			//	if (gcode.current_extruder == 1)
-			//	{
-			//		ext = 0;
-
-			//		gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-
-			//	}
-
-			//}
-
-			////	if (gcode.current_extruder == 1)
-			////	{
-			////		ext = 0;
-			////		gcode.extruder_offset = 000.0;
-			////		//std::ostringstream tmp;
-			////		//tmp << "T" << 1;
-			////		
-			////		gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-			////	
-			////		//continue;
-			////	}
-			////}
-			//else if (path.getPathMat() == 3)
-			//{
-			//	if (gcode.current_extruder == 0)
-			//	{
-			//		ext = 1;
-
-			//		gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-			//		gcode.extruder1_extrusion_offset = false;
-
-			//	}
-			//}
-
-			if (gcode.current_extruder == 1)
-			{
-				ext = 0;
-				gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-				gcode.extruder1_extrusion_offset = false;
-			}
-
-
-			if (!path.retract && path.isTravelPath() && path.points.size() == 1 && path.points[0] == gcode.getPositionXY() && z == gcode.getPositionZ())
-			{
-
-				//printf("here in wrong place 356\n");
-				continue;
-			}
-
-			if (acceleration_enabled)
-			{
-
-				if (path.isTravelPath())
-				{
-					//printf("writing travel accelrations \n");
-					gcode.writeTravelAcceleration(path.config->getAcceleration());
-				}
-				else
-				{
-					//printf("writing print accelrations \n");
-					gcode.writePrintAcceleration(path.config->getAcceleration());
-				}
-			}
-
-
-
-			if (jerk_enabled)
-			{
-				gcode.writeJerk(path.config->getJerk());
-			}
-			//
-			//if (path.retract)
-			//{
-			//	gcode.writeRetraction(retraction_config);
-			//	if (path.perform_z_hop)
-			//	{
-			//		gcode.writeZhopStart(z_hop_height);
-			//		z_hop_height = retraction_config.zHop; // back to normal z hop
-			//	}
-			//	else
-			//	{
-			//		gcode.writeZhopEnd();
-			//	}
-			//}
-			
-			if (!path.isTravelPath() && last_extrusion_config != path.config)
-			{
-				gcode.writeTypeComment(path.config->type);
-				if (path.config->isBridgePath())
-				{
-					gcode.writeComment("BRIDGE");
-				}
-				last_extrusion_config = path.config;
-				update_extrusion_offset = true;
-			}
-			else
-			{
-				update_extrusion_offset = false;
-			}
-
-			double speed = path.config->getSpeed();
-
-			// for some movements such as prime tower purge, the speed may get changed by this factor
-			speed *= path.speed_factor;
-
-			//Apply the extrusion speed factor if it's an extrusion move.
-			if (!path.isTravelPath())
-			{
-				speed *= extruder_plan.getExtrudeSpeedFactor();
-			}
-			if (path.mesh_id != current_mesh)
-			{
-				current_mesh = path.mesh_id;
-				std::stringstream ss;
-				ss << "MESH:" << current_mesh;
-				gcode.writeComment(ss.str());
-			}
-			if (path.isTravelPath())
-			{ // early comp for travel paths, which are handled more simply
-				if (!path.perform_z_hop && final_travel_z != z && extruder_plan_idx == (extruder_plans.size() - 1) && path_idx == (paths.size() - 1))
-				{
-					// Before the final travel, move up to the next layer height, on the current spot, with a sensible speed.
-					Point3 current_position = gcode.getPosition();
-					current_position.z = final_travel_z;
-
-					gcode.writeTravel(current_position, 10, layer_thicnkess);
-
-					// Prevent the final travel(s) from resetting to the 'previous' layer height.
-
-					gcode.setZ(final_travel_z);
-				}
-				for (unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
-				{
-					gcode.writeTravel(path.points[point_idx], speed, layer_thicnkess);
-				}
-				continue;
-			}
-
-			bool spiralize = false;
-
-			if (!spiralize) // normal (extrusion) move (with coasting
-			{
-				// if path provides a valid (in range 0-100) fan speed, use it
-				const double path_fan_speed = path.getFanSpeed();
-				gcode.writeFanCommand(path_fan_speed != GCodePathConfig::FAN_SPEED_DEFAULT ? path_fan_speed : extruder_plan.getFanSpeed());
-
-				bool coasting = false;
-				if (coasting)
-				{
-					//coasting = writePathWithCoasting(gcode, extruder_plan_idx, path_idx, layer_thickness);
-				}
-				if (!coasting) // not same as 'else', cause we might have changed [coasting] in the line above...
-				{ // normal path to gcode algorithm
-					for (unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
-					{
-						//communication->sendLineTo(path.config->type, path.points[point_idx], path.getLineWidthForLayerView(), path.config->getLayerThickness(), speed);
-
-						gcode.writeExtrusion(path.points[point_idx], layer_thicnkess, speed, path.getExtrusionMM3perMM(), path.config->type, update_extrusion_offset);
-
-					}
-				}
-
-			}
-
-		}
 		
-		for (unsigned int path_idx = 0; path_idx < 0; path_idx++)
-		{
-
-			extruder_plan.handleInserts(path_idx, gcode);
-
-			GCodePath& path = arranged_pathsAB_1[path_idx];
-
-			//if ((path.getPathMat() == 5) && (path.getextruder() == 1) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))
-			//{
-			//	if (gcode.current_extruder == 0)
-			//	{
-			//		ext = 1;
-
-
-			//		gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-			//		gcode.extruder1_extrusion_offset = false;
-
-			//	}
-
-			//}
-
-			//else if ((path.getPathMat() == 5) && (path.getextruder() == 0) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))
-			//{
-			//	if (gcode.current_extruder == 1)
-			//	{
-			//		ext = 0;
-
-			//		gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-
-			//	}
-
-			//}
-
-			////	if (gcode.current_extruder == 1)
-			////	{
-			////		ext = 0;
-			////		gcode.extruder_offset = 000.0;
-			////		//std::ostringstream tmp;
-			////		//tmp << "T" << 1;
-			////		
-			////		gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-			////	
-			////		//continue;
-			////	}
-			////}
-			//else if (path.getPathMat() == 3)
-			//{
-				if (gcode.current_extruder == 0)
-				{
-					ext = 1;
-
-					gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-					gcode.extruder1_extrusion_offset = false;
-
-				}
-			
-
-			/*if (gcode.current_extruder == 0)
-			{
-				ext = 1;
-				gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-				gcode.extruder1_extrusion_offset = false;
-			}*/
-
-
-			if (!path.retract && path.isTravelPath() && path.points.size() == 1 && path.points[0] == gcode.getPositionXY() && z == gcode.getPositionZ())
-			{
-
-				//printf("here in wrong place 356\n");
-				continue;
-			}
-
-			if (acceleration_enabled)
-			{
-
-				if (path.isTravelPath())
-				{
-					//printf("writing travel accelrations \n");
-					gcode.writeTravelAcceleration(path.config->getAcceleration());
-				}
-				else
-				{
-					//printf("writing print accelrations \n");
-					gcode.writePrintAcceleration(path.config->getAcceleration());
-				}
-			}
-
-
-
-			if (jerk_enabled)
-			{
-				gcode.writeJerk(path.config->getJerk());
-			}
-			//
-			//if (path.retract)
-			//{
-			//	gcode.writeRetraction(retraction_config);
-			//	if (path.perform_z_hop)
-			//	{
-			//		gcode.writeZhopStart(z_hop_height);
-			//		z_hop_height = retraction_config.zHop; // back to normal z hop
-			//	}
-			//	else
-			//	{
-			//		gcode.writeZhopEnd();
-			//	}
-			//}
-			//
-			if (!path.isTravelPath() && last_extrusion_config != path.config)
-			{
-				gcode.writeTypeComment(path.config->type);
-				if (path.config->isBridgePath())
-				{
-					gcode.writeComment("BRIDGE");
-				}
-				last_extrusion_config = path.config;
-				update_extrusion_offset = true;
-			}
-			else
-			{
-				update_extrusion_offset = false;
-			}
-
-			double speed = path.config->getSpeed();
-
-			// for some movements such as prime tower purge, the speed may get changed by this factor
-			speed *= path.speed_factor;
-
-			//Apply the extrusion speed factor if it's an extrusion move.
-			if (!path.isTravelPath())
-			{
-				speed *= extruder_plan.getExtrudeSpeedFactor();
-			}
-			if (path.mesh_id != current_mesh)
-			{
-				current_mesh = path.mesh_id;
-				std::stringstream ss;
-				ss << "MESH:" << current_mesh;
-				gcode.writeComment(ss.str());
-			}
-			if (path.isTravelPath())
-			{ // early comp for travel paths, which are handled more simply
-				if (!path.perform_z_hop && final_travel_z != z && extruder_plan_idx == (extruder_plans.size() - 1) && path_idx == (paths.size() - 1))
-				{
-					// Before the final travel, move up to the next layer height, on the current spot, with a sensible speed.
-					Point3 current_position = gcode.getPosition();
-					current_position.z = final_travel_z;
-
-					gcode.writeTravel(current_position, 10, layer_thicnkess);
-
-					// Prevent the final travel(s) from resetting to the 'previous' layer height.
-
-					gcode.setZ(final_travel_z);
-				}
-				for (unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
-				{
-					gcode.writeTravel(path.points[point_idx], speed, layer_thicnkess);
-				}
-				continue;
-			}
-
-			bool spiralize = false;
-
-			if (!spiralize) // normal (extrusion) move (with coasting
-			{
-				// if path provides a valid (in range 0-100) fan speed, use it
-				const double path_fan_speed = path.getFanSpeed();
-				gcode.writeFanCommand(path_fan_speed != GCodePathConfig::FAN_SPEED_DEFAULT ? path_fan_speed : extruder_plan.getFanSpeed());
-
-				bool coasting = false;
-				if (coasting)
-				{
-					//coasting = writePathWithCoasting(gcode, extruder_plan_idx, path_idx, layer_thickness);
-				}
-				if (!coasting) // not same as 'else', cause we might have changed [coasting] in the line above...
-				{ // normal path to gcode algorithm
-					for (unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
-					{
-						//communication->sendLineTo(path.config->type, path.points[point_idx], path.getLineWidthForLayerView(), path.config->getLayerThickness(), speed);
-
-						gcode.writeExtrusion(path.points[point_idx], layer_thicnkess, speed, path.getExtrusionMM3perMM(), path.config->type, update_extrusion_offset);
-
-					}
-				}
-
-			}
-
-		}
-		
-		for (unsigned int path_idx = 0; path_idx < 0; path_idx++)
-		{
-
-			extruder_plan.handleInserts(path_idx, gcode);
-
-			GCodePath& path = arranged_pathswalls[path_idx];
-
-			//if ((path.getPathMat() == 5) && (path.getextruder() == 1) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))
-			//{
-			//	if (gcode.current_extruder == 0)
-			//	{
-			//		ext = 1;
-
-
-			//		gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-			//		gcode.extruder1_extrusion_offset = false;
-
-			//	}
-
-			//}
-
-			//else if ((path.getPathMat() == 5) && (path.getextruder() == 0) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))
-			//{
-			//	if (gcode.current_extruder == 1)
-			//	{
-			//		ext = 0;
-
-			//		gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-
-			//	}
-
-			//}
-
-			////	if (gcode.current_extruder == 1)
-			////	{
-			////		ext = 0;
-			////		gcode.extruder_offset = 000.0;
-			////		//std::ostringstream tmp;
-			////		//tmp << "T" << 1;
-			////		
-			////		gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-			////	
-			////		//continue;
-			////	}
-			////}
-			//else if (path.getPathMat() == 3)
-			//{
-			if (gcode.current_extruder == 0)
-			{
-				ext = 1;
-
-				gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-				gcode.extruder1_extrusion_offset = false;
-
-			}
-
-			if (!path.retract && path.isTravelPath() && path.points.size() == 1 && path.points[0] == gcode.getPositionXY() && z == gcode.getPositionZ())
-			{
-
-				//printf("here in wrong place 356\n");
-				continue;
-			}
-
-			if (acceleration_enabled)
-			{
-
-				if (path.isTravelPath())
-				{
-					//printf("writing travel accelrations \n");
-					gcode.writeTravelAcceleration(path.config->getAcceleration());
-				}
-				else
-				{
-					//printf("writing print accelrations \n");
-					gcode.writePrintAcceleration(path.config->getAcceleration());
-				}
-			}
-
-
-
-			if (jerk_enabled)
-			{
-				gcode.writeJerk(path.config->getJerk());
-			}
-			//
-			//if (path.retract)
-			//{
-			//	gcode.writeRetraction(retraction_config);
-			//	if (path.perform_z_hop)
-			//	{
-			//		gcode.writeZhopStart(z_hop_height);
-			//		z_hop_height = retraction_config.zHop; // back to normal z hop
-			//	}
-			//	else
-			//	{
-			//		gcode.writeZhopEnd();
-			//	}
-			//}
-			//
-			if (!path.isTravelPath() && last_extrusion_config != path.config)
-			{
-				gcode.writeTypeComment(path.config->type);
-				if (path.config->isBridgePath())
-				{
-					gcode.writeComment("BRIDGE");
-				}
-				last_extrusion_config = path.config;
-				update_extrusion_offset = true;
-			}
-			else
-			{
-				update_extrusion_offset = false;
-			}
-
-			double speed = path.config->getSpeed();
-
-			// for some movements such as prime tower purge, the speed may get changed by this factor
-			speed *= path.speed_factor;
-
-			//Apply the extrusion speed factor if it's an extrusion move.
-			if (!path.isTravelPath())
-			{
-				speed *= extruder_plan.getExtrudeSpeedFactor();
-			}
-			if (path.mesh_id != current_mesh)
-			{
-				current_mesh = path.mesh_id;
-				std::stringstream ss;
-				ss << "MESH:" << current_mesh;
-				gcode.writeComment(ss.str());
-			}
-			if (path.isTravelPath())
-			{ // early comp for travel paths, which are handled more simply
-				if (!path.perform_z_hop && final_travel_z != z && extruder_plan_idx == (extruder_plans.size() - 1) && path_idx == (paths.size() - 1))
-				{
-					// Before the final travel, move up to the next layer height, on the current spot, with a sensible speed.
-					Point3 current_position = gcode.getPosition();
-					current_position.z = final_travel_z;
-
-					gcode.writeTravel(current_position, 10, layer_thicnkess);
-
-					// Prevent the final travel(s) from resetting to the 'previous' layer height.
-
-					gcode.setZ(final_travel_z);
-				}
-				for (unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
-				{
-					gcode.writeTravel(path.points[point_idx], speed, layer_thicnkess);
-				}
-				continue;
-			}
-
-			bool spiralize = false;
-
-			if (!spiralize) // normal (extrusion) move (with coasting
-			{
-				// if path provides a valid (in range 0-100) fan speed, use it
-				const double path_fan_speed = path.getFanSpeed();
-				gcode.writeFanCommand(path_fan_speed != GCodePathConfig::FAN_SPEED_DEFAULT ? path_fan_speed : extruder_plan.getFanSpeed());
-
-				bool coasting = false;
-				if (coasting)
-				{
-					//coasting = writePathWithCoasting(gcode, extruder_plan_idx, path_idx, layer_thickness);
-				}
-				if (!coasting) // not same as 'else', cause we might have changed [coasting] in the line above...
-				{ // normal path to gcode algorithm
-					for (unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
-					{
-						//communication->sendLineTo(path.config->type, path.points[point_idx], path.getLineWidthForLayerView(), path.config->getLayerThickness(), speed);
-
-						gcode.writeExtrusion(path.points[point_idx], layer_thicnkess, speed, path.getExtrusionMM3perMM(), path.config->type, update_extrusion_offset);
-
-					}
-				}
-
-			}
-
-		}
-		
-		for (unsigned int path_idx = 0; path_idx < 0; path_idx++)
-		{
-
-			extruder_plan.handleInserts(path_idx, gcode);
-
-			GCodePath& path = arranged_pathsB[path_idx];
-
-			//if ((path.getPathMat() == 5) && (path.getextruder() == 1) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))
-			//{
-			//	if (gcode.current_extruder == 0)
-			//	{
-			//		ext = 1;
-
-
-			//		gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-			//		gcode.extruder1_extrusion_offset = false;
-
-			//	}
-
-			//}
-
-			//else if ((path.getPathMat() == 5) && (path.getextruder() == 0) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))
-			//{
-			//	if (gcode.current_extruder == 1)
-			//	{
-			//		ext = 0;
-
-			//		gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-
-			//	}
-
-			//}
-
-			////	if (gcode.current_extruder == 1)
-			////	{
-			////		ext = 0;
-			////		gcode.extruder_offset = 000.0;
-			////		//std::ostringstream tmp;
-			////		//tmp << "T" << 1;
-			////		
-			////		gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-			////	
-			////		//continue;
-			////	}
-			////}
-			//else if (path.getPathMat() == 3)
-			//{
-			//	if (gcode.current_extruder == 0)
-			//	{
-			//		ext = 1;
-
-			//		gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-			//		gcode.extruder1_extrusion_offset = false;
-
-			//	}
-			//}
-
-			if (gcode.current_extruder == 0)
-			{
-				ext = 1;
-				gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[0], z_hop_height);
-				gcode.extruder1_extrusion_offset = false;
-			}
-
-
-			if (!path.retract && path.isTravelPath() && path.points.size() == 1 && path.points[0] == gcode.getPositionXY() && z == gcode.getPositionZ())
-			{
-
-				//printf("here in wrong place 356\n");
-				continue;
-			}
-
-			if (acceleration_enabled)
-			{
-
-				if (path.isTravelPath())
-				{
-					//printf("writing travel accelrations \n");
-					gcode.writeTravelAcceleration(path.config->getAcceleration());
-				}
-				else
-				{
-					//printf("writing print accelrations \n");
-					gcode.writePrintAcceleration(path.config->getAcceleration());
-				}
-			}
-
-
-
-			if (jerk_enabled)
-			{
-				gcode.writeJerk(path.config->getJerk());
-			}
-			//
-			//if (path.retract)
-			//{
-			//	gcode.writeRetraction(retraction_config);
-			//	if (path.perform_z_hop)
-			//	{
-			//		gcode.writeZhopStart(z_hop_height);
-			//		z_hop_height = retraction_config.zHop; // back to normal z hop
-			//	}
-			//	else
-			//	{
-			//		gcode.writeZhopEnd();
-			//	}
-			//}
-			//
-			if (!path.isTravelPath() && last_extrusion_config != path.config)
-			{
-				gcode.writeTypeComment(path.config->type);
-				if (path.config->isBridgePath())
-				{
-					gcode.writeComment("BRIDGE");
-				}
-				last_extrusion_config = path.config;
-				update_extrusion_offset = true;
-			}
-			else
-			{
-				update_extrusion_offset = false;
-			}
-
-			double speed = path.config->getSpeed();
-
-			// for some movements such as prime tower purge, the speed may get changed by this factor
-			speed *= path.speed_factor;
-
-			//Apply the extrusion speed factor if it's an extrusion move.
-			if (!path.isTravelPath())
-			{
-				speed *= extruder_plan.getExtrudeSpeedFactor();
-			}
-			if (path.mesh_id != current_mesh)
-			{
-				current_mesh = path.mesh_id;
-				std::stringstream ss;
-				ss << "MESH:" << current_mesh;
-				gcode.writeComment(ss.str());
-			}
-			if (path.isTravelPath())
-			{ // early comp for travel paths, which are handled more simply
-				if (!path.perform_z_hop && final_travel_z != z && extruder_plan_idx == (extruder_plans.size() - 1) && path_idx == (paths.size() - 1))
-				{
-					// Before the final travel, move up to the next layer height, on the current spot, with a sensible speed.
-					Point3 current_position = gcode.getPosition();
-					current_position.z = final_travel_z;
-
-					gcode.writeTravel(current_position, 10, layer_thicnkess);
-
-					// Prevent the final travel(s) from resetting to the 'previous' layer height.
-
-					gcode.setZ(final_travel_z);
-				}
-				for (unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
-				{
-					gcode.writeTravel(path.points[point_idx], speed, layer_thicnkess);
-				}
-				continue;
-			}
-
-			bool spiralize = false;
-
-			if (!spiralize) // normal (extrusion) move (with coasting
-			{
-				// if path provides a valid (in range 0-100) fan speed, use it
-				const double path_fan_speed = path.getFanSpeed();
-				gcode.writeFanCommand(path_fan_speed != GCodePathConfig::FAN_SPEED_DEFAULT ? path_fan_speed : extruder_plan.getFanSpeed());
-
-				bool coasting = false;
-				if (coasting)
-				{
-					//coasting = writePathWithCoasting(gcode, extruder_plan_idx, path_idx, layer_thickness);
-				}
-				if (!coasting) // not same as 'else', cause we might have changed [coasting] in the line above...
-				{ // normal path to gcode algorithm
-					for (unsigned int point_idx = 0; point_idx < path.points.size(); point_idx++)
-					{
-						//communication->sendLineTo(path.config->type, path.points[point_idx], path.getLineWidthForLayerView(), path.config->getLayerThickness(), speed);
-
-						gcode.writeExtrusion(path.points[point_idx], layer_thicnkess, speed, path.getExtrusionMM3perMM(), path.config->type, update_extrusion_offset);
-
-					}
-				}
-
-			}
-
-		}
-
-
-
-		
-
-
-		
-		//extruder_plan.handleAllRemainingInserts(gcode);
 
 			
 	} // paths for this extruder /\  .
@@ -1638,14 +898,14 @@ void LayerPlan::addPolygon(coord_tIrfan layer_thickness, int layer_nr, ConstPoly
 	{
 		curaIrfan::PointIrfan p1 = polygon[(start_idx + point_idx) % polygon.size()];
 		const Ratio flow = (wall_overlap_computation) ? flow_ratio * wall_overlap_computation->getFlow(p0, p1) : flow_ratio;
-		addExtrusionMove(layer_thickness, config, p1, layer_nr,1, SpaceFillType::Polygons, flow, spiralize);
+		addExtrusionMove(layer_thickness, config, p1, layer_nr,SpaceFillType::Polygons, flow, spiralize);
 		p0 = p1;
 	}
 	if (polygon.size() > 2)
 	{
 		const curaIrfan::PointIrfan& p1 = polygon[start_idx];
 		const Ratio flow = (wall_overlap_computation) ? flow_ratio * wall_overlap_computation->getFlow(p0, p1) : flow_ratio;
-		addExtrusionMove(layer_thickness, config, p1, layer_nr,1, SpaceFillType::Polygons, flow, spiralize);
+		addExtrusionMove(layer_thickness, config, p1, layer_nr,SpaceFillType::Polygons, flow, spiralize);
 
 		if (wall_0_wipe_dist > 0)
 		{ // apply outer wall wipe
@@ -1712,7 +972,7 @@ unsigned LayerPlan::locateFirstSupportedVertex(ConstPolygonRef wall, const unsig
 	}
 }
 
-void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::PointIrfan& p1, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, float flow, float& non_bridge_line_volume, Ratio speed_factor, double distance_to_bridge_start)
+void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::PointIrfan& p1, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, float flow, float& non_bridge_line_volume, Ratio speed_factor, double distance_to_bridge_start, std::vector<int> extruder_nr)
 {
 	const coord_tIrfan min_line_len = 5; // we ignore lines less than 5um long
 	const double acceleration_segment_len = 1000; // accelerate using segments of this length
@@ -1728,13 +988,14 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 	
 	if (layer_parts_mat.back() == 5)
 	{
-		wall_extruder = 1;
+		wall_extruder = extruder_nr.at(0);
 	}
 	else
 	{
-		wall_extruder = 0;
+		wall_extruder = extruder_nr.at(0);
 	}
-
+	
+	
 	auto addNonBridgeLine = [&](const curaIrfan::PointIrfan& line_end)
 	{										
 		coord_tIrfan distance_to_line_end = curaIrfan::vSize(curaIrfan::operator-(cur_point , line_end));
@@ -1773,16 +1034,16 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 						// segment is longer than coast distance so extrude using non-bridge config to start of coast
 						curaIrfan::PointIrfan point=  curaIrfan::operator+(segment_end, curaIrfan::operator*(coast_dist, curaIrfan::operator/((curaIrfan::operator-(cur_point, segment_end)), len)));
 										
-						addExtrusionMove(layer_thickness, non_bridge_config, point, wall_extruder,1, SpaceFillType::Polygons, segment_flow, spiralize, speed_factor);
+						addExtrusionMove(layer_thickness, non_bridge_config, point, wall_extruder,SpaceFillType::Polygons, segment_flow, spiralize, speed_factor);
 					}
 					// then coast to start of bridge segment
-					addExtrusionMove(layer_thickness, non_bridge_config, segment_end, wall_extruder, 1, SpaceFillType::Polygons, 0, spiralize, speed_factor);
+					addExtrusionMove(layer_thickness, non_bridge_config, segment_end, wall_extruder,SpaceFillType::Polygons, 0, spiralize, speed_factor);
 				}
 				else
 				{
 					// no coasting required, just normal segment using non-bridge config
 					
-					addExtrusionMove(layer_thickness, non_bridge_config, segment_end, wall_extruder, 1, SpaceFillType::Polygons, segment_flow, spiralize,
+					addExtrusionMove(layer_thickness, non_bridge_config, segment_end, wall_extruder,SpaceFillType::Polygons, segment_flow, spiralize,
 						(overhang_mask.empty() || (!overhang_mask.inside(p0, true) && !overhang_mask.inside(p1, true))) ? speed_factor : overhang_speed_factor);
 				}
 
@@ -1791,7 +1052,7 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 			else
 			{
 				// no coasting required, just normal segment using non-bridge config
-				addExtrusionMove(layer_thickness, non_bridge_config, segment_end, wall_extruder, 1, SpaceFillType::Polygons, segment_flow, spiralize,
+				addExtrusionMove(layer_thickness, non_bridge_config, segment_end, wall_extruder, SpaceFillType::Polygons, segment_flow, spiralize,
 					(overhang_mask.empty() || (!overhang_mask.inside(p0, true) && !overhang_mask.inside(p1, true))) ? speed_factor : overhang_speed_factor);
 			}
 			curaIrfan::PointIrfan flow_multiplier= curaIrfan::operator*(curaIrfan::operator*(segment_flow, speed_factor), non_bridge_config.getSpeed());
@@ -1805,7 +1066,7 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 	if (bridge_wall_mask.empty())
 	{
 		// no bridges required
-		addExtrusionMove(layer_thickness, non_bridge_config, p1, wall_extruder, 1, SpaceFillType::Polygons, flow, spiralize,
+		addExtrusionMove(layer_thickness, non_bridge_config, p1, wall_extruder, SpaceFillType::Polygons, flow, spiralize,
 			(overhang_mask.empty() || (!overhang_mask.inside(p0, true) && !overhang_mask.inside(p1, true))) ? 1.0_r : overhang_speed_factor);
 	}
 	else
@@ -1865,7 +1126,7 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 
 					if (bridge_line_len > min_line_len)
 					{
-						addExtrusionMove(layer_thickness , bridge_config, b1, wall_extruder, 1, SpaceFillType::Polygons, flow);
+						addExtrusionMove(layer_thickness , bridge_config, b1, wall_extruder, SpaceFillType::Polygons, flow);
 						non_bridge_line_volume = 0;
 						cur_point = b1;
 						// after a bridge segment, start slow and accelerate to avoid under-extrusion due to extruder lag
@@ -1889,7 +1150,7 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 		else if (bridge_wall_mask.inside(p0, true) && curaIrfan::vSize(curaIrfan::operator-(p0 , p1)) >= min_bridge_line_len)
 		{
 			// both p0 and p1 must be above air (the result will be ugly!)
-			addExtrusionMove(layer_thickness, bridge_config, p1, wall_extruder, 1, SpaceFillType::Polygons, flow);
+			addExtrusionMove(layer_thickness, bridge_config, p1, wall_extruder, SpaceFillType::Polygons, flow);
 			non_bridge_line_volume = 0;
 		}
 		else
@@ -1900,7 +1161,7 @@ void LayerPlan::addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::Po
 	}
 }
 
-void LayerPlan::addWall(ConstPolygonRef wall, int start_idx, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, WallOverlapComputation* wall_overlap_computation, coord_tIrfan wall_0_wipe_dist, float flow_ratio, bool always_retract)
+void LayerPlan::addWall(ConstPolygonRef wall, int start_idx, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, WallOverlapComputation* wall_overlap_computation, coord_tIrfan wall_0_wipe_dist, std::vector<int> extruder_nr, float flow_ratio, bool always_retract)
 {
 	// make sure wall start point is not above air!
 	start_idx = locateFirstSupportedVertex(wall, start_idx);
@@ -2020,7 +1281,7 @@ void LayerPlan::addWall(ConstPolygonRef wall, int start_idx, const GCodePathConf
 				first_line = false;
 				travel_required = false;
 			}
-			addWallLine(p0, p1,non_bridge_config, bridge_config, flow, non_bridge_line_volume, speed_factor, distance_to_bridge_start);
+			addWallLine(p0, p1,non_bridge_config, bridge_config, flow, non_bridge_line_volume, speed_factor, distance_to_bridge_start,extruder_nr);
 		}
 		else
 		{
@@ -2046,7 +1307,7 @@ void LayerPlan::addWall(ConstPolygonRef wall, int start_idx, const GCodePathConf
 			{
 				addTravel(layer_thickness, layer_nr, p0, wall_min_flow_retract);
 			}
-			addWallLine(p0, p1, non_bridge_config, bridge_config, flow, non_bridge_line_volume, speed_factor, distance_to_bridge_start);
+			addWallLine(p0, p1, non_bridge_config, bridge_config, flow, non_bridge_line_volume, speed_factor, distance_to_bridge_start,extruder_nr);
 
 			if (wall_0_wipe_dist > 0)
 			{ // apply outer wall wipe
@@ -2080,7 +1341,7 @@ void LayerPlan::addWall(ConstPolygonRef wall, int start_idx, const GCodePathConf
 	}
 }
 
-void LayerPlan::addWalls(const Polygons& walls,const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, WallOverlapComputation* wall_overlap_computation, const ZSeamConfig& z_seam_config, coord_tIrfan wall_0_wipe_dist, float flow_ratio, bool always_retract)
+void LayerPlan::addWalls(const Polygons& walls,const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, WallOverlapComputation* wall_overlap_computation,  std::vector<int> extruder_nr, const ZSeamConfig& z_seam_config, coord_tIrfan wall_0_wipe_dist, float flow_ratio, bool always_retract)
 {
 	
 	PathOrderOptimizer orderOptimizer(getLastPlannedPositionOrStartingPosition(), z_seam_config);
@@ -2091,7 +1352,7 @@ void LayerPlan::addWalls(const Polygons& walls,const GCodePathConfig& non_bridge
 	orderOptimizer.optimize();
 	for (unsigned int poly_idx : orderOptimizer.polyOrder)
 	{
-		addWall(walls[poly_idx], orderOptimizer.polyStart[poly_idx], non_bridge_config, bridge_config, wall_overlap_computation, wall_0_wipe_dist, flow_ratio, always_retract);
+		addWall(walls[poly_idx], orderOptimizer.polyStart[poly_idx], non_bridge_config, bridge_config, wall_overlap_computation, wall_0_wipe_dist,extruder_nr, flow_ratio, always_retract);
 	}
 }
 
@@ -2264,15 +1525,7 @@ GCodePath& LayerPlan::addTravel(coord_tIrfan layer_thickness, int layernum, cura
 		path->perform_z_hop = true;
 		
 		path->part_id = layer_parts.size();
-		if (layer_parts_mat.size() != 0)
-		{
-			path->setPathMat(layer_parts_mat.back());
-		}
-		else
-		{
-			path->setPathMat(0);//setting the default material not possible
-
-		}
+		
 
 	}
 

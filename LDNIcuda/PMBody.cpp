@@ -431,57 +431,82 @@ void PMBody::_buildContourList()
 				{
 					VSAEdge *edge = (VSAEdge *)(mesh->GetVSAEdgeList().GetNext(Pos2));
 					
-					if (edge->GetEdgeMaterial() == 0.0000)
+					if (edge->GetEdgeMaterial() == 0.0)
 					{
-						j = 5;
+						j = 1;
 						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
 						glColor3f(rgb[0], rgb[1], rgb[2]);
 					}
 
-					if (edge->GetEdgeMaterial() == 1.0000)
+					if (edge->GetEdgeMaterial() == 1.0)
 					{
 						j = 6;
 						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
 						glColor3f(rgb[0], rgb[1], rgb[2]);
 					}
 					
-					else if (edge->GetEdgeMaterial() == 2.00000)
+					else if (edge->GetEdgeMaterial() == 2.0)
 					{
 						j = 7;
 						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
 						glColor3f(rgb[0], rgb[1], rgb[2]);
 					}
 
-					else if (edge->GetEdgeMaterial() == 3.00000)
+					else if (edge->GetEdgeMaterial() == 3.0)
 					{
 						j = 8;
 						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
 						glColor3f(rgb[0], rgb[1], rgb[2]);
 					}
 
-					else if (edge->GetEdgeMaterial() == 4.00000)
+					else if (edge->GetEdgeMaterial() == 4.0)
+					{
+						j = 2;
+						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
+						glColor3f(rgb[0], rgb[1], rgb[2]);
+					}
+					
+					else if (edge->GetEdgeMaterial() == 5.0)
+					{
+						j = 3;
+						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
+						glColor3f(rgb[0], rgb[1], rgb[2]);
+					}
+					else if (edge->GetEdgeMaterial() == 6.0)
+					{
+						j = 4;
+						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
+						glColor3f(rgb[0], rgb[1], rgb[2]);
+					}
+					else if (edge->GetEdgeMaterial() == 7.0)
+					{
+						j = 5;
+						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
+						glColor3f(rgb[0], rgb[1], rgb[2]);
+					}
+					else if (edge->GetEdgeMaterial() == 8.0)
 					{
 						j = 9;
 						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
 						glColor3f(rgb[0], rgb[1], rgb[2]);
 					}
-					
-					else if (edge->GetEdgeMaterial() == 5.00000)
+					else if (edge->GetEdgeMaterial() == 9.0)
 					{
-						j = 16;
+						j = 10;
 						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
 						glColor3f(rgb[0], rgb[1], rgb[2]);
 					}
-					else if (edge->GetEdgeMaterial() == 6.00000)
+					else if (edge->GetEdgeMaterial() == 10.0)
 					{
-						j = 18;
+						j = 11;
 						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
 						glColor3f(rgb[0], rgb[1], rgb[2]);
 					}
 
+
 					else
 					{
-						j = 11;
+						j = 12;
 						_changeValueToColor(j, rgb[0], rgb[1], rgb[2]);
 						glColor3f(rgb[0], rgb[1], rgb[2]);
 					}
@@ -1083,7 +1108,7 @@ bool QuadTrglMesh::InputOBJFileFromMapping(char *filedata)
 	return true;
 }
 
-bool QuadTrglMesh::InputSTLFile(char *filename)
+bool QuadTrglMesh:: InputSTLFile(char *filename)
 {
 	FILE *fp;
 	unsigned int ver[4];
@@ -1275,13 +1300,8 @@ bool QuadTrglMesh::InputAMFFile(char *filename)
 	assert(Total_Material_AMFModel.empty() == FALSE && "Warning: No Material found in AMF file");
 	int total_nodes = amfnodeamfpos.size();
 	int total_face = (total_nodes/3)/ 3;
-	MallocMemory(total_nodes, (total_face));
-   	//-------------------------Make this algo more effective in a way of assigning material to the faces using AMF XML reading format--------------------------
 
-	/*----------------------------These loops here are used to develop the material library-------------------------------
-	-----------------------Total_Material_AMFModel is ay total number of materials in the AMF model-----------------------
-	-------------------amf_face_material is the total number of the faces at which the material is same ------------------	
-	*/
+	MallocMemory(total_nodes, (total_face));
 
 
 	for (int k = 0; k < Total_Material_AMFModel.size(); k++)
@@ -1314,37 +1334,6 @@ bool QuadTrglMesh::InputAMFFile(char *filename)
 		n++;
 	}
 	
-	/*
-	
-	for any memeory corruption check
-
-	heapstatus = _heapchk();
-	n = 1;
-	for (int i = 0; i < total_nodes/3; i++)
-	{
-		SetFaceNodes(n, i + 1, i + 2, i + 3, 0);
-		n++;
-	}
-	printf("Just set the face indexes \n");
-	
-	heapstatus = _heapchk();
-	
-	switch (heapstatus)
-	{
-	case _HEAPOK:
-		printf(" OK - heap is fine\n");
-		break;
-	case _HEAPEMPTY:
-		printf(" OK - heap is empty\n");
-		break;
-	case _HEAPBADBEGIN:
-		printf("ERROR - bad start of heap\n");
-		break;
-	case _HEAPBADNODE:
-		printf("ERROR - bad node in heap\n");
-		break;
-	}
-	*/
 	
 	amfnodeamfpos.clear();
 	amfnodeindex.clear();
@@ -1468,6 +1457,7 @@ void QuadTrglMesh::FlipModel(bool nDir_X, bool nDir_Y, bool nDir_Z)
 ContourMesh::ContourMesh(void)
 {
 	m_ContourNum = NULL;
+	perLayerMaterial_Regions = NULL;
 	bUpdate = false;
 	meshID = 0;
 	iRes[0] = 0;
@@ -1475,7 +1465,10 @@ ContourMesh::ContourMesh(void)
 	iRes[2] = 0;
 	VSAMeshNum = 0;
 	m_range = 1.0;
+	total_extruder = 0;
 	m_drawImage = false;
+	total_Material_Regions = 0;
+	
 }
 
 ContourMesh::~ContourMesh(void)
@@ -1514,6 +1507,15 @@ void ContourMesh::ClearAll()
 		totalStickNumCheck = NULL;
 		free(totalStickNumCheck);
 	}
+
+	if (perLayerMaterial_Regions != NULL)
+	{
+		perLayerMaterial_Regions = NULL;
+		free(perLayerMaterial_Regions);
+
+	}
+
+
 	
 }
 
@@ -1524,6 +1526,9 @@ void ContourMesh::MallocMemory(unsigned int* ContourNum, int imageSize[], int st
 	int i;
 
 	m_ContourNum = (int**)malloc(imageSize[1] *sizeof(int*));
+	perLayerMaterial_Regions = (int*)malloc(imageSize[1] * sizeof(int));
+	//LDMIVSAEdgeList = (VSAEdge **)malloc(stickNum * 3 * sizeof(VSAEdge*));
+
 	for (i = 0; i < imageSize[1]; i++)
 	{
 		m_ContourNum[i] = (int*)malloc(4 * sizeof(int));//this[0]is refereed to the numbe rof material in the model
@@ -1539,6 +1544,8 @@ void ContourMesh::MallocMemory(unsigned int* ContourNum, int imageSize[], int st
 	m_StnodeTable = (float*)malloc(stickNum*3*sizeof(float)); 
 	m_EdnodeTable = (float*)malloc(stickNum*3*sizeof(float)); 
 	totalstickNum = stickNum;
+	//GLKObList[151]; LDMIMeshList;
+	//LDMIMeshList = (GLKObList *)malloc(imageSize[1] * sizeof(GLKObList));
 
 	
 }
@@ -1746,10 +1753,10 @@ double ContourMesh::PerformVSA2D(VSAMesh *vmesh, int iter, double paradistterror
 //}
  /////////////////////////////////////
 
-void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int mat)
+void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* stickID, int stickNum, int* stickDir, double rotBoundingBox[], int mat, int meshID)
 {
 	VSAMesh *vmesh;
-	
+	GLKObList*LDMIVSAMeshList;
 	int i, j, num, k, localcount, index, id, patchNum = 0, patchIndex = 0, count = 0, nh = 0, st = 0, prev,first;
 	double xx, yy, zz;
 	//stid[2][stickNum];
@@ -1767,7 +1774,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 		ContourNum[j] = 0;
 	}
 	
-
+	
 	// -------------------------------- Grouping --------------------------------- //
 	
 	// for each slice it may exist multiple contours
@@ -1775,8 +1782,8 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	int l = 0;
 	std::vector<int>meshin_layer;
     meshin_layer.resize(iRes[1],0);
-	
-	for (i = 0; i < iRes[1]; i++)
+	printf("iRes[1] is %d \n", iRes[1]);
+	for (i = 0; i < iRes[1]-1; i++)
 	{
 		
 		int *m_ContourNumNew = GetLayerStickNum(i);
@@ -2010,6 +2017,11 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 					}
 
 				}
+				char *extMaterials = Materialdecoder(mat);				
+				vmesh->setRegionMaterial(extMaterials);
+				vmesh->setMeshMaterial(mat);
+				vmesh->setMeshLayer(i);
+				vmesh->setMeshID(meshID);
 				VSAMeshList.AddTail(vmesh);
 				count++;
 				contour_count++;
@@ -2020,11 +2032,14 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 		}
 		
 		st += m_ContourNumNew[0];
+		
 	
 		//to get the polygons in each layer
 	}
-	printf("Setting the direction\n");
-
+	
+	VSAMeshList.SetTot_LDMIContours();
+	
+	
 	GLKPOSITION Pos;
 	GLKPOSITION Pos2;
 	
@@ -2041,7 +2056,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 			vedge->GetEndPoint()->GetCoord3D(aa, bb, cc);
 
 			vnode = vedge->GetStartPoint();
-			
+		
 
 			if (vnode->GetStickDirX() < 0)
 			{
@@ -2064,24 +2079,112 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 
 
 		}
+		
 		//calculating angels between different sticks 
 	}
-	char response;
-	printf("Do you want to Process Gcode for this AMF file \n");
-	std::cin >> response;
 	
-	if (response == 'Y' || response == 'y')
-	{
-		processGcode(meshin_layer,rotBoundingBox);
-	}
-
+	
 	printf("Finished build-up.\n");
 	free(patchStack);
 	free(patchID);
 
 }
 
-void ContourMesh::processGcode(std::vector<int>meshin_layer, double rotBoundingBox[])
+void ContourMesh::ContourLDMIArrangement(double rotBoundingBox[])
+{
+	
+
+	for (int i = 0; i < 1; i++)
+	{
+		GLKPOSITION Pos;
+		GLKPOSITION Pos2;
+		
+		VSAMesh *vmesh;
+		VSAEdge *vedge;
+
+		vmesh = new VSAMesh();
+
+		int meshID = 0;
+
+		for (Pos = VSAMeshList.GetHeadPosition(); Pos != NULL; )
+		{
+			vmesh = (VSAMesh *)(VSAMeshList.GetNext(Pos));
+			
+
+		   if (vmesh->getmeshLayer() == i)
+			{
+				NewVSAMeshList.AddTail(vmesh);
+			}
+		}
+
+	}
+	printf("Going for Gcode \n");
+	processGcode(rotBoundingBox);
+}
+
+
+
+
+char* ContourMesh::Materialdecoder(int encodedMaterial)
+{
+	//std::string res = NULL;
+	char *res = (char*)malloc((4 + 1) * sizeof(char));
+	res[0] = '\0';
+	res[1] = '\0';
+	res[2] = '\0';
+	res[3] = '\0';
+	res[0] = '\0';
+	switch (encodedMaterial)
+	{
+	case 1:
+		res[0] = '1';
+		break;
+	case 2:
+		res[0] = '2';
+		break;
+	case 3:
+		res[0] = '3';
+		break;
+	case 4:
+		res[0] = '1';
+		res[1] = '2';
+		break;
+	case 5:
+		res[0] = '1';
+		res[1] = '3';
+		break;
+	case 6:
+
+		res[0] = '2';
+		res[1] = '1';
+
+		break;
+	case 7:
+		res[0] = '2';
+		res[1] = '3';
+		break;
+	case 8:
+		res[0] = '3';
+		res[1] = '1';
+		break;
+	case 9:
+		res[0] = '3';
+		res[1] = '2';
+		break;
+	case 10:
+		res[0] = '1';
+		res[1] = '2';
+		res[2] = '3';
+		break;
+	default:
+		break;
+	}
+
+	return res;
+
+}
+
+void ContourMesh::processGcode(double rotBoundingBox[])
 {
 	
 	ContourMesh c_mesh;
@@ -2098,7 +2201,8 @@ void ContourMesh::processGcode(std::vector<int>meshin_layer, double rotBoundingB
 	//Dont Pass C_Mesh
 	//Instead of mesh in layer vector just pass int of layer numbers
 
-	bool slice_model = polygongenrator.sliceModel(VSAMeshList, c_mesh, storage, iRes[1], meshin_layer, rotBoundingBox);
+	bool slice_model = polygongenrator.sliceModel(NewVSAMeshList, c_mesh, storage, iRes[1], rotBoundingBox);
+	printf("Sliced Model");
 	if (slice_model)
 	{
 		polygongenrator.slices2polygons(storage);
@@ -3581,7 +3685,7 @@ void VSAEdge::CalLength()
 
 VSAMesh::VSAMesh(void)
 {
-
+	materialRegionsExtruders - NULL;
 }
 
 VSAMesh::~VSAMesh(void)
@@ -3653,6 +3757,8 @@ void VSAMesh::ClearAll()
 		delete temp;
 	}
 	VSAEdgeList.RemoveAll();
+	if (materialRegionsExtruders = NULL) free(materialRegionsExtruders);
+
 }
 
 
@@ -4853,22 +4959,7 @@ void VSA::SimplifyMeshBasedOnVSARegions2D()
 	v_mesh = newpatch;
 }
 
-LDMIContourMesh::LDMIContourMesh(void)
-{
-	VSAMeshList = NULL;
-}
 
-LDMIContourMesh::~LDMIContourMesh(void)
-{
-	if (VSAMeshList != NULL) VSAMeshList = NULL;
-	
-	free(VSAMeshList);
-}
-
-void LDMIContourMesh::MallocMemory(int total_materials)
-{
-	//VSAMeshList = (GLKEntity*)malloc(total_materials * sizeof(GLKEntity));
-}
 
 
 

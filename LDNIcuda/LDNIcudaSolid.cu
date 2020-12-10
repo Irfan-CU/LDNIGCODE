@@ -423,13 +423,13 @@ void LDMIProcessor::MallocMemory(int res)
 	int num;
 	num = res * res;
 	
-	CUDA_SAFE_CALL(cudaMalloc((void**)&(dev_MatArray[0]), (num + 1) * sizeof(unsigned int)));
-	CUDA_SAFE_CALL(cudaMalloc((void**)&(dev_MatArray[1]), (num + 1) * sizeof(unsigned int)));
-	CUDA_SAFE_CALL(cudaMalloc((void**)&(dev_MatArray[2]), (num + 1) * sizeof(unsigned int)));
+	CUDA_SAFE_CALL(cudaMalloc((void**)&(dev_MatArray[0]), (num + 1) * sizeof(unsigned  int)));
+	CUDA_SAFE_CALL(cudaMalloc((void**)&(dev_MatArray[1]), (num + 1) * sizeof(unsigned  int)));
+	CUDA_SAFE_CALL(cudaMalloc((void**)&(dev_MatArray[2]), (num + 1) * sizeof(unsigned  int)));
 	
-	CUDA_SAFE_CALL(cudaMemset((void*)(dev_MatArray[0]), 0, (num + 1) * sizeof(unsigned int)));
-	CUDA_SAFE_CALL(cudaMemset((void*)(dev_MatArray[1]), 0, (num + 1) * sizeof(unsigned int)));
-	CUDA_SAFE_CALL(cudaMemset((void*)(dev_MatArray[2]), 0, (num + 1) * sizeof(unsigned int)));
+	CUDA_SAFE_CALL(cudaMemset((void*)(dev_MatArray[0]), '\0', (num + 1) * sizeof(char)));
+	CUDA_SAFE_CALL(cudaMemset((void*)(dev_MatArray[1]), '\0', (num + 1) * sizeof(char)));
+	CUDA_SAFE_CALL(cudaMemset((void*)(dev_MatArray[2]),	'\0', (num + 1) * sizeof(char)));
 
 }
 

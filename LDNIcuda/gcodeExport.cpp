@@ -211,6 +211,7 @@ void GCodeExport::startExtruder(const size_t new_extruder)
 	{
 		*output_stream << "T" << new_extruder << new_line;
 	}
+	
 	current_extruder = new_extruder;
 	//assert(getCurrentExtrudedVolume() == 0.0);
 	resetExtrusionValue(); // zero the E value on the new extruder, just to be sure
@@ -916,7 +917,7 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
 	
 	bool retraction_enable = true;
 	
-	if ((current_extruder == 0) && (new_extruder == 1))
+	/*if ((current_extruder == 0) && (new_extruder == 1))
 	{
 		extruder_offset = 18000;
 	}
@@ -924,7 +925,7 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
 	{
 		extruder_offset = 0;
 	}
-
+*/
 	
 	
 	constexpr bool force = true;

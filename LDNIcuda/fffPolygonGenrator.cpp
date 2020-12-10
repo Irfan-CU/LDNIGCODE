@@ -229,8 +229,11 @@ void FffPolygonGenerator::computePrintHeightStatistics(SliceDataStorage& storage
 	
 }
 */
-bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, SliceDataStorage& storage, int total_layers, std::vector<int>& meshin_layer, double rotBoundingBox[]) // slices the model
+bool FffPolygonGenerator::sliceModel(GLKObList &meshlist, ContourMesh& c_mesh, SliceDataStorage& storage, int total_layers, double rotBoundingBox[]) // slices the model
 {
+	
+	SlicerLayer layer;
+	
 	
 	int scale = storage.get_scale(); // scaling for the input CAD gemotry scaling is different in X and Z;
 
@@ -245,7 +248,7 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 	
 	
 	storage.Layers.resize(total_layers);
-
+	
 	coord_tIrfan layer_thickness;
 	
 	(layer_thickness) = (storage.model_max.z - storage.model_min.z) / (total_layers);
@@ -257,8 +260,7 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 		printf("###Error layer height %i is disallowed.\n", layer_thickness);
 		return false;
 	}
-
-	
+   
 	
 	if (total_layers <= 0)
 	{
@@ -274,12 +276,13 @@ bool FffPolygonGenerator::sliceModel(GLKObList& meshlist, ContourMesh& c_mesh, S
 	{
 		
 		
-		Slicer* slicer = new Slicer(storage, meshlist, c_mesh, layer_thickness, total_layers, use_variable_layer_heights, meshin_layer);
+		Slicer* slicer = new Slicer(storage, meshlist, c_mesh, layer_thickness, total_layers, use_variable_layer_heights);
 
 		slicerList.push_back(slicer);
 		
 		
 	}
+
 	generateMultipleVolumesOverlap(slicerList);
 	
 	storage.print_layer_count = 0;

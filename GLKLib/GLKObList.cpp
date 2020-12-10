@@ -38,7 +38,7 @@
 
 GLKObList::GLKObList()
 {
-	headPos=NULL;	tailPos=NULL;	nCount=0;
+	headPos = NULL;	tailPos = NULL;	nCount = 0;	tot_LDMIContours = 0;
 }
 
 GLKObList::~GLKObList()

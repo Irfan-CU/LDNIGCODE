@@ -37,6 +37,11 @@ public:
 class SliceLayerPart
 {
 public:
+	
+	SliceLayerPart() {};
+	void MallocMemory() {
+		
+	}
 	AABB boundaryBox;       //!< The boundaryBox is an axis-aligned bounardy box which is used to quickly check for possible collision between different parts on different layers. It's an optimalization used during skin calculations.
 	PolygonsPart outline;       //!< The outline is the first member that is filled, and it's filled with polygons that match a cross section of the 3D model. The first polygon is the outer boundary polygon and the rest are holes.
 	PolygonsPart outline_zigzag;
@@ -50,6 +55,10 @@ public:
 	int id;
 	int part_mat;
 	int part_print_property;// this tells whethers this is infill polygon or boundary
+	int overlap;
+	int thirdMaterial;
+	
+	
 
 	void setPartMat( int partMat) 
 	{
@@ -61,6 +70,10 @@ public:
 	{
 		return part_mat;
 	}
+
+	void setPolygonExtruders(char* extruders) { polygon_extruders = extruders; };
+	char* getPolygonExtruders() { return polygon_extruders; };
+	
 
 
 	/*!
@@ -143,6 +156,17 @@ public:
 	const Polygons& getOwnInfillArea() const;
 
 	std::vector<std::pair<Polygons, double>> spaghetti_infill_volumes; //!< For each filling volume on this layer, the area within which to fill and the total volume (in mm3) to fill over the area
+
+	private:
+
+	char* polygon_extruders;
+
+
+
+
+
+
+
 };
 
 /*!
@@ -157,6 +181,8 @@ public:
 	coord_tIrfan thickness;  //!< The thickness of this layer. Can be different when using variable layer heights.
 	std::vector<SliceLayerPart> parts;  //!< An array of LayerParts which contain the actual data. The parts are printed one at a time to minimize travel outside of the 3D model.
 	std::vector<SliceLayerPart> parts_zigzag; //parts for the zigzag pattern
+	std::vector<char>polygon_extruders;
+
 	std::vector<int> mat_parts;
 	Polygons polygons;
 	Polygons openPolyLines; //!< A list of lines which were never hooked up into a 2D polygon. (Currently unused in normal operation)

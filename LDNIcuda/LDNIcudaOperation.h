@@ -34,6 +34,7 @@
 //#define BISECTION_INTERVAL_SEARCH	true
 #define INTERSECTIONFREE_CONTOURING	true
 
+#include <iostream>
 #include <vector_types.h>
 #include<driver_types.h>
 #include <thrust/host_vector.h>
@@ -53,16 +54,21 @@ class LDMIContourMesh;
 class LDMIcudaOperation {
 public:
 
-	void MallocMemory(int imageSize) {
+	void MallocMemory(int imageSize,int mat_combination) {
 		
 		m_lDMIContourMesh = NULL;
-		stickIDcheck = (int**)(malloc(4 * sizeof(int*)));
-		prevStickIDcheck = (int**)(malloc(4 * sizeof(int*)));
-		stickDircheck = (int2**)(malloc(4 * sizeof(int2*)));
-		stickStartcheck = (float2**)(malloc(4 * sizeof(float2*)));
-		stickEndcheck = (float2**)(malloc(4 * sizeof(float2*)));
+		totalMaterialRegions = mat_combination;
+		stickMaterial = (int *)malloc(mat_combination * sizeof(int));
+		stickIDcheck = (int**)(malloc((mat_combination) * sizeof(int*)));
+		prevStickIDcheck = (int**)(malloc(mat_combination * sizeof(int*)));
+		stickDircheck = (int2**)(malloc(mat_combination * sizeof(int2*)));
+		stickStartcheck = (float2**)(malloc(mat_combination * sizeof(float2*)));
+		stickEndcheck = (float2**)(malloc(mat_combination * sizeof(float2*)));
 
-	};
+	};	
+
+	
+
 	void freeMemory()
 	{
 		if (m_lDMIContourMesh != NULL) {
@@ -73,6 +79,11 @@ public:
 		{
 			stickIDcheck = NULL;
 			free(stickIDcheck);
+		}
+		if (stickMaterial != NULL)
+		{
+			stickMaterial = NULL;
+			free(stickMaterial);
 		}
 		if (prevStickIDcheck != NULL)
 		{
@@ -94,6 +105,7 @@ public:
 			stickEndcheck = NULL;
 			free(stickEndcheck);
 		}
+		totalMaterialRegions = 0;
 
 
 	}
@@ -101,27 +113,40 @@ public:
 
 
 	int **GetstickIDcheck() { return stickIDcheck; };
-	
+	int *GetStickMaterial() { return stickMaterial; };
 	int **GetPrevStickIDcheck() { return prevStickIDcheck; };
 	int2 **GetstickDircheck() { return stickDircheck; };
 	float2 **GetstickStartcheck() { return stickStartcheck; };
 	float2 **GetstickEndcheck() { return stickEndcheck; };
-
+	int gettotalMaterialRegions() { return totalMaterialRegions; };
+	
+	ContourMesh *m_contourMesh;
 	LDMIContourMesh *m_lDMIContourMesh;
+
+	
 
 
 private:
 
 	//std::vector<int*>stickIDcheckreg;
 	
+	int * stickMaterial; //stick material will be same as a material for whole contour
 	int **stickIDcheck;
 	int2 **stickDircheck;
 	float2 **stickStartcheck;
 	float2 **stickEndcheck;
 	int** prevStickIDcheck;
+	int totalMaterialRegions;
+	std::vector<std::string>materialData;
+
+
 	
 
 };
+
+
+
+
 
 class LDNIcudaOperation	
 {
@@ -162,6 +187,14 @@ public:
 	//												float angle, float thickness, double clipPlanNm[], float nSampleWidth, float2 *stickStart, 
 	//												float2 *stickEnd, int *stickID);
 	/*static void LDNIFDMContouring_Infill(int imageSize[]);  */
+
+
+	
+
+	static char* Materialdecoder(int encodedMaterial);
+	
+	
+
 
 	static void LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* solid, ContourMesh *c_mesh, LDMIcudaOperation *ldmiCudaOperation, double rotBoundingBox[], int imageSize[],
 													  float nSampleWidth, float2 *stickStart, float2 *stickEnd, int *stickID, int2 *stickDir, unsigned int *&material_index1, bool bOutPutSGM = false);
@@ -263,8 +296,10 @@ private:
 	static float _distanceToBoundBoxBoundary(LDNIcudaSolid* inputSolid);   
 	// LDNI sampling arranged into layer heights arranged 
 
-	/*Vectors for the material allocation for the amf file*/
+	/*Data Set for LDMI Program -- Developed by Irfan---------*/
 	thrust::host_vector<int>cpuStickMaterial1;
+	
+
 	
 	
 	/*

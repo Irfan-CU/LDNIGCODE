@@ -65,6 +65,15 @@
 		return path_ext;
 	}
 
+	void GCodePath::setLDMIextruder(int extruder)
+	{
+		this->path_LDMIext = extruder;
+	}
+	int GCodePath::getLDMIextruder()
+	{
+		return path_LDMIext;
+	}
+
 
 
 

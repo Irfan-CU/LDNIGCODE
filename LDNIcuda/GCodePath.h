@@ -43,10 +43,14 @@
 		TimeMaterialEstimates estimates; //!< Naive time and material estimates
 
 		int path_mat;     //Describes the material at this path
-		int path_ext;     //path ext is here for the infill extruder allocation
+		     //path ext is here for the infill extruder allocation
 
 		int part_id;
 
+		int path_ext;
+		int path_LDMIext;
+
+		
 		/*!
 		 * \brief Creates a new g-code path.
 		 *
@@ -103,6 +107,13 @@
 		void setextruder(int extruder);
 		
 		int getextruder();
+
+		void setLDMIextruder(int extruder);
+
+		int getLDMIextruder();
+
+	private:
+		
 
 
 	};
