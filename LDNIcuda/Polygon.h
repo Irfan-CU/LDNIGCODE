@@ -288,6 +288,7 @@ class Polygon : public PolygonRef
 {
 	ClipperLib::Path poly;
 public:
+	
 	Polygon()
 		: PolygonRef(poly)
 	{
@@ -330,6 +331,18 @@ public:
 
 	Polygon T_joint(Polygon T, vector<int>materials,int shift);	//shift is needed to match t joints from polygons
 	
+	//void setPolygonmaterial(int mat) { polygonMaterial = mat; };
+	//int getPolygonMaterial() { return polygonMaterial; };
+	int polygonMaterial;
+
+	
+	char* getPolygonExtruders() { return polygon_extruders;  };
+
+
+private:
+	
+	char *polygon_extruders; //extruders for this polygon
+
 
 
 };
@@ -358,9 +371,11 @@ public:
 
 	
 	int id;
-
-	int polygons_MatId;
-	
+	void setPolygonMatID(int polygonMat) { polygon_MatId = polygonMat; };
+	int getPolygonMatID() { return polygon_MatId; };
+private:
+	int polygon_MatId;
+public:
 	void setId(int id)
 	{
 		this->id = id;
@@ -477,7 +492,7 @@ public:
 		return ConstPolygonRef(paths.back());
 	}
 
-	Polygons() {}
+	Polygons(void) { };
 
 	Polygons(const Polygons& other) { paths = other.paths; }
 	Polygons(Polygons&& other) { paths = std::move(other.paths); }
@@ -703,6 +718,10 @@ public:
 	 * Each PolygonsPart in the result has an outline as first polygon, whereas the rest are holes.
 	 */
 	std::vector<PolygonsPart> splitIntoParts(bool unionAll = false) const;
+	void setPolygonExtruders(char* extruders) { polygon_extruders = extruders; };
+	char* getPolygonExtruders() { return polygon_extruders; };
+	
+
 private:
 	/*!
 	 * recursive part of \ref Polygons::removeEmptyHoles and \ref Polygons::getEmptyHoles
@@ -718,6 +737,8 @@ private:
 	 * which uses ClipperLib::Paths instead of ClipperLib::PolyTree
 	 */
 	void addPolyTreeNodeRecursive(const ClipperLib::PolyNode& node);
+
+	char *polygon_extruders;
 public:
 	/*!
 	 * Split up the polygons into groups according to the even-odd rule.

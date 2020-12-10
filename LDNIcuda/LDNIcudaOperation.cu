@@ -2856,20 +2856,20 @@ __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
 			{
 				devMatArray[arrindex] = 'a';
 			}
-			if (rgb.w == 2.00)
+			else if (rgb.w == 2.00)
 			{
 				devMatArray[arrindex] = 'b';
 			}
 
-			if (rgb.w == 3.00)
+			else if (rgb.w == 3.00)
 			{
 				devMatArray[arrindex] = 'c';
 			}
-			if (rgb.w == 4.00)
+			else if (rgb.w == 4.00)
 			{
 				devMatArray[arrindex] = 'd';
 			}
-			if (rgb.w == 5.00)
+			else if (rgb.w == 5.00)
 			{
 				devMatArray[arrindex] = 'e';
 			}

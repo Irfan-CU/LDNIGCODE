@@ -129,14 +129,19 @@ public:
 	void AttachListTail( GLKObList* pNewList );
 
 	int GetCount() {return nCount;};
+	void SetTot_LDMIContours() { tot_LDMIContours++; };
+	int Gettot_LDMIContours() { return tot_LDMIContours; };
 
 	bool IsEmpty() {return ((nCount==0)?true:false);};
-
+	
 private:
 	GLKPOSITION headPos;
 	GLKPOSITION tailPos;
-
+	//for LDMI and GCode Development;
 	int nCount;
+	int tot_LDMIContours;
+	unsigned int totalExtruders;
+	
 };
 
 #endif

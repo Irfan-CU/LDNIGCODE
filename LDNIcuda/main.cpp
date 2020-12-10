@@ -773,6 +773,7 @@ void menuFuncFileOpen()
 		  _pDataBoard.m_polyMeshBody->computeRange();
 		  mesh->SetMeshId(_pDataBoard.m_polyMeshBody->GetMeshList().GetCount());
 		  printf("AMF File Import Time (ms): %ld\n", clock() - time);
+		  printf("Total number of faces in .(amf) mesh are: %d\n", mesh->GetFaceNumber());
 	    }
 		time = clock();
 		if (_pGLK.GetShading())
@@ -1045,7 +1046,7 @@ void menuFuncLDNISampling(bool bCUDA)
 	if (nRes <= 0) { printf("Incorrect InputL : %d!!!\n", nRes)//	condition for wrong or input reolotion
 		; return; }
 	printf("Sampling Resolution: %d\n", nRes);
-
+	
 	//-----------------------------------------------------------------------------------
 	//	Need to release the memory of displaying a object;
 	//		otherwise, the sampling may be abnormal if the graphics memory is not enough
@@ -1060,13 +1061,15 @@ void menuFuncLDNISampling(bool bCUDA)
 	float bndBox[6];				 
 	bndBox[0] = bndBox[1] = bndBox[2] = bndBox[3] = bndBox[4] = bndBox[5] = 0;	  // array initilaization to zero-
 	QuadTrglMesh *mesh = (QuadTrglMesh *)(_pDataBoard.m_polyMeshBody->GetMeshList().GetHead());
+
+
 	long time = clock();  // long variable type can store a single 64-bit signed integer
 	
 	if (bCUDA) {
 		//		LDNIcpuOperation::BRepToLDNISampling(mesh,solid,bndBox,nRes);
 		//		LDNIcudaOperation::CopyCPUSolidToCUDASolid(solid,cudaSolid);
 		//		delete solid;
-		LDNIcudaOperation::BRepToLDNISampling(mesh, cudaSolid, bndBox, nRes);
+		LDNIcudaOperation::BRepToLDMISampling(mesh, cudaSolid, ldmiProcessor, bndBox, nRes);
 	
 	}
 	else {
@@ -1590,7 +1593,7 @@ int main(int argc, char *argv[])
 	
 
 	initFunc();	
-	_pGLK.SetClearColor(0.35f,0.35f,0.35f);
+	_pGLK.SetClearColor(0.0f,0.0f,0.0f);
 	_pGLK.SetForegroundColor(1.0f,1.0f,1.0f);
 	_pGLK.m_bCoordDisp=false;
 

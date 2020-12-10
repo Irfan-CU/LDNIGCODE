@@ -399,7 +399,7 @@ void LDNISolidBody::BuildGLList(bool bWithArrow)
 
 	if (m_cudaSolid != NULL) {
 		m_cudaSolid->BuildVBOforRendering(m_vboPosition, m_vboNormal, m_vertexNum, m_cudaRegistered);
-
+														  
 		//--------------------------------------------------------------------------------------
 		//	Build the GL List of drawProfile
 		if (bWithArrow) {

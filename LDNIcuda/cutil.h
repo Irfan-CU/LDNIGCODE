@@ -777,7 +777,7 @@ extern "C" {
         exit(EXIT_FAILURE);                                                  \
     } }
 
-#  define CUDA_SAFE_CALL( call)     CUDA_SAFE_CALL_NO_SYNC(call);                                            \
+#  define CUDA_SAFE_CALL( call)     CUDA_SAFE_CALL_NO_SYNC(call);            \
 
 #  define CUDA_SAFE_THREAD_SYNC( ) {                                         \
     cudaError err = CUT_DEVICE_SYNCHRONIZE();                                 \

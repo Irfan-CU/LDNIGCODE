@@ -60,7 +60,7 @@ public:
 	 *
 	 * \return Whether the process succeeded (always true).
 	 */
-	bool sliceModel(GLKObList& meshlist,ContourMesh& c_mesh, SliceDataStorage& storage, int total_layers, std::vector<int>& meshin_layer, double rotBoundingBox[]); // slices the model
+	bool sliceModel(GLKObList &meshlist,ContourMesh& c_mesh, SliceDataStorage& storage, int total_layers, double rotBoundingBox[]); // slices the model
 
 	/*!
 	 * Processes the outline information as stored in the \p storage: generates inset perimeter polygons, support area polygons, etc.

@@ -43,6 +43,7 @@
 	class GapCloserResult
 	{
 	public:
+		GapCloserResult(void) {};
 		coord_tIrfan len = -1;
 		int polygonIdx = -1;
 		size_t pointIdxA = -1;
@@ -53,19 +54,42 @@
 	class SlicerLayer
 	{
 	public:
+		SlicerLayer(void) {
+			LDMIpolygons = new Polygons[7];
+
+		};
+
+		~SlicerLayer(void) {};
+		
 		std::vector<SlicerSegment> segments;
 		std::vector<SlicerSegment> segments_zigzag; //duplicate 
 		std::unordered_map<int, int> face_idx_to_segment_idx; // topology
 		std::vector<Polygons> infillpolygons;
 		int z = -1;
+		
+		Polygons *LDMIpolygons;
+
 		Polygons polygons;
-		Polygons polygons_Zigzag;//these polygos are for   
-		Polygons polygons_Circle_inter;//these polygos are for 
-		Polygons openPolylines;
-		Polygons polygons_boundary;
-		Polygons polygons_Circle_interA;//these polygos are for 
-		Polygons polygons_Circle_interB;//these polygos are for 
-		Polygons polygons_Circle_interC;//these polygos are for 
+		//Polygons polygons_Zigzag;//these polygos are for   
+		//Polygons polygons_Circle_inter;//these polygos are for 
+		//Polygons openPolylines;
+		//Polygons polygons_boundary;
+		//Polygons *polygons_Circle_LDMI;
+		//Polygons polygons_Circle_interA;//these polygos are for 
+		//Polygons polygons_Circle_interB;//these polygos are for 
+		//Polygons polygons_Circle_interC;//these polygos are for 
+		//Polygons polygons_Circle_interD;//these polygos are for 
+		//Polygons polygons_Circle_interE;//these polygos are for 
+		//Polygons polygons_Circle_interF;//these polygos are for 
+		//Polygons polygons_Circle_interG;//these polygos are for 
+		//Polygons polygons_Circle_interH;//these polygos are for 
+		//Polygons polygons_Circle_interI;//these polygos are for 
+		//Polygons polygons_Circle_interJ;//these polygos are for 
+		//Polygons polygons_Circle_interK;//these polygos are for 
+		//Polygons polygons_Circle_interL;//these polygos are for 
+		//Polygons polygons_Circle_interM;//these polygos are for 
+		//Polygons polygons_Circle_interN;//these polygos are for 
+		//Polygons polygons_Circle_interO;//these polygos are for 
 		bool inteference_zigzag;//bool for the zig-zag boundary at the interference
 			
 	};
@@ -74,10 +98,27 @@
 	{
 		friend class SlicerLayer;
 	public:
-		std::vector<SlicerLayer> layers;
-		const Mesh* mesh = nullptr;
-		Slicer(SliceDataStorage& storage, GLKObList& mesh_list,ContourMesh& c_mesh, const coord_tIrfan thickness, int slice_layer_count, bool use_variable_layer_heights, std::vector<int>& meshin_layer);
+		Slicer(void) {};
 		
+		
+		//LDMIpolyCircle = (Polygon*)malloc(totalRegions * sizeof(Polygon));
+
+		std::vector<SlicerLayer> layers;
+		
+		const Mesh* mesh = nullptr;
+		
+		Slicer(SliceDataStorage& storage, GLKObList &meshlist,ContourMesh& c_mesh, const coord_tIrfan thickness, int slice_layer_count, bool use_variable_layer_heights);
+		
+		
+		//std::vector<Polygon>LDMIPolygons;
+		//std::vector<int>LDMIPolygonsMaterial;
+
+		Polygon LDMIpolyCircle;
+
+
+	private:
+		
+
 	};
 
 //namespace cura

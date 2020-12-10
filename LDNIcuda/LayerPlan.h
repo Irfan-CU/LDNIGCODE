@@ -325,9 +325,9 @@
 
 		bool setExtruder(const size_t extruder_nr);
 		
-		void addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePathConfig& config, const Polygons& polygons, int layernum,int mat, SpaceFillType space_fill_type, bool enable_travel_optimization = false, int wipe_dist = 0, float flow_ratio = 1.0, std::optional<curaIrfan::PointIrfan> near_start_location = std::optional<curaIrfan::PointIrfan>(), double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
+		void addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePathConfig& config, const Polygons& polygons, int layernum,SpaceFillType space_fill_type, bool enable_travel_optimization = false, int wipe_dist = 0, float flow_ratio = 1.0, std::optional<curaIrfan::PointIrfan> near_start_location = std::optional<curaIrfan::PointIrfan>(), double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
 	        
-		void addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathConfig& config, curaIrfan::PointIrfan p, int extreuder, int mat, SpaceFillType space_fill_type, const Ratio& flow = 1.0, bool spiralize = false, Ratio speed_factor = 1.0, double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
+		void addExtrusionMove(coord_tIrfan layer_thickness, const GCodePathConfig& config, curaIrfan::PointIrfan p, int extreuder, SpaceFillType space_fill_type, const Ratio& flow = 1.0, bool spiralize = false, Ratio speed_factor = 1.0, double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT);
 	 	
 		bool getSkirtBrimIsPlanned(unsigned int extruder_nr) const
 		{
@@ -360,11 +360,11 @@
 
 		void addPolygon(coord_tIrfan layer_thickness, int layer_nr, ConstPolygonRef polygon, int start_Idx, const GCodePathConfig& config, WallOverlapComputation* wall_overlap_computation = nullptr, coord_tIrfan wall_0_wipe_dist = 0, bool spiralize = false, const double& flow_ratio = 1.0, bool always_retract = false);
 	
-		void addWalls(const Polygons& walls, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, WallOverlapComputation* wall_overlap_computation, const ZSeamConfig& z_seam_config = ZSeamConfig(), coord_tIrfan wall_0_wipe_dist = 0, float flow_ratio = 1.0, bool always_retract = false);
+		void addWalls(const Polygons& walls, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, WallOverlapComputation* wall_overlap_computation, std::vector<int> extruder_nr, const ZSeamConfig& z_seam_config = ZSeamConfig(), coord_tIrfan wall_0_wipe_dist = 0, float flow_ratio = 1.0, bool always_retract = false);
 		
-		void addWall(ConstPolygonRef polygon, int start_idx, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, WallOverlapComputation* wall_overlap_computation, coord_tIrfan wall_0_wipe_dist, float flow_ratio, bool always_retract);
+		void addWall(ConstPolygonRef polygon, int start_idx, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, WallOverlapComputation* wall_overlap_computation, coord_tIrfan wall_0_wipe_dist, std::vector<int> extruder_nr, float flow_ratio, bool always_retract);
 
-		void addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::PointIrfan& p1, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, float flow, float& non_bridge_line_volume, Ratio speed_factor, double distance_to_bridge_start);
+		void addWallLine(const curaIrfan::PointIrfan& p0, const curaIrfan::PointIrfan& p1, const GCodePathConfig& non_bridge_config, const GCodePathConfig& bridge_config, float flow, float& non_bridge_line_volume, Ratio speed_factor, double distance_to_bridge_start, std::vector<int> extruder_nr);
 
 		void addPolygonsByOptimizer(coord_tIrfan layer_thickness, int layer_nr, const Polygons& polygons, const GCodePathConfig& config, WallOverlapComputation* wall_overlap_computation = nullptr, const ZSeamConfig& z_seam_config = ZSeamConfig(), coord_tIrfan wall_0_wipe_dist = 0, bool spiralize = false, const double flow_ratio = 1.0, bool always_retract = false, bool reverse_order = false);
 

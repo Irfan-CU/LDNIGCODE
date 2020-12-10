@@ -237,8 +237,8 @@ public:
 	 */
 	void processSkirtBrim(const SliceDataStorage& storage,  LayerPlan& gcodeLayer, unsigned int extruder_nr) const;
 	bool processIroning(const SliceLayer& part, LayerPlan& gcode_layer) const;
-	bool processInsets(const SliceDataStorage& storage, LayerPlan& gcodeLayer, const size_t extruder_nr, int mat, const PathConfigStorage::MeshPathConfigs& mesh_config,const SliceLayerPart& part) const;
-	void processOutlineGaps(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, int mat, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, bool& added_something) const;
+	bool processInsets(const SliceDataStorage& storage, LayerPlan& gcodeLayer, std::vector<int> extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config,const SliceLayerPart& part) const;
+	void processOutlineGaps(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, std::vector<int>extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, bool& added_something) const;
 	void addPrimeTower(const SliceDataStorage& storage, LayerPlan& gcodeLayer, int prev_extruder) const;
 	void setExtruder_addPrime(const SliceDataStorage& storage, LayerPlan& gcode_layer, const size_t extruder_nr) const;
 	/*!
@@ -313,7 +313,7 @@ public:
 		 * \param gcode_layer The initial planning of the gcode of the layer.
 		 */
 
-	void addMeshLayerToGCode(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer) const;
+	void addMeshLayerToGCode(SliceDataStorage& storage, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer) const;
 	
 	/*!
 	 * Add all features of the given extruder from a single part from a given layer of a mesh-volume to the layer plan \p gcode_layer.
@@ -327,7 +327,7 @@ public:
 	 * \param part The part to add
 	 * \param gcode_layer The initial planning of the gcode of the layer.
 	 */
-	void addMeshPartToGCode(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, LayerPlan& gcode_layer, int mat) const;
+	void addMeshPartToGCode(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const PathConfigStorage::MeshPathConfigs& mesh_config, SliceLayerPart& part, LayerPlan& gcode_layer, std::vector<int>extruder_nr) const;
 
 	/*!
 	 * \brief Add infill for a given part in a layer plan.
@@ -340,7 +340,7 @@ public:
 	 * \param part The part for which to create gcode.
 	 * \return Whether this function added anything to the layer plan.
 	 */
-	bool processInfill(const SliceDataStorage& storage, const SliceMeshStorage& mesh, LayerPlan& gcode_layer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, int mat) const;
+	bool processInfill(const SliceDataStorage& storage, const SliceMeshStorage& mesh, LayerPlan& gcode_layer, std::vector<int>extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const;
 
 	/*!
 	 * \brief Add thicker (multiple layers) sparse infill for a given part in a
@@ -354,7 +354,7 @@ public:
 	 * \param part The part for which to create gcode.
 	 * \return Whether this function added anything to the layer plan.
 	 */
-	bool processMultiLayerInfill(const SliceDataStorage& storage, const SliceMeshStorage& mesh,LayerPlan& gcode_layer, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, int mat) const;
+	bool processMultiLayerInfill(const SliceDataStorage& storage, const SliceMeshStorage& mesh,LayerPlan& gcode_layer, std::vector<int>extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, std::vector<int>mat) const;
 
 	/*!
 	 * \brief Add normal sparse infill for a given part in a layer.
@@ -366,7 +366,7 @@ public:
 	 * \param part The part for which to create gcode.
 	 * \return Whether this function added anything to the layer plan.
 	 */
-	bool processSingleLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer, const size_t extruder_nr, const SliceLayerPart& part, int mat) const;
+	bool processSingleLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer, std::vector<int>extruder_nr, const SliceLayerPart& part) const;
 
 	//void finalize();
 
@@ -387,17 +387,17 @@ public:
 	 */
 	 //	 unsigned int findSpiralizedLayerSeamVertexIndex(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const int layer_nr, const int last_layer_nr);
 	
-	bool processSkinAndPerimeterGaps(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, int mat, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const;
+	bool processSkinAndPerimeterGaps(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, std::vector<int>extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const;
 
-	bool processSkinPart(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr,int mat, const PathConfigStorage::MeshPathConfigs& mesh_config, const SkinPart& skin_part) const;
+	bool processSkinPart(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, std::vector<int> extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SkinPart& skin_part) const;
 
-	void processSkinInsets(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SkinPart& skin_part, bool& added_something) const;
+	void processSkinInsets(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, std::vector<int> extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SkinPart& skin_part, bool& added_something) const;
 
-	void processTopBottom(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, int mat, const PathConfigStorage::MeshPathConfigs& mesh_config, const SkinPart& skin_part, Polygons& concentric_perimeter_gaps, bool& added_something) const;
+	void processTopBottom(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, std::vector<int> extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SkinPart& skin_part, Polygons& concentric_perimeter_gaps, bool& added_something) const;
 
-	void processPerimeterGaps(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, int mat, const Polygons& perimeter_gaps, const GCodePathConfig& perimeter_gap_config, bool& added_something) const;
+	void processPerimeterGaps(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, std::vector<int> extruder_nr, const Polygons& perimeter_gaps, const GCodePathConfig& perimeter_gap_config, bool& added_something) const;
 
-	void processSkinPrintFeature(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, const size_t extruder_nr, int mat, int skin_part_mat, const Polygons& area, const GCodePathConfig& config, EFillMethod pattern, const AngleDegrees skin_angle, const coord_tIrfan skin_overlap, const Ratio skin_density, Polygons* perimeter_gaps_output, bool& added_something, double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT) const;
+	void processSkinPrintFeature(const SliceDataStorage& storage, LayerPlan& gcode_layer, const SliceMeshStorage& mesh, std::vector<int> extruder_nr, int skin_part_mat, const Polygons& area, const GCodePathConfig& config, EFillMethod pattern, const AngleDegrees skin_angle, const coord_tIrfan skin_overlap, const Ratio skin_density, Polygons* perimeter_gaps_output, bool& added_something, double fan_speed = GCodePathConfig::FAN_SPEED_DEFAULT) const;
 
 	std::optional<curaIrfan::PointIrfan> getSeamAvoidingLocation(const Polygons& filling_part, int filling_angle, curaIrfan::PointIrfan last_position) const;
 
