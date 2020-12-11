@@ -6,7 +6,7 @@ Using this point cloud guidelined are sent to 3d printer for printing.
 
 # Technologies
 
-C/C++11,STL,Boost,Thrust,XML,OpenGL,GLSL,
+C/C++11,STL,Boost,Thrust,XML,OpenGL,GLSL,NVIDIA Cuda
 
 
 # Requirements
