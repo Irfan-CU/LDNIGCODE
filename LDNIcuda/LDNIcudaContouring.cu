@@ -92,7 +92,7 @@ extern __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 r
 	unsigned int *xIndexArray, float *xDepthArray, float* NxarrayPtr, float* NormalXarrayPtr,
 	unsigned int *yIndexArray, float *yDepthArray, float* NyarrayPtr, float* NormalYarrayPtr,
 	unsigned int *zIndexArray, float *zDepthArray, float* NzarrayPtr, float* NormalZarrayPtr, char* devMatArrayY, float3 origin, double2 imgorigin, float gwidth, int3 imageRes,
-	int nodeNum, float thickness, float imgWidth, unsigned int *material_index1, int cellNum, int totMaterials);
+	int nodeNum, float thickness, float imgWidth, unsigned int *material_index1, unsigned int* material_overlapStatus, int cellNum, int totMaterials);
 
 
 //extern __global__ void krFDMContouring_NodesSampling(bool *gridNodes, double3 rotdir, char* devMatArrayY, float3 origin, double2 imgorigin, float gwidth, int3 imageRes,
@@ -102,17 +102,17 @@ extern __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 r
 
 extern __global__ void krFDMContouring_CountAllStick(bool *gridNodes, bool *gridNodesCopy, int3 imageRes, int cellNum, unsigned int* count, unsigned int *material_index1);
 
-extern __global__ void krFDMPrintinf(bool *gridNodes, bool *gridNodesCopy, int3 imageRes, int cellNum, int contourMat, unsigned int *material_index1);
+extern __global__ void krFDMPrintinf(bool *gridNodes, bool *gridNodesCopy, int3 imageRes, int cellNum, int contourMat,int overlap_count, unsigned int *material_index1,unsigned int* material_overlapStatus);
 
 extern __global__ void krFDMPrintincheck(bool *gridNodes, unsigned int *matindex2, int3 imageRes, int cellNum, unsigned int* count, unsigned int *material_index1);
 
 
 extern __global__ void krFDMContouring_FindAllStickInAxisX(bool *gridNodes, bool *gridNodesCopy, unsigned int* stickIndex, float2 *stickStart, unsigned int* counter, float2 *stickEnd, int3 imageRes, int cellNum,
-	double2 imgOri, float imgWidth, int* stickID, int* prevStickId, int2 *stickDir,  unsigned int* material_index1);
+	double2 imgOri, float imgWidth, int* stickID, int* prevStickId, int2 *stickDir);
 
 
 extern __global__ void krFDMContouring_FindAllStickInAxisZ(bool *gridNodes, bool *gridNodesCopy, unsigned int* stickIndex, float2 *stickStart, unsigned int* counter, float2 *stickEnd, int3 imageRes, int cellNum,
-	double2 imgOri, float imgWidth, int* stickID, int* prevStickId, int2 *stickDir,  unsigned int* material_index1);
+	double2 imgOri, float imgWidth, int* stickID, int* prevStickId, int2 *stickDir);
 
 extern __global__ void krFDMContouring_ConstrainedSmoothing(float2 *newStart, float2 *newEnd, float2 *stickStart, float2 *stickEnd,															  
 	int *stickID, int stickNum, int2 *stickDir,
@@ -238,7 +238,7 @@ extern __device__ bool _detectInOutPoint(int index, float px, float py, float pz
 	unsigned int* xIndex, float* xDepth, float* NxarrayPtr, float* NormalXarrayPtr,
 	unsigned int* yIndex, float* yDepth, float* NyarrayPtr, float* NormalYarrayPtr,
 	unsigned int* zIndex, float* zDepth, float* NzarrayPtr, float* NormalZarrayPtr, char* devMatArrayY,
-	float3 ori_p, float3 origin, float gwidth, int res, unsigned int *material_index1, int totMaterials);
+	float3 ori_p, float3 origin, float gwidth, int res, unsigned int *material_index1, unsigned int* material_overlapStatus, int totMaterials);
 
 
 extern __device__ bool _calTwoLineSegmentsIntersection(float2 vMinus1, float2 v_a,
@@ -588,6 +588,9 @@ void LDNIcudaOperation::LDNIFDMContouring_Generation(LDNIcudaSolid* solid, LDMIP
 	float2 *stickStart, *stickEnd;
 	unsigned int *stickIndex;
 	unsigned int *material_index;
+	unsigned int *material_overlapStatus;
+	
+
 	unsigned int *material_status;
 	int *stickID;
 	int *prevStickID;
@@ -613,10 +616,10 @@ void LDNIcudaOperation::LDNIFDMContouring_Generation(LDNIcudaSolid* solid, LDMIP
 	//----------------------------------------------------------------------------------------------
 	//	Step 2: Binary Sampling
 		
+	
 		LDNIFDMContouring_BinarySamlping(solid, ldmiProcessor,ldmiCudaOperation, c_mesh, rotBoundingBox, BinaryImageSize, angle, thickness, clipPlaneNm,
 			nSampleWidth, gridNodes, stickStart, stickEnd, stickIndex,
-			stickID, prevStickID, stickDir, material_index, qmesh, material_status);
-		
+			stickID, prevStickID, stickDir, material_index, material_overlapStatus, qmesh, material_status);
 		
 
 		c_mesh->setTotalmaterialRegions(ldmiCudaOperation->gettotalMaterialRegions());
@@ -626,7 +629,7 @@ void LDNIcudaOperation::LDNIFDMContouring_Generation(LDNIcudaSolid* solid, LDMIP
 		cudaFree(gridNodes);
 		cudaFree(material_index);
 		cudaFree(material_status);
-		printf("Donw with Binary Sampling \n");
+		printf("Done with Binary Sampling \n");
 		
 		//----------------------------------------------------------------------------------------------
 		// Step 3: Constrained Smoothing
@@ -634,14 +637,16 @@ void LDNIcudaOperation::LDNIFDMContouring_Generation(LDNIcudaSolid* solid, LDMIP
 
 		/*LDNIFDMContouring_ConstrainedSmoothing(solid, c_mesh, rotBoundingBox,  BinaryImageSize,	angle, thickness,
 											clipPlaneNm, nSampleWidth, stickStart, stickEnd, stickID);*/
+	
 		
 		
 
-		
+		long forming_material_regions = clock();
 		
 		LDNIFDMContouring_ConstrainedSmoothing(solid, c_mesh,ldmiCudaOperation, rotBoundingBox, BinaryImageSize,
 			nSampleWidth, stickStart, stickEnd, stickID, stickDir, material_index);
-	
+		printf("The time for the forming_material_regions is %ld(ms); \n",clock()- forming_material_regions );  forming_material_regions = clock(); 
+		
 
 	cudaFree(stickStart);
 	cudaFree(stickEnd);
@@ -659,6 +664,7 @@ void LDNIcudaOperation::LDNIFDMContouring_Generation(LDNIcudaSolid* solid, LDMIP
 	//	Step 6: Clean up memory
 	printf("-------------------------------------------\n");
 	printf("Total time for FDM contour generation and Readback %ld(ms)\n", clock() - time);
+
 
 
 
@@ -780,7 +786,7 @@ void LDNIcudaOperation::LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* so
 
 
 
-//	if (bOutPutSGM)
+		//	if (bOutPutSGM)
 		{
 
 			int *cpuStickDir = (int*)malloc(2 * stickNumCheck[0] * sizeof(int));
@@ -794,7 +800,7 @@ void LDNIcudaOperation::LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* so
 	}
 
 
-	//c_mesh->ContourLDMIArrangement(rotBoundingBox);
+	c_mesh->ContourLDMIArrangement(rotBoundingBox);
 
 	free(cpuStickStart);
 	free(cpuStickEnd);
@@ -2710,7 +2716,7 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, C
 // Binary Sampling Function for FDM
 void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, LDMIProcessor *ldmiProcessor, LDMIcudaOperation *&ldmiCudaOperation, ContourMesh *c_mesh, double rotBoundingBox[],
 	int imageSize[], float angle, float thickness, double clipPlanNm[],
-	float nSampleWidth, bool *&gridNodes, float2 *&stickStart, float2 *&stickEnd, unsigned int *&stickIndex, int *&stickID, int *&prevStickID, int2 *&stickDir,unsigned int *&material_index, QuadTrglMesh *qmesh, unsigned int*&material_status)
+	float nSampleWidth, bool *&gridNodes, float2 *&stickStart, float2 *&stickEnd, unsigned int *&stickIndex, int *&stickID, int *&prevStickID, int2 *&stickDir,unsigned int *&material_index, unsigned int *& material_overlapStatus, QuadTrglMesh *qmesh, unsigned int*&material_status)
 {
 	//bool *gridNodes;
 	int nRes = solid->GetResolution();
@@ -2720,14 +2726,18 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, L
 	int nodenum = imageSize[0] * imageSize[1] * imageSize[2]; //totoal number of cube nodes from ldni 			   
 	ldmiCudaOperation = new LDMIcudaOperation;
 	int Resalloc = imageSize[1] + 1;
-	bool *gridNodesCopy;
+	
 	bool* hostgridNodes;
 	unsigned int* hostmaterial_index;
+	unsigned int* hostmaterial_overlapStatus;
+
 	
 	
 	CUDA_SAFE_CALL(cudaMalloc((void**)&(gridNodes), imageSize[0] * imageSize[1] * imageSize[2] * sizeof(bool)));
 	CUDA_SAFE_CALL(cudaMemset((void*)gridNodes, 0.0, imageSize[0] * imageSize[1] * imageSize[2] * sizeof(bool)));
 
+	CUDA_SAFE_CALL(cudaMalloc((void**)&(material_overlapStatus), imageSize[0] * imageSize[1] * imageSize[2] * sizeof(unsigned int)));
+	CUDA_SAFE_CALL(cudaMemset((void*)material_overlapStatus, 0, imageSize[0] * imageSize[1] * imageSize[2] * sizeof(unsigned int)));
 	
 	CUDA_SAFE_CALL(cudaMalloc((void**)&(material_index), imageSize[0] * imageSize[1] * imageSize[2] * sizeof(unsigned int)));
 	CUDA_SAFE_CALL(cudaMemset((void*)material_index, 0, imageSize[0] * imageSize[1] * imageSize[2] * sizeof(unsigned int)));
@@ -2736,21 +2746,28 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, L
 	
 	hostgridNodes = (bool*)malloc(imageSize[0] * imageSize[1] * imageSize[2] * sizeof(bool));
 	hostmaterial_index = (unsigned int*)malloc(imageSize[0] * imageSize[1] * imageSize[2] * sizeof(unsigned int));
+	hostmaterial_overlapStatus = (unsigned int*)malloc(imageSize[0] * imageSize[1] * imageSize[2] * sizeof(unsigned int));
 
 	
 	c_mesh->StickCheckMallocMemory(ldmiProcessor->GetTotalMaterials());
-	
+	long grdinodeclassification_time = clock();
 	krFDMContouring_BinarySampling << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, make_double3(clipPlanNm[0], clipPlanNm[1], clipPlanNm[2])
 		, angle, nRes, solid->GetIndexArrayPtr(0), solid->GetSampleDepthArrayPtr(0), solid->GetSampleNxArrayPtr(0), solid->GetSampleNyArrayPtr(0),
 		solid->GetIndexArrayPtr(1), solid->GetSampleDepthArrayPtr(1), solid->GetSampleNxArrayPtr(1), solid->GetSampleNyArrayPtr(1),
 		solid->GetIndexArrayPtr(2), solid->GetSampleDepthArrayPtr(2), solid->GetSampleNxArrayPtr(2), solid->GetSampleNyArrayPtr(2),ldmiProcessor->GetdevMatArray(1),
 		make_float3(origin[0], origin[1], origin[2]), make_double2(rotBoundingBox[0], rotBoundingBox[4]), gwidth, make_int3(imageSize[0], imageSize[1], imageSize[2]),
-		nodenum, thickness, nSampleWidth, material_index, (imageSize[0] - 1)*imageSize[1]* (imageSize[2] - 1), ldmiProcessor->GetTotalMaterials());//just tells about all the points which are inside the surface or not
+		nodenum, thickness, nSampleWidth, material_index, material_overlapStatus, (imageSize[0] - 1)*imageSize[1]* (imageSize[2] - 1), ldmiProcessor->GetTotalMaterials());//just tells about all the points which are inside the surface or not
+	
+	printf("The time for the grdinodeclassification_time is %ld(ms); \n", clock() - grdinodeclassification_time);  grdinodeclassification_time = clock();
+
 
 	CUDA_SAFE_CALL(cudaMemcpy(hostgridNodes, gridNodes, (imageSize[0] * imageSize[1] * imageSize[2]) * sizeof(bool), cudaMemcpyDeviceToHost));
 	CUDA_SAFE_CALL(cudaMemcpy(hostmaterial_index, material_index, (imageSize[0] * imageSize[1] * imageSize[2]) * sizeof(unsigned int), cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL(cudaMemcpy(hostmaterial_overlapStatus, material_overlapStatus, (imageSize[0] * imageSize[1] * imageSize[2]) * sizeof(unsigned int), cudaMemcpyDeviceToHost));
+
+   
 	
-	std::set<int>material_dataset;
+	std::set<unsigned int>material_dataset;
 
 	for (int mat_it = 0; mat_it <= (imageSize[0] * imageSize[1] * imageSize[2]); mat_it++)
 	{
@@ -2758,12 +2775,15 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, L
 		if (hostgridNodes[mat_it]) 
 		{
 			
+			
 			material_dataset.insert(hostmaterial_index[mat_it]);
 		
 		}
 	}
 
-	printf("the total material data set regions are %d \n", material_dataset.size());
+
+
+	
 
 	ldmiCudaOperation->MallocMemory(Resalloc, material_dataset.size());
 
@@ -2778,92 +2798,120 @@ void LDNIcudaOperation::LDNIFDMContouring_BinarySamlping(LDNIcudaSolid* solid, L
 	int *stickNum = c_mesh->GetTotalStickNumCheck();
 	unsigned int s_Num;
 	int i = 0;
-	std::set<int>::iterator temp;
+	
+	// More Robust Solution: We can create a map and can increment  the value of the key for every occurence
+
+
+
+	std::set<unsigned int>::iterator temp;
+
 	for (temp = material_dataset.begin(); temp != material_dataset.end(); temp++)
 	{
-		CUDA_SAFE_CALL(cudaMalloc((void**)&(gridNodesCopy), imageSize[0] * imageSize[1] * imageSize[2] * sizeof(bool)));
-		CUDA_SAFE_CALL(cudaMemset((void*)gridNodesCopy, 0.0, imageSize[0] * imageSize[1] * imageSize[2] * sizeof(bool)));
-		
-		
 		contourMat = *temp;
-		CUDA_SAFE_CALL(cudaMalloc((void**)&(stickIndex), (imageSize[1] + 1) * sizeof(unsigned int)));
-		CUDA_SAFE_CALL(cudaMemset((void*)stickIndex, 0, (imageSize[1] + 1) * sizeof(unsigned int)));
-		
-		CUDA_SAFE_CALL(cudaMemcpy(gridNodesCopy, gridNodes, (imageSize[0] * imageSize[1] * imageSize[2]) * sizeof(bool), cudaMemcpyDeviceToDevice));
-		//CUDA_SAFE_CALL(cudaMemset((void*)stickIndexcheck[0], 0, (imageSize[1] + 1) * sizeof(unsigned int)));
-		
-		krFDMPrintinf << < BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, gridNodesCopy, make_int3(imageSize[0] - 1, imageSize[1], imageSize[2] - 1),
-			((imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1)), contourMat, material_index);
-		
-		krFDMContouring_CountAllStick << < BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, gridNodesCopy, make_int3(imageSize[0] - 1, imageSize[1], imageSize[2] - 1),
-			((imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1)), stickIndex, material_index);
+		std::set<int>material_overlap_count;
+		for (int mat_it = 0; mat_it <= (imageSize[0] * imageSize[1] * imageSize[2]); mat_it++)
+		{
 
+			if ((hostgridNodes[mat_it]) && (hostmaterial_index[mat_it] == contourMat))
+			{
+				material_overlap_count.insert(hostmaterial_overlapStatus[mat_it]);
+			}
+		}
 
-		// Sum up and get the total number of stick
-		
-		
-		
-		thrust::device_ptr<unsigned int> dev_ptr(stickIndex); //	Wrap raw pointers with dev_ptr
-		thrust::exclusive_scan(dev_ptr, dev_ptr + (imageSize[1] + 1), dev_ptr); //	in-place scan
-		
-		s_Num = dev_ptr[imageSize[1]];
-		
-		stickNum[i] = s_Num;
+		std::set<int>::iterator tempoverlap;
 
-		unsigned int* stickCounter;
+		for (tempoverlap = material_overlap_count.begin(); tempoverlap != material_overlap_count.end(); tempoverlap++)
+		{
+			bool *gridNodesCopy;
+			long interlacing_time = clock();
+			CUDA_SAFE_CALL(cudaMalloc((void**)&(gridNodesCopy), imageSize[0] * imageSize[1] * imageSize[2] * sizeof(bool)));
+			CUDA_SAFE_CALL(cudaMemset((void*)gridNodesCopy, 0.0, imageSize[0] * imageSize[1] * imageSize[2] * sizeof(bool)));
+			CUDA_SAFE_CALL(cudaMalloc((void**)&(stickIndex), (imageSize[1] + 1) * sizeof(unsigned int)));
+			CUDA_SAFE_CALL(cudaMemset((void*)stickIndex, 0, (imageSize[1] + 1) * sizeof(unsigned int)));
 
-		printf("total number of layers and bool is ----- %d\n",imageSize[1]);
-		printf("total number of sticks count is ----- %d and materia is %d \n", stickNum[i],*temp);
-		
-		
+			CUDA_SAFE_CALL(cudaMemcpy(gridNodesCopy, gridNodes, (imageSize[0] * imageSize[1] * imageSize[2]) * sizeof(bool), cudaMemcpyDeviceToDevice));
+			//CUDA_SAFE_CALL(cudaMemset((void*)stickIndexcheck[0], 0, (imageSize[1] + 1) * sizeof(unsigned int)));
 
-		CUDA_SAFE_CALL(cudaMalloc((void**)&(stickStart), s_Num * sizeof(float2)));
-		CUDA_SAFE_CALL(cudaMemset((void*)stickStart, 0, s_Num * sizeof(float2)));
-		CUDA_SAFE_CALL(cudaMalloc((void**)&(stickEnd), s_Num * sizeof(float2)));
-		CUDA_SAFE_CALL(cudaMemset((void*)stickEnd, 0, s_Num * sizeof(float2)));
-		CUDA_SAFE_CALL(cudaMalloc((void**)&(stickID), s_Num * sizeof(int)));
-		CUDA_SAFE_CALL(cudaMemset((void*)stickID, 0, s_Num * sizeof(int)));
-
-	
-		CUDA_SAFE_CALL(cudaMalloc((void**)&(prevStickID), s_Num * sizeof(int)));
-		CUDA_SAFE_CALL(cudaMemset((void*)prevStickID, 0, s_Num * sizeof(int)));
-		CUDA_SAFE_CALL(cudaMalloc((void**)&(stickCounter), (imageSize[1]) * sizeof(unsigned int)));
-		CUDA_SAFE_CALL(cudaMemset((void*)stickCounter, 0, (imageSize[1]) * sizeof(unsigned int)));
-		CUDA_SAFE_CALL(cudaMalloc((void**)&(stickDir), s_Num * sizeof(int2)));
-		CUDA_SAFE_CALL(cudaMemset((void*)stickDir, 0, s_Num * sizeof(int2)));
-
-
-
-		krFDMContouring_FindAllStickInAxisX << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, gridNodesCopy, stickIndex, stickStart, stickCounter, stickEnd, make_int3(imageSize[0], imageSize[1], imageSize[2]),
-			(imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1), make_double2(rotBoundingBox[0], rotBoundingBox[4]), nSampleWidth, stickID, prevStickID, stickDir, material_index);
-
-
-		krFDMContouring_FindAllStickInAxisZ << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, gridNodesCopy, stickIndex, stickStart, stickCounter, stickEnd, make_int3(imageSize[0], imageSize[1], imageSize[2]),
-			(imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1), make_double2(rotBoundingBox[0], rotBoundingBox[4]), nSampleWidth, stickID, prevStickID, stickDir, material_index);
-		
-		materialData[i] = *temp;
-		stickIDcheck[i] = stickID;
-		prevStickIDcheck[i] = prevStickID;
-		stickDircheck[i] = stickDir;
-		stickStartcheck[i] = stickStart;
-		stickEndcheck[i] = stickEnd;  
 			
+
+			krFDMPrintinf << < BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, gridNodesCopy, make_int3(imageSize[0] - 1, imageSize[1], imageSize[2] - 1),
+				((imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1)), contourMat,*tempoverlap, material_index, material_overlapStatus);
+
+			krFDMContouring_CountAllStick << < BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, gridNodesCopy, make_int3(imageSize[0] - 1, imageSize[1], imageSize[2] - 1),
+				((imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1)), stickIndex, material_index);
+
+
+			// Sum up and get the total number of stick
+
+			
+			
+
+
+			thrust::device_ptr<unsigned int> dev_ptr(stickIndex); //	Wrap raw pointers with dev_ptr
+			thrust::exclusive_scan(dev_ptr, dev_ptr + (imageSize[1] + 1), dev_ptr); //	in-place scan
+
+			s_Num = dev_ptr[imageSize[1]];
+
+			stickNum[i] = s_Num;
+
+			unsigned int* stickCounter;
+
+			printf("total number of layers and bool is ----- %d\n", imageSize[1]);
+			printf("total number of sticks count is ----- %d and material is %d \n", stickNum[i], *temp);
+			printf("Total Interlacing Time for  material  %d  is : %ld (ms)\n", *temp, clock() - interlacing_time); interlacing_time = clock();
+
+
+			CUDA_SAFE_CALL(cudaMalloc((void**)&(stickStart), s_Num * sizeof(float2)));
+			CUDA_SAFE_CALL(cudaMemset((void*)stickStart, 0, s_Num * sizeof(float2)));
+			CUDA_SAFE_CALL(cudaMalloc((void**)&(stickEnd), s_Num * sizeof(float2)));
+			CUDA_SAFE_CALL(cudaMemset((void*)stickEnd, 0, s_Num * sizeof(float2)));
+			CUDA_SAFE_CALL(cudaMalloc((void**)&(stickID), s_Num * sizeof(int)));
+			CUDA_SAFE_CALL(cudaMemset((void*)stickID, 0, s_Num * sizeof(int)));
+
+
+			CUDA_SAFE_CALL(cudaMalloc((void**)&(prevStickID), s_Num * sizeof(int)));
+			CUDA_SAFE_CALL(cudaMemset((void*)prevStickID, 0, s_Num * sizeof(int)));
+			CUDA_SAFE_CALL(cudaMalloc((void**)&(stickCounter), (imageSize[1]) * sizeof(unsigned int)));
+			CUDA_SAFE_CALL(cudaMemset((void*)stickCounter, 0, (imageSize[1]) * sizeof(unsigned int)));
+			CUDA_SAFE_CALL(cudaMalloc((void**)&(stickDir), s_Num * sizeof(int2)));
+			CUDA_SAFE_CALL(cudaMemset((void*)stickDir, 0, s_Num * sizeof(int2)));
+
+
+
+			krFDMContouring_FindAllStickInAxisX << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, gridNodesCopy, stickIndex, stickStart, stickCounter, stickEnd, make_int3(imageSize[0], imageSize[1], imageSize[2]),
+				(imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1), make_double2(rotBoundingBox[0], rotBoundingBox[4]), nSampleWidth, stickID, prevStickID, stickDir);
+
+
+			krFDMContouring_FindAllStickInAxisZ << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (gridNodes, gridNodesCopy, stickIndex, stickStart, stickCounter, stickEnd, make_int3(imageSize[0], imageSize[1], imageSize[2]),
+				(imageSize[0] - 1)*imageSize[1] * (imageSize[2] - 1), make_double2(rotBoundingBox[0], rotBoundingBox[4]), nSampleWidth, stickID, prevStickID, stickDir);
+
+			materialData[i] = *temp;
+			stickIDcheck[i] = stickID;
+			prevStickIDcheck[i] = prevStickID;
+			stickDircheck[i] = stickDir;
+			stickStartcheck[i] = stickStart;
+			stickEndcheck[i] = stickEnd;
+
+
+
+
+			unsigned int **cpuStickIndex = (unsigned int**)malloc(4 * sizeof(unsigned int*));
+			cpuStickIndex[0] = (unsigned int*)malloc((imageSize[1] + 1) * sizeof(unsigned int));
+			CUDA_SAFE_CALL(cudaMemcpy(cpuStickIndex[0], stickIndex, (imageSize[1] + 1) * sizeof(unsigned int), cudaMemcpyDeviceToHost));
+			//CUDA_SAFE_CALL( cudaMemcpy( test, stickID, s_Num*sizeof(unsigned int), cudaMemcpyDeviceToHost ) );
+
+			//unsigned int *cpuCount = (unsigned int*)malloc((imageSize[1])*sizeof(unsigned int));
+			//CUDA_SAFE_CALL( cudaMemcpy( cpuCount, stickCounter, (imageSize[1])*sizeof(unsigned int), cudaMemcpyDeviceToHost ) );
+			c_mesh->SetThickness(thickness);
+			c_mesh->SetOrigin(origin[0], origin[1], origin[2]);
+			c_mesh->MallocMemory(cpuStickIndex[0], imageSize, stickNum[0]);
+			i++;
+
+			cudaFree(gridNodesCopy);
+
+		}
 		
 		
-		
-		unsigned int **cpuStickIndex = (unsigned int**)malloc(4 * sizeof(unsigned int*));
-		cpuStickIndex[0] = (unsigned int*)malloc((imageSize[1] + 1) * sizeof(unsigned int));
-		CUDA_SAFE_CALL(cudaMemcpy(cpuStickIndex[0], stickIndex, (imageSize[1] + 1) * sizeof(unsigned int), cudaMemcpyDeviceToHost));
-		//CUDA_SAFE_CALL( cudaMemcpy( test, stickID, s_Num*sizeof(unsigned int), cudaMemcpyDeviceToHost ) );
-		
-		//unsigned int *cpuCount = (unsigned int*)malloc((imageSize[1])*sizeof(unsigned int));
-		//CUDA_SAFE_CALL( cudaMemcpy( cpuCount, stickCounter, (imageSize[1])*sizeof(unsigned int), cudaMemcpyDeviceToHost ) );
-		c_mesh->SetThickness(thickness);
-		c_mesh->SetOrigin(origin[0], origin[1], origin[2]);
-		c_mesh->MallocMemory(cpuStickIndex[0], imageSize, stickNum[0]);
-		i++;
-		
-		cudaFree(gridNodesCopy);
 	}
 	
 	
@@ -5609,10 +5657,10 @@ __global__ void krFDMContouring_CountAllStick(bool *gridNodes, bool *gridNodesCo
 	}
 }
 
-__global__ void krFDMPrintinf(bool *gridNodes, bool *gridNodesCopy,int3 imageRes, int cellNum, int contourMat, unsigned int *material_index1)
+__global__ void krFDMPrintinf(bool *gridNodes, bool *gridNodesCopy,int3 imageRes, int cellNum, int contourMat, int overlap_count, unsigned int *material_index1, unsigned int* material_overlapStatus)
 {
 	int index = threadIdx.x + blockIdx.x*blockDim.x;
-	unsigned int ix, iy, iz, realx = imageRes.x + 1, material_bnodes, material_tmp_bnodes, material_tmp_bnodes1;
+	unsigned int ix, iy, iz, realx = imageRes.x + 1, material_bnodes, material_tmp_bnodes, material_tmp_bnodes1, material_bnodes_overlap, material_tmp_bnodes_overlap, material_tmp_bnodes1_overlap;
 	bool bnodes, bnodes_tmp;
 
 
@@ -5627,22 +5675,29 @@ __global__ void krFDMPrintinf(bool *gridNodes, bool *gridNodesCopy,int3 imageRes
 		material_bnodes = (material_index1[iz*realx*imageRes.y + iy * realx + ix]);// moving the nodes here and getting the status of the nodes
 		material_tmp_bnodes = (material_index1[(iz + 1)*realx*imageRes.y + iy * realx + ix]);// moving the nodes here and getting the status of the nodes
 		material_tmp_bnodes1 = (material_index1[(iz)*realx*imageRes.y + iy * realx + ix + 1]);// moving the nodes here and getting the status of the nodes
+		material_bnodes_overlap = (material_overlapStatus[iz*realx*imageRes.y + iy * realx + ix]);// moving the nodes here and getting the status of the nodes
+		material_tmp_bnodes_overlap = (material_overlapStatus[(iz + 1)*realx*imageRes.y + iy * realx + ix]);// moving the nodes here and getting the status of the nodes
+		material_tmp_bnodes1_overlap = (material_overlapStatus[(iz)*realx*imageRes.y + iy * realx + ix + 1]);// moving the nodes here and getting the status of the nodes
+		 
+		
 
-		if (material_bnodes != contourMat)
+
+
+		if ((material_bnodes != contourMat) || (material_bnodes_overlap != overlap_count))
 		{
 			gridNodesCopy[iz*realx*imageRes.y + iy * realx + ix] = false;
 			
 		
 		}
 		
-		else if (material_tmp_bnodes != contourMat)
+		else if ((material_tmp_bnodes != contourMat) || (material_tmp_bnodes_overlap != overlap_count))
 		{
 			gridNodesCopy[(iz+1)*realx*imageRes.y + iy * realx + ix] = false;
 			
 			//material_index1[(iz+1)*realx*imageRes.y + iy * realx + ix] = 0;
 		}
 		
-		else if (material_tmp_bnodes1 != contourMat)
+		else if ((material_tmp_bnodes1 != contourMat) || (material_tmp_bnodes1_overlap != overlap_count))
 		{
 			gridNodesCopy[iz*realx*imageRes.y + iy * realx + ix+1] = false;
 			//material_index1[iz*realx*imageRes.y + iy * realx + ix+1] = 0;
@@ -5756,7 +5811,7 @@ __global__ void krFDMPrintincheck(bool *gridNodes, unsigned int *matindex2, int3
 
 
 __global__ void krFDMContouring_FindAllStickInAxisZ(bool *gridNodes, bool *gridNodesCopy, unsigned int* stickIndex, float2 *stickStart, unsigned int* counter, float2 *stickEnd, int3 imageRes, int cellNum,
-	double2 imgOri, float imgWidth, int* stickID, int* prevStickId, int2 *stickDir, unsigned int* material_index1)
+	double2 imgOri, float imgWidth, int* stickID, int* prevStickId, int2 *stickDir)
 {
 	int index = threadIdx.x + blockIdx.x*blockDim.x;
 	unsigned int ix, iy, iz;
@@ -6012,7 +6067,7 @@ __global__ void krFDMContouring_FindAllStickInAxisZ(bool *gridNodes, bool *gridN
 
 
 __global__ void krFDMContouring_FindAllStickInAxisX(bool *gridNodes, bool *gridNodesCopy, unsigned int* stickIndex, float2 *stickStart, unsigned int* counter, float2 *stickEnd, int3 imageRes,
-	int cellNum, double2 imgOri, float imgWidth,	int* stickID, int* prevStickId, int2 *stickDir, unsigned int* material_index1)
+	int cellNum, double2 imgOri, float imgWidth,	int* stickID, int* prevStickId, int2 *stickDir)
 {	
 
 	int index = threadIdx.x + blockIdx.x*blockDim.x;
@@ -6278,7 +6333,7 @@ __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 rotdir, 
 	unsigned int *xIndexArray, float *xDepthArray, float* NxarrayPtr, float* NormalXarrayPtr,
 	unsigned int *yIndexArray, float *yDepthArray, float* NyarrayPtr, float* NormalYarrayPtr,
 	unsigned int *zIndexArray, float *zDepthArray, float* NzarrayPtr, float* NormalZarrayPtr,  char* devMatArrayY, float3 origin, double2 imgorigin, float gwidth, int3 imageRes,
-	int nodeNum, float thickness, float imgWidth,unsigned int *material_index1,  int cellNum,int totMaterials)
+	int nodeNum, float thickness, float imgWidth,unsigned int *material_index1, unsigned int* material_overlapStatus, int cellNum,int totMaterials)
 {
 	
 	int index = threadIdx.x + blockIdx.x*blockDim.x;  
@@ -6311,7 +6366,7 @@ __global__ void krFDMContouring_BinarySampling(bool *gridNodes, double3 rotdir, 
 		//printf("the index is %d ad the total nodes are %d \n", index, nodeNum);
 		gridNodes[index] = _detectInOutPoint(index, (float)rot_p.x, (float)rot_p.y, (float)rot_p.z, xIndexArray, xDepthArray, NxarrayPtr, NormalYarrayPtr,
 			yIndexArray, yDepthArray, NyarrayPtr, NormalYarrayPtr, zIndexArray, zDepthArray, NzarrayPtr, NormalYarrayPtr, devMatArrayY,
-			ori_p, origin, gwidth, res, material_index1,totMaterials);
+			ori_p, origin, gwidth, res, material_index1, material_overlapStatus, totMaterials);
 		
         index += blockDim.x * gridDim.x;
 
@@ -6875,7 +6930,7 @@ __device__ bool  _detectInOutPoint(int index1, float px, float py, float pz,
 	unsigned int* xIndex, float* xDepth, float* NxarrayPtr, float* NormalXarrayPtr,
 	unsigned int* yIndex, float* yDepth, float* NyarrayPtr, float* NormalYarrayPtr,
 	unsigned int* zIndex, float* zDepth, float* NzarrayPtr, float* NormalZarrayPtr, char* devMatArrayY,
-	float3 ori_p, float3 origin, float gwidth, int res, unsigned int *material_index1,int totMaterials)
+	float3 ori_p, float3 origin, float gwidth, int res, unsigned int *material_index1, unsigned int* material_overlapStatus, int totMaterials)
 {
 
 
@@ -7160,6 +7215,7 @@ __device__ bool  _detectInOutPoint(int index1, float px, float py, float pz,
 					{
 
 						*&material_index1[index1] = NyarrayPtr[st + index];
+						*&material_overlapStatus[index1] = 1;
 						counter++; break;
 
 
@@ -7171,6 +7227,9 @@ __device__ bool  _detectInOutPoint(int index1, float px, float py, float pz,
 					// if  and 1 for mat =2 than 
 					//0011 2121
 					//0011 2121
+					
+
+
 
 					else if (num == 4)
 					{
@@ -7182,6 +7241,36 @@ __device__ bool  _detectInOutPoint(int index1, float px, float py, float pz,
 						// 0=Startinf sample, 1= Last sample of a material
 						// 0011 ==ABAB || AABB
 
+						int material_id = 0;
+						int overlap_count = 0;
+						for (int id = index; id >= 0; id--)
+						{
+
+							if (maty[id] == 0)
+							{
+								
+								material_id += NyarrayPtr[st + id];
+								overlap_count++;
+								
+
+							}
+							else
+							{
+								
+								
+								material_id -= NyarrayPtr[st + id];
+								overlap_count--;
+								
+
+							}
+							
+
+						}
+						*&material_overlapStatus[index1] = overlap_count;
+						*&material_index1[index1] = material_id;
+						counter++; break;
+
+						/*
 
 					
 						if ((maty[index] == 0) && (maty[index+1] == 0))
@@ -7261,7 +7350,7 @@ __device__ bool  _detectInOutPoint(int index1, float px, float py, float pz,
 
 						}
 
-
+						*/
 
 						
 						
@@ -7272,9 +7361,33 @@ __device__ bool  _detectInOutPoint(int index1, float px, float py, float pz,
 					{
 
 						//*&material_index1[index1] = ((NyarrayPtr[st + index]) * 100 + (NyarrayPtr[st + index + 1]));
-						*&material_index1[index1] = 10;
-						counter++;
-						break;
+
+						int material_id = 0;
+						int overlap_count = 0;
+						for (int id = index; id >= 0; id--)
+						{
+
+							if (maty[id] == 0)
+							{
+								overlap_count++;
+								material_id += NyarrayPtr[st + id];
+							}
+							else
+							{
+								overlap_count--;
+								material_id -= NyarrayPtr[st + id];
+							}
+
+						}
+						*&material_overlapStatus[index1] = overlap_count;
+						*&material_index1[index1] = material_id;
+						counter++; break;
+
+
+
+						//*&material_index1[index1] = 10;
+						//counter++;
+						//break;
 
 					}
 				}

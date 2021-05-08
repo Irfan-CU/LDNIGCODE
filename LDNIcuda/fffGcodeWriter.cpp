@@ -3,6 +3,7 @@
 #include <list>
 #include <limits> // numeric_limits
 #include <vector>
+#include <algorithm>
 
 #include "Bridge.h"
 #include "fffGcodeWriter.h"
@@ -186,7 +187,7 @@ LayerPlan& FffGcodeWriter::processLayer(SliceDataStorage& storage, int layer_nr,
 {
 	coord_tIrfan z;
 	bool include_helper_parts = true;
-
+	
 	z = storage.Layers[layer_nr].printZ; // stub default   //storage.Layers[layer_nr].printZ = initial_layer_thickness + (layer_nr * layer_thickness);
 	coord_tIrfan layer_thickness = storage.Layers[layer_nr].thickness;
 	coord_tIrfan avoid_distance = 0; // minimal avoid distance is zero
@@ -226,11 +227,27 @@ LayerPlan& FffGcodeWriter::processLayer(SliceDataStorage& storage, int layer_nr,
 	int mesh_idx = 0;
 
 
-	const SliceMeshStorage& mesh = storage.meshes[mesh_idx];
-	const PathConfigStorage::MeshPathConfigs& mesh_config = gcode_layer.configs_storage.mesh_configs[mesh_idx];
-	addMeshLayerToGCode(storage, mesh, 0, mesh_config, gcode_layer);
+	//const SliceMeshStorage& mesh = storage.meshes[mesh_idx];
+	//const PathConfigStorage::MeshPathConfigs& mesh_config = gcode_layer.configs_storage.mesh_configs[mesh_idx];
+	
+	//addMeshLayerToGCode(storage, mesh, 0, mesh_config, gcode_layer);
+
+	if ( (layer_nr % 2) ==  0){
+		const SliceMeshStorage& mesh = storage.meshes[mesh_idx];
+		const PathConfigStorage::MeshPathConfigs& mesh_config = gcode_layer.configs_storage.mesh_configs[mesh_idx];
+		addMeshLayerToGCode(storage, mesh, 0, mesh_config, gcode_layer);
+	}
+
+	else 
+	{
+		const SliceMeshStorage& mesh = storage.meshes[mesh_idx];
+		const PathConfigStorage::MeshPathConfigs& mesh_config = gcode_layer.configs_storage.mesh_configs[mesh_idx];
+		addMeshLayerToGCode(storage, mesh, 0, mesh_config, gcode_layer);
+	}
 
 
+
+	
 
 	//if (layer_nr % 2 != 0)
 	//{
@@ -469,7 +486,7 @@ void FffGcodeWriter::setInfillAndSkinAngles(SliceDataStorage& storage)
 void FffGcodeWriter::addMeshLayerToGCode(SliceDataStorage& storage, const SliceMeshStorage& mesh, const size_t extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer) const
 {
 	int mat;
-
+	
 	SliceLayer& layer = storage.Layers[gcode_layer.getLayerNr()];
 
 	if (layer.parts.size() == 0)
@@ -493,19 +510,23 @@ void FffGcodeWriter::addMeshLayerToGCode(SliceDataStorage& storage, const SliceM
 
 	part_order_optimizer.optimize();
 
-	for (int part_idx : part_order_optimizer.polyOrder)
+	if ((gcode_layer.getLayerNr() % 2) == 0) 
 	{
+	for (int part_it = 0; part_it < part_order_optimizer.polyOrder.size(); part_it++)
+		{
+			int part_idx = part_order_optimizer.polyOrder[part_it];
+
 			int mat = layer.mat_parts[part_idx];
 			{
 				SliceLayerPart& part = layer.parts[part_idx];
-				
+
 				gcode_layer.layer_parts.push_back(part);
 				gcode_layer.layer_parts_mat.push_back(mat);
-				
+
 				char* extruders = layer.parts[part_idx].getPolygonExtruders();
-				
+
 				std::vector<int>LDMIExtruders;
-				
+
 				for (extruders; *extruders != '\0'; ++extruders)
 				{
 					char extrud = *extruders;
@@ -514,11 +535,40 @@ void FffGcodeWriter::addMeshLayerToGCode(SliceDataStorage& storage, const SliceM
 					LDMIExtruders.push_back(ext);
 
 				}
-
-				float lineDistance = 5.0;
+				
+				std::reverse(LDMIExtruders.begin(), LDMIExtruders.end());
 				
 				addMeshPartToGCode(storage, mesh, mesh_config, part, gcode_layer, LDMIExtruders);
 			}
+		}
+	}
+	else
+	{
+		for (int part_it = part_order_optimizer.polyOrder.size()-1; part_it >= 0 ; part_it--)
+		{
+			int part_idx = part_order_optimizer.polyOrder[part_it];
+			int mat = layer.mat_parts[part_idx];
+			{
+				SliceLayerPart& part = layer.parts[part_idx];
+
+				gcode_layer.layer_parts.push_back(part);
+				gcode_layer.layer_parts_mat.push_back(mat);
+
+				char* extruders = layer.parts[part_idx].getPolygonExtruders();
+
+				std::vector<int>LDMIExtruders;
+
+				for (extruders; *extruders != '\0'; ++extruders)
+				{
+					char extrud = *extruders;
+					int ext = (int)extrud - 48;
+
+					LDMIExtruders.push_back(ext);					
+				}
+			
+				addMeshPartToGCode(storage, mesh, mesh_config, part, gcode_layer, LDMIExtruders);
+			}
+		}
 	}
 	processIroning(layer, gcode_layer);
 	gcode_layer.setMesh("NONMESH");
@@ -598,20 +648,70 @@ void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage& storage, const S
 {
 
 	bool added_something = false;
-
+	
 	if ((part.part_print_property == 1)&&(part.thirdMaterial!=1))
 	{
 		if (extruder_nr.size()==1)
 		{
+			//added_something = added_something | processInsets(storage, gcode_layer, extruder_nr, mesh_config, part);
+			
+			
+			float infill_line_distance = 2.5;
 			added_something = added_something | processInsets(storage, gcode_layer, extruder_nr, mesh_config, part);
 			processOutlineGaps(storage, gcode_layer, mesh, extruder_nr, mesh_config, part, added_something);
-			added_something = added_something | processInfill(storage, mesh, gcode_layer, extruder_nr, mesh_config, part);
+			added_something = added_something | processInfill(storage, mesh, gcode_layer, extruder_nr[0], infill_line_distance, mesh_config, part);			
 			added_something = added_something | processSkinAndPerimeterGaps(storage, gcode_layer, mesh, extruder_nr, mesh_config, part);
 		}
 		else
 		{
+			for (int i = 0; i < extruder_nr.size(); i++)
+			{
+				float infill_line_distance = 5.0;
+				
+				
+				if ((extruder_nr[0] == 1) && (extruder_nr[1] == 2))
+				{
+					std::vector<int>fakeWallextruder;
 
-			added_something = added_something | processInfill(storage, mesh, gcode_layer, extruder_nr, mesh_config, part);
+					fakeWallextruder.push_back(2);
+					if (extruder_nr[i] == 2)
+					{
+						added_something = added_something | processInfill(storage, mesh, gcode_layer, extruder_nr[i], infill_line_distance, mesh_config, part);
+						added_something = added_something | processInsets(storage, gcode_layer, fakeWallextruder, mesh_config, part);
+						processOutlineGaps(storage, gcode_layer, mesh, fakeWallextruder, mesh_config, part, added_something);
+						added_something = added_something | processSkinAndPerimeterGaps(storage, gcode_layer, mesh, fakeWallextruder, mesh_config, part);
+					}
+					else
+					{
+						added_something = added_something | processInfill(storage, mesh, gcode_layer, extruder_nr[i], infill_line_distance, mesh_config, part);
+					}
+
+					
+
+					
+				}
+				else if ((extruder_nr[0] == 2) && (extruder_nr[1] == 1))
+				{
+					std::vector<int>fakeWallextruder;
+					
+					fakeWallextruder.push_back(2);
+					if (extruder_nr[i] == 2)
+					{
+						added_something = added_something | processInsets(storage, gcode_layer, fakeWallextruder, mesh_config, part);
+						processOutlineGaps(storage, gcode_layer, mesh, fakeWallextruder, mesh_config, part, added_something);
+						added_something = added_something | processInfill(storage, mesh, gcode_layer, extruder_nr[i], infill_line_distance, mesh_config, part);
+						added_something = added_something | processSkinAndPerimeterGaps(storage, gcode_layer, mesh, fakeWallextruder, mesh_config, part);
+
+					}
+					else
+					{
+						added_something = added_something | processInfill(storage, mesh, gcode_layer, extruder_nr[i], infill_line_distance, mesh_config, part);
+					}
+					
+				}
+			}
+			
+			
 
 		}
 	}
@@ -687,11 +787,11 @@ void FffGcodeWriter::processOutlineGaps(const SliceDataStorage& storage, LayerPl
 
 
 
-bool FffGcodeWriter::processInfill(const SliceDataStorage& storage, const SliceMeshStorage& mesh, LayerPlan& gcode_layer, std::vector<int>extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const
+bool FffGcodeWriter::processInfill(const SliceDataStorage& storage, const SliceMeshStorage& mesh, LayerPlan& gcode_layer, int extruder_nr, float infill_line_distance, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const
 {
 
 	//bool added_something = processMultiLayerInfill(storage, mesh, gcode_layer, extruder_nr, mesh_config, part, mat);
-	bool added_something = processSingleLayerInfill(storage, mesh_config, gcode_layer, extruder_nr, part);
+	bool added_something = processSingleLayerInfill(storage, mesh_config, gcode_layer, extruder_nr, infill_line_distance, part);
 	return added_something;
 
 
@@ -769,7 +869,7 @@ bool FffGcodeWriter::processMultiLayerInfill(const SliceDataStorage& storage, co
 	return added_something;
 }
 
-bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer, std::vector<int>extruder_nr, const SliceLayerPart& part) const
+bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer, int extruder_nr,float infill_line_distance_in, const SliceLayerPart& part) const
 {
 
 	if (part.infill_area_per_combine_per_density[0].size() == 0)
@@ -810,20 +910,21 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, c
 		//Polygons in_outline = part.infill_area_per_combine_per_density[density_idx][0];	 //part.outline;
 
 		//const coord_tIrfan circumference = in_outline.polygonLength();
-		for (int ext = 1; ext <= extruder_nr.size(); ext++)
+		//for (int ext = 1; ext <= extruder_nr.size(); ext++)
+		for (int ext = 1; ext < 2; ext++)
 		{
 
 			Polygons infill_polygons;
 			Polygons infill_lines;
 			coord_tIrfan infill_line_distance;
-			if (extruder_nr.size() == 1)
+			//if (extruder_nr == 1)
 			{
-				infill_line_distance = MM2INT(2.5);
+				infill_line_distance = MM2INT(infill_line_distance_in);
 			}	
-			else
+			/*else
 			{
 				infill_line_distance = MM2INT(extruder_nr.size()*2.5);
-			}
+			}*/
 
 			int infill_line_distance_here = infill_line_distance << (density_idx + 1);
 			
@@ -844,7 +945,18 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, c
 			in_outline.removeSmallAreas(minimum_small_area);
 			coord_tIrfan outline_offset = 0;
 			
-			if ((extruder_nr.size() == 2) && (ext ==extruder_nr.at(1)))
+			if (infill_line_distance_in == 5.0 && extruder_nr == 2) {
+
+				infill_shift += infill_line_distance_here / 2;
+
+			}
+			/*if ((extruder_nr.size() == 2) && (extruder_nr[ext - 1] == 2))
+			{
+				infill_shift += infill_line_distance_here / 2;
+			}*/
+			
+			// ffor over lapping circles
+			/*if ((extruder_nr.size() == 2) && (ext ==extruder_nr.at(1)))
 			{
 				
 				infill_shift += infill_line_distance_here / 2;
@@ -860,7 +972,7 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, c
 			{
 				infill_shift += infill_line_distance_here/3.4;
 				
-			}
+			}*/
 			
 			Infill infill_comp(pattern, zig_zaggify_infill, connect_polygons, in_outline, 0, infill_line_width, infill_line_distance_here, infill_overlap, infill_multiplier, infill_angle, gcode_layer.z, infill_shift, wall_line_count, infill_origin
 				, /*Polygons* perimeter_gaps =*/ false
@@ -870,7 +982,9 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, c
 				, /*int zag_skip_count =*/ 0
 				, MM2INT(2.0));
 			infill_comp.generate(infill_polygons, infill_lines);
-			infill_lines.print_extruder = extruder_nr.at(ext-1);
+			//infill_lines.print_extruder = extruder_nr.at(ext - 1); for Overlapping Cylinders
+			infill_lines.print_extruder = extruder_nr;
+			
 			coord_tIrfan layer_thickness = mesh_config.infill_config[0].getLayerThickness();
 			int layernum = gcode_layer.getLayerNr();
 
@@ -891,6 +1005,9 @@ bool FffGcodeWriter::processSingleLayerInfill(const SliceDataStorage& storage, c
 			
 
 		}
+
+
+
 		
 		
 		//else if ((part.part_mat == 1) || (part.part_mat == 2) || (part.part_mat == 3))

@@ -140,6 +140,7 @@ void LayerPlan::addLinesByOptimizer(coord_tIrfan layer_thickness , const GCodePa
 		const size_t start = orderOptimizer.polyStart[poly_idx];
 		const size_t end = 1 - start;
 		const curaIrfan::PointIrfan& p0 = polygon[start];
+		
 		addTravel(layer_thickness, layernum,p0);
 		
 		const curaIrfan::PointIrfan& p1 = polygon[end];
@@ -321,22 +322,13 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 			GCodePath& path_unarranged = paths[path_idx];
 
 
-			if ((path_unarranged.getPathMat() == 1))
+			
+
+			if ((path_unarranged.getextruder() == 1) && ((path_unarranged.config->type == PrintFeatureType::Infill) || (path_unarranged.config->type == PrintFeatureType::Skin) || (path_unarranged.config->type == PrintFeatureType::InnerWall) || (path_unarranged.config->type == PrintFeatureType::OuterWall)))
 			{
 				arranged_pathsA.push_back(path_unarranged);
 			}
-			if ((path_unarranged.getPathMat() == 2)) 
-			{
 			
-				arranged_pathsA.push_back(path_unarranged);
-			
-			
-			}
-		
-			if ((path_unarranged.getPathMat() == 2))
-			{
-				arranged_pathsA.push_back(path_unarranged);
-			}
 			/*else if ((path_unarranged.getPathMat() == 5) && (path_unarranged.config->type != PrintFeatureType::Infill))
 			{
 				arranged_pathswalls.push_back(path_unarranged);
@@ -551,10 +543,10 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 			
 		}
 		*/
-
+		
 	
 
-		gcode.current_extruder = 1;
+		gcode.current_extruder = 0;
 		
 		for (unsigned int path_idx = 0; path_idx < paths.size(); path_idx++)
 		{
@@ -563,51 +555,15 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 
 			GCodePath& path= paths[path_idx];
 		
-				
+
 				
 
-				if (path.getextruder() == 3)
+				if ((path.getextruder() == 3) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))		   //2
 				{
-					if (gcode.current_extruder == 1)
+					if (gcode.current_extruder == 0)
 					{
 						bool wait = false;
 						ext = 3;
-
-						gcode.resetExtrusionValue();
-
-						gcode.switchExtruder(3, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
-						gcode.extruder1_extrusion_offset = false;
-						gcode.writeTemperatureCommand(1, 140.0, wait);
-						wait = true;
-						gcode.writeTemperatureCommand(0, 210.0, wait);
-
-					}
-					if (gcode.current_extruder == 2)
-					{
-						bool wait = false;
-						ext = 3;
-
-						gcode.resetExtrusionValue();
-
-						gcode.switchExtruder(3, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
-						gcode.extruder1_extrusion_offset = false;
-						gcode.writeTemperatureCommand(1, 140.0, wait);
-						wait = true;
-						gcode.writeTemperatureCommand(0, 210.0, wait);
-
-					}
-					gcode.current_extruder = 3;
-
-					
-					
-				}
-
-				else if (path.getextruder() == 2)
-				{
-					if (gcode.current_extruder == 1)
-					{
-						bool wait = false;
-						ext = 2;
 
 						gcode.resetExtrusionValue();
 
@@ -618,11 +574,10 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 						gcode.writeTemperatureCommand(0, 210.0, wait);
 
 					}
-				
-					if (gcode.current_extruder == 3)
+					else if (gcode.current_extruder == 1)
 					{
 						bool wait = false;
-						ext = 2;
+						ext = 3;
 
 						gcode.resetExtrusionValue();
 
@@ -635,35 +590,75 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 					}
 					gcode.current_extruder = 2;
 
+					
+					
+				}
+
+				else if ((path.getextruder() == 2) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))//1
+				{
+					if (gcode.current_extruder == 0)
+					{
+						bool wait = true;
+						ext = 2;
+
+						gcode.resetExtrusionValue();
+
+						gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
+						gcode.extruder1_extrusion_offset = false;
+						
+						gcode.writeTemperatureCommand(0, 140.0, wait);
+						wait = false;
+						gcode.writeTemperatureCommand(1, 210.0, wait);
+						
+						
+
+					}
+				
+					else if (gcode.current_extruder == 2)
+					{
+						bool wait = true;
+						ext = 2;
+
+						gcode.resetExtrusionValue();
+
+						gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
+						gcode.extruder1_extrusion_offset = false;
+						gcode.writeTemperatureCommand(0, 140.0, wait);
+						wait = false;
+						gcode.writeTemperatureCommand(1, 210.0, wait);
+
+					}
+					gcode.current_extruder = 1;
+
 
 				}
 
 
-				else if (path.getextruder() == 1)
+				else if ((path.getextruder() == 1) && ((path.config->type == PrintFeatureType::Infill) || (path.config->type == PrintFeatureType::Skin) || (path.config->type == PrintFeatureType::InnerWall) || (path.config->type == PrintFeatureType::OuterWall)))  //0
 				{
 					
-					if (gcode.current_extruder == 2)
+					if (gcode.current_extruder == 1)
 					{
 						bool wait = false;
 						ext = 1;
 
 						gcode.resetExtrusionValue();
 
-						gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
+						gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
 						gcode.extruder1_extrusion_offset = false;
 						gcode.writeTemperatureCommand(1, 140.0, wait);
 						wait = true;
 						gcode.writeTemperatureCommand(0, 210.0, wait);
 
 					}
-					if (gcode.current_extruder == 3)
+					else if (gcode.current_extruder == 2)
 					{
 						bool wait = false;
 						ext = 1;
 
 						gcode.resetExtrusionValue();
 
-						gcode.switchExtruder(1, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
+						gcode.switchExtruder(0, storage.extruder_switch_retraction_config_per_extruder[1], z_hop_height);
 						gcode.extruder1_extrusion_offset = false;
 						gcode.writeTemperatureCommand(1, 140.0, wait);
 						wait = true;
@@ -671,13 +666,16 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
 
 					}
 
-					gcode.current_extruder = 1;
+					gcode.current_extruder = 0;
+
+
+
+
+
+
 				}
-			
 
-
-
-
+				
 
 				if (!path.retract && path.isTravelPath() && path.points.size() == 1 && path.points[0] == gcode.getPositionXY() && z == gcode.getPositionZ())
 				{
@@ -1368,6 +1366,7 @@ void LayerPlan::moveInsideCombBoundary(int layernum,const coord_tIrfan distance)
 		PolygonUtils::moveInside(comb_boundary_inside2, p, distance, max_dist2);
 		if (comb_boundary_inside2.inside(p))
 		{
+			
 			addTravel_simple(layernum, p);
 			//Make sure the that any retraction happens after this move, not before it by starting a new move path.
 			forceNewPathStart();
@@ -1560,6 +1559,7 @@ GCodePath& LayerPlan::addTravel_simple(int layer_nr,curaIrfan::PointIrfan p, GCo
 		path->setPathMat(100);//setting the default material not possible
 
 	}
+	path->setextruder(2);
 	return *path;
 }
 

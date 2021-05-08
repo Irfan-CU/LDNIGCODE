@@ -1146,6 +1146,7 @@ void menuFuncLDMISampling(bool bCUDA)
 		//		LDNIcpuOperation::BRepToLDNISampling(mesh,solid,bndBox,nRes);
 		//		LDNIcudaOperation::CopyCPUSolidToCUDASolid(solid,cudaSolid);
 		//		delete solid;
+		
 		LDNIcudaOperation::BRepToLDMISampling(mesh, cudaSolid, ldmiProcessor, bndBox, nRes);
 
 	}
@@ -1593,7 +1594,7 @@ int main(int argc, char *argv[])
 	
 
 	initFunc();	
-	_pGLK.SetClearColor(0.0f,0.0f,0.0f);
+	_pGLK.SetClearColor(1.0f,1.0f,1.0f);
 	_pGLK.SetForegroundColor(1.0f,1.0f,1.0f);
 	_pGLK.m_bCoordDisp=false;
 

@@ -239,10 +239,10 @@ bool FffPolygonGenerator::sliceModel(GLKObList &meshlist, ContourMesh& c_mesh, S
 
 	storage.model_min.x = MM2INT(rotBoundingBox[0] * scale);
 	storage.model_min.y = MM2INT(rotBoundingBox[4] * scale);
-	storage.model_min.z = MM2INT(rotBoundingBox[2] * 18);
+	storage.model_min.z = MM2INT(rotBoundingBox[2] * 1);
 	storage.model_max.x = MM2INT(rotBoundingBox[1] * scale);
 	storage.model_max.y = MM2INT(rotBoundingBox[5] * scale);
-	storage.model_max.z = MM2INT(rotBoundingBox[3] * 18);
+	storage.model_max.z = MM2INT(rotBoundingBox[3] * 1);
 
 	storage.model_size = storage.model_max - storage.model_min;
 	

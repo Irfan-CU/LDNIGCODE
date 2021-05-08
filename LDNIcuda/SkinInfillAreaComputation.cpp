@@ -204,7 +204,7 @@
 	void SkinInfillAreaComputation::generateSkinAndInfillAreas(SliceLayerPart& part)
 	{
 		
-		printf("the parts insets sizes zre %d %d %d \n",part.insets[0].size(), part.insets[1].size(), part.insets[2].size());
+		
 		Polygons original_outline = part.insets.back().offset(-innermost_wall_line_width / 2);
 		
 		
@@ -610,7 +610,7 @@
 				//printf("the infill_area_per_combine_current_density part %d and the layer is %d", infill_area_per_combine_current_density.size(),layer_idx);
 				part.infill_area_own = nullptr; // clear infill_area_own, it's not needed any more.
 				assert(part.infill_area_per_combine_per_density.size() != 0 && "infill_area_per_combine_per_density is now initialized");
-				printf("this layer has outline size %d and infill size is %d \n", part.infill_area_per_combine_per_density[0][0].size(),infill_area.size());
+				
 			}
 			
 		}

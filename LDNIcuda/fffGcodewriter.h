@@ -340,7 +340,7 @@ public:
 	 * \param part The part for which to create gcode.
 	 * \return Whether this function added anything to the layer plan.
 	 */
-	bool processInfill(const SliceDataStorage& storage, const SliceMeshStorage& mesh, LayerPlan& gcode_layer, std::vector<int>extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const;
+	bool processInfill(const SliceDataStorage& storage, const SliceMeshStorage& mesh, LayerPlan& gcode_layer,int extruder_nr,float infill_line_distance, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part) const;
 
 	/*!
 	 * \brief Add thicker (multiple layers) sparse infill for a given part in a
@@ -366,7 +366,7 @@ public:
 	 * \param part The part for which to create gcode.
 	 * \return Whether this function added anything to the layer plan.
 	 */
-	bool processSingleLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer, std::vector<int>extruder_nr, const SliceLayerPart& part) const;
+	bool processSingleLayerInfill(const SliceDataStorage& storage, const PathConfigStorage::MeshPathConfigs& mesh_config, LayerPlan& gcode_layer, int extruder_nr,float infill_line_distance, const SliceLayerPart& part) const;
 
 	//void finalize();
 

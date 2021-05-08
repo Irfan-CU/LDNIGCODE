@@ -95,6 +95,18 @@ void LDNIcudaSolid::FreeMemory()
 	cudaFree((dev_indexArray[0]));
 	cudaFree((dev_indexArray[1]));
 	cudaFree((dev_indexArray[2]));
+	cudaFree((dev_materialArray[0]));
+	cudaFree((dev_materialArray[1]));
+	cudaFree((dev_materialArray[2]));
+	cudaFree ((dev_material_status[0]));
+	cudaFree((dev_material_status[1]));
+	cudaFree((dev_material_status[2]));
+	cudaFree ((dev_material_normal[0]));
+	cudaFree((dev_material_normal[1])); 
+	cudaFree((dev_material_normal[2]));
+	cudaFree((dev_sampleMaterialStatus[0]));
+	cudaFree((dev_sampleMaterialStatus[1]));
+	cudaFree ((dev_sampleMaterialStatus[2]));
 
 	m_res = 0;
 	//	printf("CUDA memory of LDNIcudaSolid has been released!\n");

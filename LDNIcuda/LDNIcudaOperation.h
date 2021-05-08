@@ -182,7 +182,7 @@ public:
 												float angle, float thickness, double clipPlanNm[], float nSampleWidth, bool *&gridNodes,
 												float2 *&stickStart, float2 *&stickEnd, unsigned int *&stickIndex, 
 												int *&stickID ,int *&prevStickID,  int2 *&stickDir, 
-												unsigned int *&material_index,	QuadTrglMesh *qmesh, unsigned int*&material_status);
+												unsigned int *&material_index,unsigned int*& material_overlapStatus,	QuadTrglMesh *qmesh, unsigned int*&material_status);
 	//static void LDNIFDMContouring_ConstrainedSmoothing(LDNIcudaSolid* solid, ContourMesh *c_mesh, double rotBoundingBox[], int imageSize[],
 	//												float angle, float thickness, double clipPlanNm[], float nSampleWidth, float2 *stickStart, 
 	//												float2 *stickEnd, int *stickID);

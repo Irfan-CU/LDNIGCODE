@@ -283,11 +283,11 @@ using namespace std;
 			//int user_choice;
 
 			//int shift = 22;
-			//Polygon T_Joint_A;
+			//Polygon T_Joint_A,poly;
 			//if (!poly_circle_A.empty())
 			//{
 			//	shift = 0;
-			//	//T_Joint_A = poly.T_joint(poly_circle_A, poly_circle_A_material,shift);
+//				T_Joint_A = poly.T_joint(poly_circle_A, poly_circle_A_material,shift);
 			//   	//layers[layer_nr].polygons_Circle_interA.add(poly_circle_A);
 			//	//T_Joint_A.clear();
 			//	//layers[layer_nr].polygons_Circle_interA.add(poly_circle_A);

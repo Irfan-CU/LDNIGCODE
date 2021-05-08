@@ -112,7 +112,7 @@ extern __global__ void krLDNINormalReconstruction_PerSample(unsigned int* xIndex
 
 extern __global__ void krLDNISampling_SortSamples(float *devNxArrayPtr, float *devNyArrayPtr, float *devDepthArrayPtr, 
 												  int arrsize, unsigned int *devIndexArrayPtr);
-extern __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr, float *devNyArrayPtr, float *devDepthArrayPtr,char* devMatArray, 
+extern __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr, float *devNyArrayPtr, float *devDepthArrayPtr, 
 												  int n, int arrsize, float width, float sampleWidth, int res, 
 												  unsigned int *devIndexArrayPtr);
 extern __global__ void krLDNISampling_CopyIndexAndFindMax(unsigned char *devStencilBufferPtr, unsigned int *devIndexArrayPtr, 
@@ -1484,6 +1484,7 @@ bool LDNIcudaOperation::  BRepToLDMISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 	
 
 	ldmiProcessor->SetTotalMaterials(mesh->total_materials.size());
+	printf("---------------faceNum is %d \n", faceNum);
 	for (i = 0; i < faceNum; i++) 
 	{
 		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);	 
@@ -1500,7 +1501,23 @@ bool LDNIcudaOperation::  BRepToLDMISampling(QuadTrglMesh *mesh, LDNIcudaSolid* 
 		}
 
 	}
-	
+
+	//---------------------for Obj Processing--------------------------------//
+
+	/*for (i = 0; i < faceNum; i++)
+	{
+		mesh->GetFaceNodes(i + 1, ver[0], ver[1], ver[2], ver[3]);
+		std::string tmp = mesh->face_material_names[i];
+
+				glVertex4i(ver[0] - 1, ver[1] - 1, ver[2] - 1, 1);
+		
+		
+
+	}
+
+*/
+
+
 	glEnd();
 	glEndList();
 	//---------------------for AMF Processing--------------------------------//
@@ -1727,8 +1744,8 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, LDMIProcess
 		float* devNxArrayPtr=solid->GetSampleNxArrayPtr(nAxis);	// taking the address to the first for the array here 
 		float* devNyArrayPtr=solid->GetSampleNyArrayPtr(nAxis);
 		float* devDepthArrayPtr=solid->GetSampleDepthArrayPtr(nAxis);
-		float *devMaterialInOut = solid->GetMaterialInOUt(nAxis);
-		char  *devMatArray = ldmiProcessor->GetdevMatArray(nAxis);
+		//float *devMaterialInOut = solid->GetMaterialInOUt(nAxis);
+		//char  *devMatArray = ldmiProcessor->GetdevMatArray(nAxis);
 		//int* devmaterial_normal = solid->GetMaterial_Normal(nAxis);
 		//int* devmaterial_array = solid->GetMaterialArray(nAxis);
 		//int* dev_material_status = solid->GetMaterial_Status(nAxis);
@@ -1740,7 +1757,7 @@ void LDNIcudaOperation::_decomposeLDNIByFBOPBO(LDNIcudaSolid *solid, LDMIProcess
 			CUDA_SAFE_CALL( cudaBindTextureToArray(tex2DFloat4In, in_array) );
 			//--------------------------------------------------------------------------------------------------------
 			//	fill the sampleArray on device
-			krLDNISampling_CopySamples << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (devNxArrayPtr, devNyArrayPtr, devDepthArrayPtr,devMatArray, n, arrsize, width, gWidth, nRes, devIndexArrayPtr);
+			krLDNISampling_CopySamples << <BLOCKS_PER_GRID, THREADS_PER_BLOCK >> > (devNxArrayPtr, devNyArrayPtr, devDepthArrayPtr, n, arrsize, width, gWidth, nRes, devIndexArrayPtr);
 			
 			
 			CUDA_SAFE_CALL( cudaGraphicsUnmapResources( 1, &sampleTex_resource, NULL ) );
@@ -2829,7 +2846,7 @@ __global__ void krLDNISampling_SortSamples(float *devNxArrayPtr, float *devNyArr
 }
 
 __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
-	float *devNyArrayPtr, float *devDepthArrayPtr, char *devMatArray,
+	float *devNyArrayPtr, float *devDepthArrayPtr,
 	int n, int arrsize, float width, float sampleWidth, int res,
 	unsigned int *devIndexArrayPtr)
 {
@@ -2852,7 +2869,7 @@ __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
 			devNxArrayPtr[arrindex]=rgb.w;		// material index;	
 			devNyArrayPtr[arrindex]=rgb.y;		// y-component of normal
 			
-			if (rgb.w == 1.00)
+			/*if (rgb.w == 1.00)
 			{
 				devMatArray[arrindex] = 'a';
 			}
@@ -2873,7 +2890,7 @@ __global__ void krLDNISampling_CopySamples(float *devNxArrayPtr,
 			{
 				devMatArray[arrindex] = 'e';
 			}
-
+*/
 			
 			
 			/*

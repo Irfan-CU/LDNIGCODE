@@ -164,9 +164,6 @@
     <ClCompile Include="logoutput.cpp">
       <Filter>Source Files\LDMI Gcode Infill</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files\LDMI Gcode Infill</Filter>
-    </ClCompile>
     <ClCompile Include="MergerInfillLines.cpp">
       <Filter>Source Files\LDMI Gcode Infill</Filter>
     </ClCompile>
@@ -259,6 +256,9 @@
     </ClCompile>
     <ClCompile Include="WallOverlap.cpp">
       <Filter>Source Files\LDMI Gcode Infill</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files\LDMI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

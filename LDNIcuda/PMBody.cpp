@@ -1908,7 +1908,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	
 	
 	//std::vector<vector<float > >infillbbpos;		 
-	//printf("Building topology for each contour....\n");
+	printf("Building topology for each contour....\n");
 	for (i = 0; i <iRes[1]; i++)
 	{
 		int contour_count = 0;
@@ -1963,6 +1963,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 
 					}
 				}
+				
 				//first = st+j;
 				index = st + j;	  	// number of sticks
 				//printf("The value for index is %d and st is %d and i is %d \n", index,st,i);
@@ -2017,6 +2018,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 					}
 
 				}
+				
 				char *extMaterials = Materialdecoder(mat);				
 				vmesh->setRegionMaterial(extMaterials);
 				vmesh->setMeshMaterial(mat);
@@ -2027,7 +2029,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 				contour_count++;
 				meshin_layer[i]= contour_count;
 			}
-
+		
 			num += ContourNum[i];
 		}
 		
@@ -2038,7 +2040,7 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 	}
 	
 	VSAMeshList.SetTot_LDMIContours();
-	
+	printf("Done with Topology\n");
 	
 	GLKPOSITION Pos;
 	GLKPOSITION Pos2;
@@ -2093,8 +2095,9 @@ void ContourMesh::BuildContourTopology(float* st_stick, float* ed_stick, int* st
 void ContourMesh::ContourLDMIArrangement(double rotBoundingBox[])
 {
 	
+	long gcodeDevelopment_time = clock();
 
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < iRes[1]; i++)
 	{
 		GLKPOSITION Pos;
 		GLKPOSITION Pos2;
@@ -2118,8 +2121,9 @@ void ContourMesh::ContourLDMIArrangement(double rotBoundingBox[])
 		}
 
 	}
-	printf("Going for Gcode \n");
+	
 	processGcode(rotBoundingBox);
+	printf("Going for Gcode--- the time is %ld(ms)is, \n", clock() - gcodeDevelopment_time);
 }
 
 
@@ -2133,7 +2137,7 @@ char* ContourMesh::Materialdecoder(int encodedMaterial)
 	res[1] = '\0';
 	res[2] = '\0';
 	res[3] = '\0';
-	res[0] = '\0';
+	
 	switch (encodedMaterial)
 	{
 	case 1:
@@ -2143,7 +2147,9 @@ char* ContourMesh::Materialdecoder(int encodedMaterial)
 		res[0] = '2';
 		break;
 	case 3:
-		res[0] = '3';
+		res[0] = '3';// for case of Overlapping circles
+		//res[0] = '1';// for case of overlapping dogbone 
+		//res[1] = '2'; // for case of overlapping dogbone 
 		break;
 	case 4:
 		res[0] = '1';
@@ -2177,6 +2183,9 @@ char* ContourMesh::Materialdecoder(int encodedMaterial)
 		res[2] = '3';
 		break;
 	default:
+		//res[0] = '1';	// for case of overlapping dogbone 
+		//res[1] = '2';	// for case of overlapping dogbone 
+		//res[2] = '3';	// for case of overlapping dogbone 
 		break;
 	}
 
@@ -2196,8 +2205,8 @@ void ContourMesh::processGcode(double rotBoundingBox[])
 
 	storage.Layers.resize(iRes[1]);
 	
-	int scale = 1;
-	storage.set_scale(scale);
+	
+	storage.set_scale(1);
 	//Dont Pass C_Mesh
 	//Instead of mesh in layer vector just pass int of layer numbers
 

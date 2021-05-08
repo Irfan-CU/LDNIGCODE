@@ -483,7 +483,7 @@ void GCodeExport::writeFXYZE(const double& speed, const int x, const int y, cons
 	
 	curaIrfan::PointIrfan gcode_pos = getGcodePos(x, y, current_extruder);
 	total_bounding_box.include(Point3(gcode_pos.X, gcode_pos.Y, z));
-	int UM3_offset_x = 30000;
+	int UM3_offset_x = 18000;
 	int UM3_offset_y = 100000;
 	*output_stream << " X" << MMtoStream{ (gcode_pos.X - extruder_offset) + UM3_offset_x } << " Y" << MMtoStream{ gcode_pos.Y + UM3_offset_y };		   // offset to adjust the print iside the UM3 frame it needs to be changed for the different parts.
 	//*output_stream << " X" << MMtoStream{gcode_pos.X} << " Y" << MMtoStream{gcode_pos.Y};
@@ -914,18 +914,18 @@ void GCodeExport::switchExtruder(size_t new_extruder, const RetractionConfig& re
 	{
 		return;
 	}
-	
 	bool retraction_enable = true;
 	
-	/*if ((current_extruder == 0) && (new_extruder == 1))
+	
+	if ((current_extruder == 0) && (new_extruder == 1))
 	{
-		extruder_offset = 18000;
+		extruder_offset = 17900;
 	}
 	else if ((current_extruder == 1) && (new_extruder == 0))
 	{
 		extruder_offset = 0;
 	}
-*/
+
 	
 	
 	constexpr bool force = true;

@@ -24,8 +24,7 @@
 		layer_plan.layer_parts;
 		
 		LayerPlan* to_be_written = processBuffer(layernum, layer_thickness);
-		//printf("processed buffer for the layer number \%d \n", layer_plan.getLayerNr());
-
+		
 		if (to_be_written)
 		{
 			
